@@ -36,6 +36,9 @@ const SITE_CSS = `
 .zx-ft-links a{font-size:14px;font-weight:600;color:var(--zx-muted);text-decoration:none}
 .zx-ft-links a:hover{color:var(--zx-peri-deep)}
 .zx-disclaimer{font-size:13px;line-height:1.6;color:var(--zx-soft);max-width:760px;margin:0;font-weight:500}
+.zx-copyright{font-size:13px;line-height:1.6;color:var(--zx-soft);margin:14px 0 0;font-weight:500}
+.zx-copyright a{color:var(--zx-muted);text-decoration:none}
+.zx-copyright a:hover{color:var(--zx-peri-deep)}
 @media(max-width:860px){
   /* Мобильная шапка: прячем десктоп-меню/кнопки, показываем гамбургер (MobileNav);
      шапка липкая и компактная. Свой фон обязателен — у body градиент с fixed-attachment,
@@ -119,6 +122,9 @@ export function SiteLayout({ children }: { children: React.ReactNode }): React.J
           <p className="zx-disclaimer">
             Материалы носят информационно-развлекательный характер и не заменяют профессиональную
             консультацию.
+          </p>
+          <p className="zx-copyright">
+            © 2026 Зодиакум · <a href="mailto:loliloop@proton.me">loliloop@proton.me</a>
           </p>
         </div>
       </footer>

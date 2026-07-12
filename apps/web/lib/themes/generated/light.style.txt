@@ -162,6 +162,9 @@
   .foot-logo{display:flex;align-items:center;gap:10px}
   .foot-logo .name{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink)}
   .disclaimer{font-size:13px;line-height:1.6;color:var(--soft);max-width:760px;font-weight:500}
+  .copyright{font-size:13px;line-height:1.6;color:var(--soft);margin-top:14px;font-weight:500}
+  .copyright a{color:var(--muted);text-decoration:none}
+  .copyright a:hover{color:var(--peri-deep)}
 
   /* ============================================================
      МОБИЛЬНЫЙ АДАПТИВ (тема «Небесный свет» — единственное оформление).
