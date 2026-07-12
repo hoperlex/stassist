@@ -1,0 +1,56 @@
+{
+  "cluster": "competitors",
+  "checks": [
+    {
+      "claim": "Nebula (OBRIO): 30+ млн пользователей, ARR ~$50 млн (2023), монетизация подписка + кредиты на чат с консультантами",
+      "verdict": "подтверждено",
+      "details": "Tech.eu (дек. 2023) и TheNextWeb подтверждают: 30 млн пользователей по всему миру, ARR $50 млн в 2023, рост дохода на 250%. Модель монетизации подтверждена первоисточниками (официальные FAQ Nebula/AskNebula): подписка (weekly $7.99 с 3-дневным триалом, monthly $24.99, 3 мес. $29.99) даёт премиум-контент и возобновляемые кредиты (100 приветственных + 150 каждые 2 недели по веб-подписке); чат с консультантами оплачивается кредитами по тарифу 30 кредитов за минуту (по сути поминутная оплата через кредиты). Более свежих официальных цифр ARR (2024-2026) в открытых источниках не найдено — $50 млн следует помечать как данные 2023 года.",
+      "sources": [
+        {"url": "https://tech.eu/2023/12/05/obrio/", "title": "How Ukrainian startup OBRIO turned psychic reading and astrology into a thriving business venture — Tech.eu"},
+        {"url": "https://thenextweb.com/news/ukrainian-startup-astrology-app-nebula-thriving-despite-war", "title": "Ukrainian startup behind astrology app Nebula thriving despite war — TNW"},
+        {"url": "https://www.asknebula.com/faq", "title": "AskNebula — официальный FAQ (кредиты, 30 кредитов/мин чата)"},
+        {"url": "https://nebulahoroscope.com/en/web-subcription-faq/", "title": "Nebula: Horoscope & Astrology — Web Subscription FAQ (подписка + кредиты)"}
+      ]
+    },
+    {
+      "claim": "AstroTalk: выручка FY25 ~1182 крор рупий (~$140 млн), 90-95% выручки — поминутные консультации",
+      "verdict": "подтверждено",
+      "details": "Entrackr (по внутреннему документу компании): FY25 — выручка Rs 1 182 крор, прибыль свыше Rs 250 крор (FY24: Rs 651 крор / Rs 100 крор). Официальный пресс-релиз компании даёт близкие цифры: общая выручка Rs 1 214 крор (+85% г/г), выручка от операций Rs 1 176 крор. 11,8-12,1 млрд рупий по курсу ~84-86 руп./$ это ~$138-144 млн — оценка ~$140 млн корректна. Доля консультаций: источники указывают ~90% выручки от поминутных консультаций с астрологами (чат/звонки, от 5 до 200+ руп./мин); e-commerce-вертикаль (AstroTalk Store) дала Rs 140 крор за календарный 2025, но в FY25 (до марта 2025) её вклад был меньше, так что диапазон 90-95% для FY25 правдоподобен. Компания готовится к IPO, ищет оценку $1,3-1,5 млрд.",
+      "sources": [
+        {"url": "https://entrackr.com/exclusive/exclusive-astrotalk-seeks-unicorn-valuation-in-new-round-9485023", "title": "Exclusive: AstroTalk seeks unicorn valuation in new round — Entrackr (FY25: Rs 1 182 Cr)"},
+        {"url": "https://www.bwdisrupt.com/article/astrotalk-revenue-jumps-85-to-rs-1-214-cr-591016", "title": "Astrotalk Revenue Jumps 85% To Rs 1,214 Cr — BW Disrupt (официальный релиз)"},
+        {"url": "https://entrackr.com/news/astrotalks-e-commerce-vertical-posts-rs-140-cr-revenue-in-2025-hits-rs-200-cr-arr-11004745", "title": "AstroTalk e-commerce vertical posts Rs 140 Cr in 2025 — Entrackr"}
+      ]
+    },
+    {
+      "claim": "Co-Star: 30+ млн регистраций, $15 млн Series A (2021), интерпретации — заранее написанные фрагменты, собираемые алгоритмически (не LLM-чат)",
+      "verdict": "уточнено",
+      "details": "Series A $15 млн (апрель 2021, лид — Spark Capital, участие Maveron, Female Founders Fund) — подтверждено (Axios). 30 млн — подтверждено, но это ~30 млн зарегистрированных пользователей по состоянию на 2023 год (на момент Series A в 2021 было 20+ млн загрузок); свежих официальных цифр 2025-2026 нет. Механика интерпретаций подтверждена: алгоритм сопоставляет написанные людьми (фрилансеры-райтеры и астрологи) фрагменты текста с планетарными данными NASA JPL — это не генерация LLM на лету. Уточнение: у Co-Star есть премиум-функция 'Ask the stars' с использованием ИИ для ответов на вопросы пользователей, т.е. формулировка 'не LLM-чат' верна для основного ежедневного контента, но у продукта уже есть ИИ-вопросная функция.",
+      "sources": [
+        {"url": "https://www.axios.com/2021/04/14/astrology-app-co-star-raises-15-million-funding", "title": "Astrology app Co-Star raises $15 million in new funding — Axios"},
+        {"url": "https://en.wikipedia.org/wiki/Co%E2%80%93Star", "title": "Co-Star — Wikipedia (30 млн зарегистрированных пользователей, 2023)"},
+        {"url": "https://www.inverse.com/article/54991-costar-astrology-app-how-it-works", "title": "Co-Star Astrology App: How It Works — Inverse (человеческие фрагменты + алгоритм на данных NASA)"}
+      ]
+    },
+    {
+      "claim": "Прибыль ООО «А-Контент решения» (Astro7) выросла с 11,4 до 151,5 млн руб. за 2021-2024 (Известия)",
+      "verdict": "подтверждено",
+      "details": "Статья Известий (en.iz.ru, «Gild the tube: who monopolized the online psychic market in Russia») прямо подтверждает: официальная прибыль ООО «А-Контент решения», управляющего порталами Astro7 и Aura7, выросла с 11,4 млн руб. до 151,5 млн руб. за 2021-2024, т.е. в 13,2 раза (по данным финансовой отчётности компании). Региональные СМИ (Infopro54) со ссылкой на отчётность повторяют те же цифры; владелец — Павел Парфёнов. Первоисточник цифр — бухгалтерская отчётность ООО (ГИРБО ФНС), Известия корректно её цитируют.",
+      "sources": [
+        {"url": "https://en.iz.ru/en/2037847/vladislav-daniilov-egor-kucher/gild-tube-who-monopolized-online-psychic-market-russia", "title": "Gild the tube: who monopolized the online psychic market in Russia — Izvestia"},
+        {"url": "https://infopro54.ru/news/it-biznesmeny-iz-novosibirska-upravlyayut-populyarnymi-servisami-gadanij-i-ezoteriki/", "title": "IT-бизнесмены из Новосибирска управляют популярными сервисами гаданий — Infopro54"},
+        {"url": "https://companies.rbc.ru/id/1217700326931-obschestvo-s-ogranichennoj-otvetstvennostyu-a-kontent-resheniya/", "title": "ООО «А-Контент решения» — карточка компании, РБК Компании"}
+      ]
+    },
+    {
+      "claim": "Мировой рынок астроприложений ~$4,7 млрд (2025), CAGR ~20%",
+      "verdict": "подтверждено",
+      "details": "The Business Research Company: рынок астроприложений $4,73 млрд в 2025 при CAGR ~20,2%; Research and Markets (Astrology App Market Report 2026) даёт близкие $4,75 млрд (2025) и рост до ~$11,7 млрд к 2030 (CAGR ~19,8%); MarkNtel Advisors прогнозирует ~$9 млрд к 2030 при CAGR около 20%. Оценки аналитических агентств расходятся в деталях (отдельные источники дают CAGR до 24,8%), но порядок $4,7-5 млрд в 2025 и CAGR ~20% подтверждается несколькими независимыми исследованиями. Важно: это оценки коммерческих аналитических фирм, а не аудированные данные — использовать как ориентир порядка величины.",
+      "sources": [
+        {"url": "https://www.thebusinessresearchcompany.com/market-insights/astrology-app-market-insights-2025", "title": "Astrology App Market 2025 — The Business Research Company ($4,73 млрд, CAGR 20,2%)"},
+        {"url": "https://www.researchandmarkets.com/reports/6090017/astrology-app-market-report", "title": "Astrology App Market Report 2026 — Research and Markets"},
+        {"url": "https://finance.yahoo.com/news/global-astrology-app-market-triple-103800115.html", "title": "Global Astrology App Market to Reach USD 9 Billion by 2030 — MarkNtel Advisors (Yahoo Finance)"}
+      ]
+    }
+  ]
+}

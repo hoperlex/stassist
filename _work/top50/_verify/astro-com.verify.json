@@ -1,0 +1,67 @@
+{
+  "slug": "astro-com",
+  "checks": [
+    {
+      "claim": "Аудитория ~9,42 млн визитов/мес (Semrush, июнь 2026)",
+      "verdict": "уточнено",
+      "details": "Порядок величины подтверждается, но актуальные данные выше: Semrush за январь 2026 показывает 11,43 млн визитов/мес (средняя сессия 9:30, рост +4,14% м/м). Цифра профиля 9,42 млн — правдоподобная оценка того же порядка, однако свежие независимые данные дают 11+ млн. Заявление сайта о 8-9 млн посетителей/мес совместимо с этим диапазоном (визиты > уникальные посетители).",
+      "sources": [
+        {"url": "https://www.semrush.com/website/astro.com/overview/", "title": "Semrush — astro.com Website Traffic (January 2026: 11.43M визитов)"},
+        {"url": "https://ahrefstop.com/websites/astro.com", "title": "Ahrefs — astro.com Search traffic, Ranking and Backlinks"}
+      ]
+    },
+    {
+      "claim": "Аудитория ~69% женщины, ядро 25-34; сильный прямой трафик (~60-75% direct) при ~35% органики",
+      "verdict": "подтверждено",
+      "details": "Similarweb: аудитория 68,8% женщин / 31,2% мужчин, крупнейшая возрастная группа 25-34. Структура трафика по Similarweb: Direct 60,23% (десктоп), Organic Search 35,42% — цифра «~35% органики по Similarweb» из профиля совпадает точно; «75% direct» относится к оценке Semrush и в целом согласуется с доминированием прямого трафика.",
+      "sources": [
+        {"url": "https://www.similarweb.com/website/astro.com/", "title": "Similarweb — astro.com Traffic Analytics, Ranking & Audience"}
+      ]
+    },
+    {
+      "claim": "Astrodienst PLUS — 12,90 USD/EUR в год: без сторонней рекламы, до 2000 записей рождения, доступ к Astrodatabank Research",
+      "verdict": "подтверждено",
+      "details": "Официальная страница подписки подтверждает все детали: USD/EUR 12.90 в год (1.08 в месяц), отключение сторонней рекламы на срок подписки, расширение хранилища до 2000 астрологических записей, инструмент исследования Astrodatabank, плюс неограниченное использование AstroClick-гороскопов. Срок 12 месяцев, без автопродления (напоминание по email).",
+      "sources": [
+        {"url": "https://www.astro.com/prod/pr_astroplus_e.htm", "title": "Astrodienst Plus — официальная страница подписки"}
+      ]
+    },
+    {
+      "claim": "Extended Daily Horoscope — ~4,16 USD/EUR в мес (~50 в год)",
+      "verdict": "подтверждено",
+      "details": "Официальная страница: годовая подписка USD/EUR 49.90 (эквивалент 4.16 в месяц) — совпадает с профилем. Дополнение: существует и месячный вариант за USD/EUR 6.95, который в профиле не упомянут. Обе опции включают отключение рекламы.",
+      "sources": [
+        {"url": "https://www.astro.com/prod/pr_hkonl_e.htm", "title": "Subscription to the Extended Daily Horoscope — цены USD/EUR 49.90 в год, 6.95 в месяц"}
+      ]
+    },
+    {
+      "claim": "Astro-Databank — база 60 000+ верифицированных данных рождения знаменитостей (Rodden Rating)",
+      "verdict": "уточнено",
+      "details": "Точная цифра «60 000+» независимыми источниками не подтверждается — оценки сильно расходятся. Сам сайт astro.com в заголовке раздела до сих пор заявляет «birth data and horoscope of 20000 celebrities» (устаревший тайтл). Wikipedia фиксирует 72 271 страницу на момент запуска вики в 2009 г. Сторонние справочные источники (Grokipedia) дают ~75 000 управляемых записей на 2025 г. и упоминают «more than 80 000 chart data». Порядок величины (десятки тысяч записей с Rodden Rating) верен, но «60 000+» — неточная оценка; реалистичнее «70 000-80 000+ записей/страниц» либо «20 000+ знаменитостей» по консервативному заявлению самого сайта.",
+      "sources": [
+        {"url": "https://en.wikipedia.org/wiki/Astrodatabank", "title": "Astrodatabank — Wikipedia (72 271 страница при запуске вики в 2009)"},
+        {"url": "https://grokipedia.com/page/Astrodatabank", "title": "Astrodatabank — Grokipedia (~75 000 записей на 2025)"},
+        {"url": "https://www.astro.com/astro-databank/", "title": "Astro-Databank — заголовок сайта: «birth data and horoscope of 20000 celebrities»"}
+      ]
+    },
+    {
+      "claim": "Swiss Ephemeris — точность 0,001 угл. сек. на базе JPL NASA, де-факто индустриальный стандарт астрологического ПО",
+      "verdict": "подтверждено",
+      "details": "Независимые источники (документация pyswisseph на GitHub, обзор RoxyAPI для разработчиков, пакет swephR) подтверждают: Swiss Ephemeris в сжатом режиме совпадает с NASA JPL DE431 в пределах 0,001 угловой секунды (1 mas); ядро — компрессия JPL DE431 (2,8 ГБ → 99 МБ), покрытие ~13 000 г. до н.э. — 17 000 г. н.э. Статус стандарта для астрологического ПО подтверждается сторонними разработчиками (Astrolog, pyswisseph, swephR, RoxyAPI). Примечание: официальная страница называется «for 8000 years and more», при этом онлайн-эфемериды astro.com покрывают 9000 лет — формулировка профиля про 9000 лет относится к эфемеридам сайта, а не к диапазону движка (который шире).",
+      "sources": [
+        {"url": "https://github.com/astrorigin/pyswisseph/blob/master/docs/ephemerides/planetary_and_lunar/three_ephemerides/swiss_ephemeris.rst", "title": "pyswisseph — документация Swiss Ephemeris (точность 0.001\" против JPL DE431)"},
+        {"url": "https://roxyapi.com/blogs/swiss-ephemeris-explained-developers", "title": "RoxyAPI — Swiss Ephemeris Explained for Developers: The Engine Behind Astrology Software"},
+        {"url": "https://rstub.r-universe.dev/swephR", "title": "swephR: High Precision Swiss Ephemeris"}
+      ]
+    },
+    {
+      "claim": "AI-функций практически нет: интерпретации — заранее написанные тексты, публичных генеративных AI-функций не найдено",
+      "verdict": "подтверждено",
+      "details": "Целевой поиск по 2025-2026 гг. не обнаружил ни одного упоминания AI-чат-ботов или генеративных функций у Astrodienst. Независимый обзор Astrodienst 2026 г. (aijet.cc) описывает сервис как «gold standard» по точности расчётов на Swiss Ephemeris, но не упоминает AI-функций. AI-астрология в 2025-2026 развивается у других игроков (AstroSage AI, AstroGPT, Astro Voice AI), а не у astro.com. Доказательство отсутствия по природе неполное, но публичных AI-функций действительно не находится.",
+      "sources": [
+        {"url": "https://aijet.cc/item/astrodienst", "title": "Astrodienst 2026 Review: Free Horoscopes & Professional Astrology (aijet.cc)"},
+        {"url": "https://horoscope.astrosage.com/introducing-astrosage-ai-a-revolutionary-leap-in-astrology/", "title": "AstroSage AI — пример AI-функций у конкурентов, не у Astrodienst"}
+      ]
+    }
+  ]
+}

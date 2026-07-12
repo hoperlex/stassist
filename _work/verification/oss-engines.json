@@ -1,0 +1,50 @@
+{
+  "cluster": "oss-engines",
+  "checks": [
+    {
+      "claim": "astronomy-engine — лицензия MIT, точность ±1 угловая минута против JPL Horizons, есть фазы Луны и восходы/заходы, НЕТ систем домов, Хирона, Лилит, аспектного движка",
+      "verdict": "уточнено",
+      "details": "Лицензия MIT — подтверждено. Фазы Луны и времена восхода/захода/кульминации — подтверждено. Систем астрологических домов, Хирона, Лилит и аспектного движка нет — подтверждено: это чисто астрономическая библиотека, поддерживаемые тела — Солнце, Луна, Меркурий–Плутон и 4 галилеевых спутника Юпитера; никаких астрологических функций. УТОЧНЕНИЕ по точности: автор гарантирует точность «в пределах 1 угловой минуты от результатов NOVAS C 3.1»; JPL Horizons упоминается лишь как один из дополнительных источников кросс-валидации, а не как основной эталон гарантии. Суть (±1' для позиций) верна, но эталон — NOVAS, не JPL Horizons.",
+      "sources": [
+        {"url": "https://github.com/cosinekitty/astronomy", "title": "GitHub: cosinekitty/astronomy (Astronomy Engine) — README, лицензия MIT, заявление о точности"}
+      ]
+    },
+    {
+      "claim": "Данные VSOP87 распространяются свободно и дают точность ~1 угловая секунда для планет",
+      "verdict": "подтверждено",
+      "details": "Таблицы VSOP87 (Bretagnon & Francou, 1988) публично и свободно доступны через VizieR и FTP; используются во множестве открытого ПО (Celestia, Orbiter и др.). Точность 1\" подтверждена, но с разными интервалами гарантии: внутренние планеты (Меркурий, Венера, барицентр Земля-Луна, Марс) — ±4000 лет от J2000; Юпитер и Сатурн — ±2000 лет; Уран и Нептун — ±6000 лет. Для практического диапазона астрологического портала (~1900–2100) точность ~1\" обеспечивается для всех планет. Внимание: Плутон в VSOP87 отсутствует (нужен отдельный источник, например PLUTO95 или Horizons).",
+      "sources": [
+        {"url": "https://en.wikipedia.org/wiki/VSOP_model", "title": "Wikipedia: VSOP model — точность и распространение VSOP87"},
+        {"url": "https://www.scirp.org/reference/referencespapers?referenceid=3449455", "title": "Bretagnon P., Francou G. (1988) Planetary Theories... VSOP87 Solution. Astronomy and Astrophysics, 202, 309"}
+      ]
+    },
+    {
+      "claim": "circular-natal-horoscope-js распространяется под Unlicense (public domain) и содержит реализации систем домов (Плацидус и др.)",
+      "verdict": "подтверждено",
+      "details": "Лицензия Unlicense (public domain) — подтверждено по репозиторию GitHub. Реализовано 7 систем домов: Placidus, Koch, Campanus, Regiomontanus, Topocentric, Whole Sign, Equal House. ВАЖНАЯ ОГОВОРКА для проектного решения: проект фактически не поддерживается — последний релиз v1.1.0 («Campanus») вышел 18.07.2021, около 20 открытых issues без активного решения (по состоянию на июль 2026). Код можно свободно заимствовать/форкать, но полагаться на upstream-поддержку нельзя.",
+      "sources": [
+        {"url": "https://github.com/0xStarcat/CircularNatalHoroscopeJS", "title": "GitHub: 0xStarcat/CircularNatalHoroscopeJS — лицензия Unlicense, список систем домов"},
+        {"url": "https://github.com/0xStarcat/CircularNatalHoroscopeJS/releases", "title": "Releases CircularNatalHoroscopeJS — последний релиз v1.1.0 (июль 2021)"}
+      ]
+    },
+    {
+      "claim": "Данные JPL Horizons (включая эфемериды Хирона) свободны для использования",
+      "verdict": "подтверждено",
+      "details": "Данные Horizons — работа правительства США (NASA/JPL), не охраняются авторским правом (17 U.S.C. § 105), находятся в общественном достоянии; коммерческое использование не ограничено, цитирование источника лишь рекомендуется. Единственные оговорки: нельзя использовать материалы так, чтобы подразумевалось одобрение NASA, и логотипы NASA защищены отдельно. Наличие Хирона проверено живым запросом к Horizons API: объект «2060 Chiron (1977 UB)» возвращается с полными орбитальными данными (a=13.646 а.е., e=0.382, период 50.41 г., решение на 6026 наблюдениях 1895–2026 гг.).",
+      "sources": [
+        {"url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='2060'&OBJ_DATA='YES'&MAKE_EPHEM='NO'", "title": "JPL Horizons API — живой ответ по объекту 2060 Chiron"},
+        {"url": "https://jpl.nasa.gov/copyrights.php", "title": "JPL Image Use Policy — статус материалов NASA/JPL"},
+        {"url": "https://www.nasa.gov/nasa-brand-center/images-and-media/", "title": "NASA: Guidelines for using NASA Images and Media (public domain работ правительства США)"}
+      ]
+    },
+    {
+      "claim": "Плацидус и Кох не работают за полярным кругом (~66.5 широты), нужен fallback",
+      "verdict": "подтверждено",
+      "details": "Подтверждено документацией Swiss Ephemeris (эталонная реализация): выше ~66.56° часть градусов эклиптики становится незаходящей/невосходящей, полудуги не определены, и трисекция Плацидуса/итерации Коха математически невозможны. Swiss Ephemeris в этих случаях автоматически переключается на систему Порфирия (Porphyry) и возвращает предупреждение — это и есть стандартный fallback-паттерн, который стоит повторить в портале. Whole Sign и Equal House работают на любых широтах и тоже пригодны как fallback.",
+      "sources": [
+        {"url": "https://github.com/astrorigin/pyswisseph/blob/master/docs/sidereal_time_ascendant_mc_houses_vertex/astrological_house_systems.rst", "title": "Swiss Ephemeris (pyswisseph docs): Astrological house systems — поведение Placidus/Koch за полярным кругом, fallback на Porphyry"},
+        {"url": "https://www.astro.com/swisseph/sweph_ht_e.htm", "title": "Astrodienst: Swiss Ephemeris Tables of Houses — ограничения систем домов по широте"}
+      ]
+    }
+  ]
+}

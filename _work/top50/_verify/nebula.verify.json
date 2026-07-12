@@ -1,0 +1,63 @@
+{
+  "slug": "nebula",
+  "checks": [
+    {
+      "claim": "Аудитория: 30+ млн загрузок к началу 2024, OBRIO заявляет о 60 млн пользователей платформы",
+      "verdict": "уточнено",
+      "details": "Цифра «60 млн пользователей» действительно заявляется самой OBRIO (obrio.co) и повторяется в профилях компании (Crunchbase, tech.eu); разные источники называют 30, 45 и 60 млн — цифры росли со временем. Однако независимые магазинные данные заметно скромнее: Google Play показывает 5+ млн установок, AppBrain — ~8,1 млн загрузок Android, сама Nebula в описаниях упоминает «сообщество 12+ млн». Суммарные 30-60 млн — заявления компании (включают iOS и веб) и независимо не подтверждаются; профиль корректно помечает их как оценки, но стоит подчеркнуть, что это self-reported цифры.",
+      "sources": [
+        {"url": "https://obrio.co/en/", "title": "OBRIO — официальный сайт (60 млн пользователей Nebula)"},
+        {"url": "https://play.google.com/store/apps/details?id=genesis.nebula&hl=en_US", "title": "Google Play: Nebula Spiritual Guidance — 5M+ установок"},
+        {"url": "https://www.appbrain.com/app/nebula-horoscope-astrology/genesis.nebula", "title": "AppBrain: ~8,1 млн загрузок Android"},
+        {"url": "https://tech.eu/2023/12/05/obrio/", "title": "Tech.eu: How Ukrainian startup OBRIO turned psychic reading into a business"}
+      ]
+    },
+    {
+      "claim": "Консультации в среднем ~$3.99/мин (10-60 кредитов/мин), первые 3 минуты бесплатно + скидка 80% новичкам",
+      "verdict": "подтверждено",
+      "details": "Независимые обзоры подтверждают: средняя цена ~$3.99/мин, диапазон 10-60 кредитов/мин в зависимости от эксперта; новые клиенты получают 3 бесплатные минуты плюс скидку 80% на первое чтение (в некоторых промо — $14 бесплатных кредитов). Бесплатный психик-чат для новичков анонсировался официально (GlobeNewswire, окт. 2023). Один источник упоминает, что 1 кредит-пакет может давать эффективную цену ~$2/мин — цена сильно зависит от выбранного консультанта и пакета.",
+      "sources": [
+        {"url": "https://www.mindbodygreen.com/articles/nebula-review", "title": "Mindbodygreen: Nebula review — 3 бесплатные минуты, ~$3.99/мин"},
+        {"url": "https://www.globenewswire.com/news-release/2023/10/24/2765524/0/en/Nebula-Psychic-Reading-Site-Introduces-Free-Psychic-Chat.html", "title": "GlobeNewswire: Nebula вводит бесплатный психик-чат"},
+        {"url": "https://www.asknebula.com/free-psychic-reading", "title": "Nebula: Free Psychic Reading — промо для новых пользователей"}
+      ]
+    },
+    {
+      "claim": "Подписка в приложении: $7.99-9.99/нед после 3-дневного триала, $39.99-49.99 за 3 месяца, ~$49.99/год",
+      "verdict": "уточнено",
+      "details": "Недельная подписка $7.99 (чаще всего) или $9.99 с 3-дневным бесплатным триалом подтверждается независимыми обзорами. Но по длинным планам данные расходятся: встречаются варианты $24.99/мес и $29.99 за 3 месяца наряду с $39.99 за 3 мес и $49.99/год из профиля. Цены менялись по годам и различаются между iOS/Android/веб — вилку за 3 месяца следует расширить до $29.99-39.99 или пометить как переменную.",
+      "sources": [
+        {"url": "https://www.mindbodygreen.com/articles/nebula-review", "title": "Mindbodygreen: тарифы подписки Nebula ($7.99/нед, 3-дневный триал)"},
+        {"url": "https://apps.apple.com/us/app/nebula-spiritual-guidance/id1459969523", "title": "App Store: Nebula Spiritual Guidance — in-app purchases"},
+        {"url": "https://www.sweetyhigh.com/read/nebula-horoscope-astrology-app-review-032521", "title": "SweetyHigh: обзор Nebula — недельная подписка $9.99"}
+      ]
+    },
+    {
+      "claim": "Живые консультации с 900+ эдвайзерами (психики, астрологи, тарологи), доступны 24/7",
+      "verdict": "подтверждено",
+      "details": "Сам сайт Nebula говорит о «900 trusted advisors available 24/7», сторонние описания и профили компании называют «более 1000» и даже «более 1500» консультантов. Формулировка «900+» корректна (нижняя граница); фактическое число, вероятно, уже превышает 1000.",
+      "sources": [
+        {"url": "https://www.asknebula.com/psychics", "title": "Nebula: All Spiritual Advisors in One Place"},
+        {"url": "https://apps.apple.com/us/app/nebula-spiritual-guidance/id1459969523", "title": "App Store: Nebula — сотни консультантов 24/7"},
+        {"url": "https://www.crunchbase.com/organization/nebula-horoscope-astrology", "title": "Crunchbase: Nebula — 1000+ психиков по всему миру"}
+      ]
+    },
+    {
+      "claim": "Отзывы на Trustpilot: 17k+ отзывов, рейтинг 4.3; при этом массовые жалобы на биллинг и автопродление",
+      "verdict": "подтверждено",
+      "details": "Trustpilot показывает рейтинг 4.3 звезды при 17 000+ отзывов на asknebula.com. Негативные отзывы систематически упоминают именно то, что указано в профиле: непрозрачные автоподписки («advertising is unclear & borderline deceptive»), неопознанные списания (например, 39 евро с меткой THENEBULAAP NICOSIA CY), трату кредитов из-за медленных ответов консультантов. Разрыв между высокой средней оценкой и типовыми жалобами на биллинг подтверждается.",
+      "sources": [
+        {"url": "https://www.trustpilot.com/review/asknebula.com", "title": "Trustpilot: Nebula (asknebula.com) — 4.3, 17k+ отзывов"},
+        {"url": "https://www.insidermonkey.com/blog/5-psychic-reading-apps-ranked-by-trustpilot-reviews-1799513/", "title": "Insider Monkey: рейтинг психик-приложений по Trustpilot"}
+      ]
+    },
+    {
+      "claim": "Инструмент для пар «Relationship Check-In» создан в партнёрстве с психологом-астрологом Dr. Jennifer Freed",
+      "verdict": "подтверждено",
+      "details": "Подтверждается: «Relationship Check-In» — инструмент для укрепления близости пар, созданный в 2022 году в партнёрстве Nebula с celebrity-астрологом и автором Dr. Jennifer Freed, на основе психологических принципов здоровых отношений и астрологического понимания стихий. Оговорка: единственный найденный источник — Wikipedia (уже указан в профиле), других независимых подтверждений в выдаче нет; факт малозначимый и, вероятно, устаревающий (2022 год).",
+      "sources": [
+        {"url": "https://en.wikipedia.org/wiki/Nebula_(spiritual_guidance)", "title": "Wikipedia: Nebula (spiritual guidance) — Relationship Check-In, 2022"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "cluster": "seo-facts",
+  "checks": [
+    {
+      "claim": "Google с конца 2023 показывает FAQPage-сниппеты только гос- и мед-сайтам, HowTo-сниппеты убраны в сентябре 2023",
+      "verdict": "уточнено",
+      "details": "Суть верна, но дата анонса — не «конец 2023», а август 2023: официальный пост Google Search Central «Changes to HowTo and FAQ rich results» опубликован 8 августа 2023. FAQ rich results с тех пор показываются только «известным авторитетным государственным и медицинским сайтам» (well-known, authoritative government and health websites). HowTo rich results убраны с мобильной выдачи в августе 2023, а с 13 сентября 2023 — и с десктопа, т.е. формат полностью деприкейчен. На июль 2026 изменения остаются в силе (Search Engine Land, обзор «rise and fall of FAQ schema», подтверждает: разметку можно оставить, но видимых сниппетов она не даёт). Отчёты Search Console и поддержка в API также свёрнуты.",
+      "sources": [
+        {"url": "https://developers.google.com/search/blog/2023/08/howto-faq-changes", "title": "Changes to HowTo and FAQ rich results — Google Search Central Blog (август 2023)"},
+        {"url": "https://www.searchenginejournal.com/google-drops-faq-rich-results-from-search/574429/", "title": "Google Drops FAQ Rich Results From Search — Search Engine Journal"},
+        {"url": "https://searchengineland.com/faq-schema-rise-fall-seo-today-463993", "title": "The rise and fall of FAQ schema — and what it means for SEO today — Search Engine Land"}
+      ]
+    },
+    {
+      "claim": "Яндекс придаёт большой вес поведенческим факторам; для Google важнее E-E-A-T и ссылки",
+      "verdict": "подтверждено",
+      "details": "Подтверждается несколькими независимыми SEO-источниками, в т.ч. анализами утечки исходного кода Яндекса (январь 2023): поведенческие сигналы (CTR из выдачи — вес ~0.8, dwell time ~0.75) — доминирующие факторы MatrixNet, Яндекс открыто использует их как высоковесовые сигналы. Google, напротив, публично преуменьшает прямое влияние сырых поведенческих метрик (ссылаясь на накрутки) и опирается на авторитетность, траст, ссылочный профиль и E-E-A-T. Ссылки в Яндексе — «один из кусочков пазла, и небольшой» (тематический индекс цитирования, штраф за нетематические ссылки), тогда как в Google бэклинки — критический фактор. Корреляция наборов факторов Яндекса и Google оценивается ~70%, но веса принципиально различаются.",
+      "sources": [
+        {"url": "https://www.searchenginejournal.com/9-biggest-differences-yandex-vs-google-seo/168628/", "title": "10 Biggest Differences Between Yandex & Google SEO — Search Engine Journal"},
+        {"url": "https://seosherpa.com/yandex-seo/", "title": "Yandex SEO in 2026: How to Rank on Russia's #1 Search Engine — SEO Sherpa"},
+        {"url": "https://www.morelogin.com/blog/google-vs-yandex", "title": "Google vs Yandex: Behavioral Factors in 2025 — MoreLogin Blog"}
+      ]
+    },
+    {
+      "claim": "Запросы «гороскоп на [год]» пикуют в ноябре-декабре",
+      "verdict": "уточнено",
+      "details": "Декабрьский пик подтверждается косвенно первоисточником: исследование Яндекса о запросах 31 декабря относит «гороскопы на следующий год» к ядру новогодних запросов (~16% запросов 31 декабря — новогодняя тематика: поздравления, рецепты, гороскопы на следующий год); общий пик предновогоднего поискового интереса фиксируется 23-24 и 31 декабря, а разгон интереса к новогодней тематике начинается с конца сентября. Однако прямых открытых данных Wordstat/Google Trends именно по кривой «гороскоп на [год]» с помесячной разбивкой (и конкретно по доле ноября) в открытых источниках не найдено. Вывод: декабрьский пик достоверен, ноябрь — правдоподобен, но точная форма кривой требует ручной проверки во вкладке «Динамика» Яндекс Вордстата.",
+      "sources": [
+        {"url": "https://yandex.ru/company/researches/2015/ya_december_31", "title": "31 декабря в поиске Яндекса — исследование компании Яндекс"},
+        {"url": "https://ppc.world/articles/povedenie-polzovateley-nakanune-zimnih-prazdnikov-interesnye-issledovaniya-i-poleznye-materialy/", "title": "Поведение пользователей накануне зимних праздников — ppc.world"}
+      ]
+    },
+    {
+      "claim": "У horoscopes.rambler.ru ~42% десктоп-трафика — органический поиск (Similarweb)",
+      "verdict": "подтверждено",
+      "details": "Similarweb (страница horoscopes.rambler.ru, данные на апрель 2026): органический поиск — главный источник десктоп-трафика, 41.96% визитов за последний месяц; далее прямые заходы (Direct) и рефералы. Цифра ~42% точно соответствует актуальным данным Similarweb.",
+      "sources": [
+        {"url": "https://www.similarweb.com/website/horoscopes.rambler.ru/", "title": "horoscopes.rambler.ru Traffic Analytics, Ranking & Audience [April 2026] — Similarweb"}
+      ]
+    },
+    {
+      "claim": "Частотность «натальная карта» в Wordstat — порядка сотен тысяч показов/мес",
+      "verdict": "не проверяемо",
+      "details": "Абсолютную цифру частотности в открытых источниках найти не удалось: Wordstat отдаёт данные только авторизованным пользователям, а публикации приводят лишь относительную динамику. Косвенные подтверждения высокого спроса есть: обзор на vc.ru (2026) со ссылкой на Wordstat фиксирует рост запроса «натальная карта» на 67% за три года (апрель 2023 → апрель 2026), рост «асцендент» на 92%, «совместимость по дате рождения» на 134%; 62% запросов — с мобильных. Порядок величины «сотни тысяч показов/мес» (широкая частотность) правдоподобен для запроса такого класса, но независимо не подтверждён — требует ручной проверки напрямую в wordstat.yandex.ru перед принятием проектных решений, завязанных на эту цифру.",
+      "sources": [
+        {"url": "https://vc.ru/services/2923780-natalnaya-karta-onlayn-7-luchshikh-servisov", "title": "Натальная карта онлайн: разбираем 7 сервисов — vc.ru (динамика Wordstat 2023-2026)"},
+        {"url": "https://wordstat.yandex.ru/", "title": "Яндекс Вордстат — первоисточник для ручной проверки частотности"}
+      ]
+    }
+  ]
+}

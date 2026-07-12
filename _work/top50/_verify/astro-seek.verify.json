@@ -1,0 +1,59 @@
+{
+  "slug": "astro-seek",
+  "checks": [
+    {
+      "claim": "Аудитория ~10,8–12,6 млн визитов/мес (февраль–апрель 2026, Similarweb), средняя сессия ~10 минут",
+      "verdict": "подтверждено",
+      "details": "Независимый поиск по данным Similarweb/Semrush: апрель 2026 — 12,59 млн визитов, март — 12,29 млн, февраль — 10,76–11,3 млн; средняя длительность сессии 10:04, ~5,9 страниц за визит. Диапазон профиля совпадает с точностью до сотых.",
+      "sources": [
+        {"url": "https://www.semrush.com/website/astro-seek.com/overview/", "title": "astro-seek.com Website Traffic, Ranking, Analytics [April 2026] — Semrush"},
+        {"url": "https://www.similarweb.com/website/astro-seek.com/", "title": "astro-seek.com Traffic Analytics — Similarweb"}
+      ]
+    },
+    {
+      "claim": "Всё бесплатно, платных тарифов нет; монетизация — только реклама (баннеры)",
+      "verdict": "подтверждено",
+      "details": "Независимый обзор-сравнение (my-zodiac-ai, 2026) подтверждает: все калькуляторы и функции astro-seek.com бесплатны, сайт ad-supported, реклама навязчива, но не блокирует функции. ВАЖНОЕ ПРЕДОСТЕРЕЖЕНИЕ: в поиске всплывают сайты-двойники astroseek.org и astro-seek.app с платной подпиской (триал $1, затем ~$50/мес) — это НЕ официальный astro-seek.com; их цены не относятся к профилируемому конкуренту.",
+      "sources": [
+        {"url": "https://my-zodiac-ai.com/blog/astro-seek-vs-my-zodiac-ai-2026", "title": "Astro-Seek Review: Free Birth Charts, Limits, AI Alternative (2026)"},
+        {"url": "https://astro-seek.app/", "title": "astro-seek.app — сторонний сайт-двойник с платной воронкой (не путать с astro-seek.com)"}
+      ]
+    },
+    {
+      "claim": "Мобильного приложения нет — только адаптивный сайт",
+      "verdict": "подтверждено",
+      "details": "Независимый обзор 2026 года прямо указывает: «нет мобильного приложения — сайт работает на мобильных, но не был разработан под них», и называет это одним из главных недостатков платформы.",
+      "sources": [
+        {"url": "https://my-zodiac-ai.com/blog/astro-seek-vs-my-zodiac-ai-2026", "title": "Astro-Seek Review: Free Birth Charts, Limits, AI Alternative (2026)"}
+      ]
+    },
+    {
+      "claim": "База знаменитостей Astro-Databank: 94 000+ карт известных людей",
+      "verdict": "уточнено",
+      "details": "Независимые поисковые данные (описание famouspeople.astro-seek.com в выдаче) говорят о базе «90 000 знаменитостей». Порядок величины подтверждён, но точная цифра 94 000+ независимо не верифицирована: сам сайт famouspeople.astro-seek.com отдаёт HTTP 403 ботам (следствие анти-скрейпинг защиты). Рекомендация: писать «90 000+» или «~90–94 тыс.». Не путать с Astro-Databank на astro.com (~20 000 карт, база Lois Rodden) — это другой проект с похожим названием.",
+      "sources": [
+        {"url": "https://famouspeople.astro-seek.com/", "title": "Astro-Databank, Astrology Database, Famous People Charts (в выдаче: база 90 000 знаменитостей)"},
+        {"url": "https://www.astro.com/astro-databank/", "title": "Astro-Databank на astro.com — отдельный проект, ~20 000 карт"}
+      ]
+    },
+    {
+      "claim": "В 2026 ИИ-скрейперы обрушили сайт; доступ закрывали для незарегистрированных; инструмент «Astrology Data Export» для ChatGPT появился ПОСЛЕ инцидента и вызвал отток пользователей",
+      "verdict": "уточнено",
+      "details": "Сам инцидент подтверждён: около 12 марта 2026 «server overload» от ИИ-ботов, сайт был недоступен минимум пару дней, доступ временно ограничили только зарегистрированными пользователями, часть пользователей в знак протеста удалила аккаунты (есть скриншоты). НО хронология в профиле неверна: по статье Daily Dot/Yahoo, инструмент экспорта для ChatGPT существовал на сайте ЗАДОЛГО ДО падения (часть пользователей даже винила его в привлечении ботов, другие это опровергали), а не был добавлен после. После восстановления сайт работает вместе с этим инструментом.",
+      "sources": [
+        {"url": "https://tech.yahoo.com/articles/final-straw-ai-bots-crash-190540259.html", "title": "«The final straw»: AI bots crash popular astrology site AstroSeek (Yahoo Tech / Daily Dot, март 2026)"},
+        {"url": "https://x.com/dwlz/status/2032275606033903911", "title": "Dan Loewenherz (X): Astro-Seek закрыл публичный доступ из-за наплыва ИИ-ботов"}
+      ]
+    },
+    {
+      "claim": "Сайт делается фактически одним человеком — Петром Соуралом (Petr Soural) — с 2012 года",
+      "verdict": "подтверждено",
+      "details": "Подтверждено несколькими независимыми источниками: пост в Threads («Petr, the owner and programmer... since 2012», «one man show»), профиль LinkedIn (Petr Soural — Architect / Programmer / Astrologer, Прага, Чехия), запись в Astro-Databank на astro.com (Petr Soural, род. 9.05.1983, «founded, created and maintains the Astro-Seek website»).",
+      "sources": [
+        {"url": "https://cz.linkedin.com/in/petr-soural", "title": "Petr Soural — Architect / Programmer / Astrologer (LinkedIn)"},
+        {"url": "https://www.astro.com/astro-databank/Soural,_Petr", "title": "Soural, Petr — Astro-Databank (astro.com): основатель и разработчик Astro-Seek"},
+        {"url": "https://www.threads.com/@ziggyastrology/post/DVybYUOFpWz/", "title": "Threads: Петр — владелец и программист Astro-Seek с 2012 года"}
+      ]
+    }
+  ]
+}

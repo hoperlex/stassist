@@ -1,0 +1,44 @@
+{
+  "cluster": "se-license",
+  "checks": [
+    {
+      "claim": "Swiss Ephemeris до версии 2.10.0 включительно — GPL-2.0, с 2.10.1 (2021) — AGPL-3.0",
+      "verdict": "подтверждено",
+      "details": "Официальный сайт Astrodienst: «Since Swiss Ephemeris release 2.10.01 the GPL license has been replaced with the AGPL license» (в рамках двойного лицензирования AGPL / Professional). Нюанс: старая лицензия формально была «GNU public license version 2 or later» (GPL-2.0-or-later), а не строго GPL-2.0 — это подтверждает старый файл LICENSE (редакция 1997–2008). Текущий LICENSE в официальном репозитории aloistr/swisseph ссылается на AGPL-3.0 (gnu.org/licenses/agpl-3.0.html). Формулировка «до 2.10.0 — GPL-2.0, с 2.10.1 — AGPL-3.0» дословно используется в README биндингов sweph и по сути верна.",
+      "sources": [
+        {"url": "https://www.astro.com/swisseph/swephinfo_e.htm", "title": "Astrodienst — Swiss Ephemeris info (двойное лицензирование, смена GPL→AGPL с 2.10.01)"},
+        {"url": "https://www.astro.com/ftp/swisseph/LICENSE", "title": "Официальный LICENSE Swiss Ephemeris (текущий, AGPL-3.0 / Professional)"},
+        {"url": "https://raw.githubusercontent.com/ygrenier/SwissEphNet/master/LICENSE", "title": "Старая редакция LICENSE Swiss Ephemeris (1997–2008): «GNU public license version 2 or later»"}
+      ]
+    },
+    {
+      "claim": "Профессиональная лицензия Astrodienst стоит порядка 700-750 CHF разово (первая лицензия)",
+      "verdict": "уточнено",
+      "details": "Порядок суммы верен, но структура прайса изменилась. По состоянию на июль 2026 действует контракт «Edition June 2026»: единственный вариант — unlimited license за CHF 700 разово, срок действия 99 лет. Старая схема «первая лицензия CHF 750 + CHF 400 за каждую дополнительную, unlimited CHF 1550» больше не фигурирует в актуальном прайс-листе astro.com. Т.е. для проекта закладывать нужно CHF 700 разово (unlimited), а не 750 за «первую» лицензию.",
+      "sources": [
+        {"url": "https://www.astro.com/swisseph/swephprice_e.htm", "title": "Astrodienst — актуальный прайс-лист Swiss Ephemeris (Professional Edition unlimited: CHF 700)"},
+        {"url": "http://www.astro.com/swisseph/secont_e.pdf", "title": "Swiss Ephemeris Professional License contract, Edition June 2026 (unlimited license at CHF 700, срок 99 лет)"}
+      ]
+    },
+    {
+      "claim": "AGPL для SaaS означает обязанность открыть исходный код сервиса",
+      "verdict": "подтверждено",
+      "details": "AGPL-3.0 (раздел 13, «Remote Network Interaction») создана именно для закрытия «SaaS-лазейки» GPL: если пользователи взаимодействуют с программой по сети, им обязаны предложить полный соответствующий исходный код (Corresponding Source). Поскольку копилефт AGPL распространяется на производную работу целиком, сервис, слинкованный с AGPL-библиотекой (Swiss Ephemeris ≥2.10.1), обязан открыть свой серверный код под AGPL-совместимой лицензией. Astrodienst прямо пишет: выбравший AGPL обязан поместить весь свой программный проект под AGPL или совместимую лицензию; альтернатива — Professional License, снимающая это требование (контракт июнь 2026 явно покрывает серверный сценарий и не требует раскрытия кода).",
+      "sources": [
+        {"url": "https://www.gnu.org/licenses/agpl-3.0.html", "title": "GNU AGPL v3 — официальный текст (раздел 13 о сетевом взаимодействии)"},
+        {"url": "https://www.astro.com/swisseph/swephinfo_e.htm", "title": "Astrodienst: выбор AGPL обязывает открыть весь проект под AGPL/совместимой лицензией"},
+        {"url": "https://fossa.com/blog/open-source-software-licenses-101-agpl-license/", "title": "FOSSA — AGPL License 101 (сетевое использование = обязанность предоставить исходники)"}
+      ]
+    },
+    {
+      "claim": "npm-пакет sweph (timotejroiko) активен и при профлицензии доступен под LGPL-3.0; npm swisseph (mivion) заброшен",
+      "verdict": "подтверждено",
+      "details": "sweph: последняя публикация в npm — 2.10.3-7 от 28.06.2026 (две недели назад на момент проверки), поле license в реестре npm: «(AGPL-3.0-or-later OR LGPL-3.0-or-later)»; README прямо указывает: «If you own a professional license for the Swiss Ephemeris, you may use any version of this library under LGPL-3.0». swisseph (автор mivion): последняя версия 0.5.17 опубликована 25.01.2022, обновлений в реестре нет более 4,5 лет — пакет фактически заброшен (данные реестра registry.npmjs.org, поле time).",
+      "sources": [
+        {"url": "https://github.com/timotejroiko/sweph", "title": "GitHub timotejroiko/sweph — README (условия лицензирования, LGPL-3.0 при профлицензии), релизы"},
+        {"url": "https://registry.npmjs.org/sweph", "title": "npm registry sweph — latest 2.10.3-7, publish 2026-06-28, license (AGPL-3.0-or-later OR LGPL-3.0-or-later)"},
+        {"url": "https://registry.npmjs.org/swisseph", "title": "npm registry swisseph (mivion) — latest 0.5.17, publish 2022-01-25, с тех пор обновлений нет"}
+      ]
+    }
+  ]
+}
