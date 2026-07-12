@@ -5,9 +5,12 @@
  * `getDb` (Ф2) — типобезопасная drizzle-обёртка (`@stassist/db`) поверх того же пула, для
  * репозиториев auth/birth-profiles/consents/etc. Возвращает `undefined` в degraded-режиме —
  * вызывающий код (см. app.ts) обязан явно решить, что делать без БД (обычно 503).
+ *
+ * `resolvePgPoolConfig` (см. @stassist/db/pg-ssl) досчитывает `ssl` — локальный docker-compose
+ * Postgres работает без SSL, Supabase (dev/стейдж-альтернатива, ADR-8) требует его обязательно.
  */
 import { Pool } from 'pg';
-import { createDb, type Db } from '@stassist/db';
+import { createDb, resolvePgPoolConfig, type Db } from '@stassist/db';
 import type { Config } from '@stassist/shared';
 
 let pool: Pool | undefined;
@@ -15,7 +18,7 @@ let db: Db | undefined;
 
 export function getPool(config: Config): Pool | undefined {
   if (!config.db.url) return undefined;
-  pool ??= new Pool({ connectionString: config.db.url, max: 10 });
+  pool ??= new Pool({ ...resolvePgPoolConfig(config.db.url), max: 10 });
   return pool;
 }
 

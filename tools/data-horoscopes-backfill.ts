@@ -24,7 +24,7 @@
  */
 import { Pool } from 'pg';
 import type { Logger } from 'pino';
-import { createDb } from '@stassist/db';
+import { createDb, resolvePgPoolConfig } from '@stassist/db';
 import { StubLlmProvider } from '@stassist/shared';
 // apps/* (в отличие от packages/*) не публикует workspace-экспорт — забираем собранный dist
 // напрямую по относительному пути (см. doc-комментарий файла выше).
@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   }
   const force = process.argv.includes('--force');
 
-  const pool = new Pool({ connectionString });
+  const pool = new Pool(resolvePgPoolConfig(connectionString));
   const db = createDb(pool);
   const logger = consoleLogger();
   const deps: HoroscopeJobDeps = { db, llm: new StubLlmProvider(), logger };

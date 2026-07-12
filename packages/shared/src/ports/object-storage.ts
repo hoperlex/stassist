@@ -1,6 +1,8 @@
 /**
- * Порт объектного хранилища (S3-совместимого). Реальная реализация (Yandex Object Storage /
- * MinIO) появится в поздних фазах; здесь — интерфейс + тривиальный in-memory стаб (§2 конвенций).
+ * Порт объектного хранилища (S3-совместимого). Реальная реализация — `S3ObjectStorage`
+ * (s3-object-storage.ts, s3.cloud.ru/MinIO через `@aws-sdk/client-s3`, см. doc-комментарий там);
+ * здесь — интерфейс + тривиальный in-memory стаб (§2 конвенций реализации), дефолт для
+ * unit-тестов и development без `STORAGE=s3`.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -8,6 +10,8 @@ import path from 'node:path';
 export interface ObjectStorage {
   put(key: string, data: Buffer | string, contentType?: string): Promise<void>;
   get(key: string): Promise<Buffer | null>;
+  /** Существует ли объект под этим ключом (без скачивания тела). */
+  exists(key: string): Promise<boolean>;
   /** Подписанная (или, для стаба, условная) ссылка на объект. */
   getSignedUrl(key: string, expiresInSec?: number): Promise<string>;
   delete(key: string): Promise<void>;
@@ -48,6 +52,10 @@ export class MemoryObjectStorage implements ObjectStorage {
 
   async get(key: string): Promise<Buffer | null> {
     return this.store.get(key)?.data ?? null;
+  }
+
+  async exists(key: string): Promise<boolean> {
+    return this.store.has(key);
   }
 
   async getSignedUrl(key: string, expiresInSec = 3600): Promise<string> {

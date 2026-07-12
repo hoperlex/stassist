@@ -18,6 +18,15 @@ describe('MemoryObjectStorage', () => {
     expect(await storage.get('k')).toBeNull();
   });
 
+  it('exists() отражает наличие объекта', async () => {
+    const storage = new MemoryObjectStorage({ persist: false });
+    expect(await storage.exists('k')).toBe(false);
+    await storage.put('k', 'v');
+    expect(await storage.exists('k')).toBe(true);
+    await storage.delete('k');
+    expect(await storage.exists('k')).toBe(false);
+  });
+
   it('возвращает детерминированную по форме подписанную ссылку', async () => {
     const storage = new MemoryObjectStorage({ persist: false });
     const url = await storage.getSignedUrl('k', 60);

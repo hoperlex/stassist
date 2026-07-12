@@ -68,6 +68,67 @@ pnpm --filter @stassist/worker dev   # degraded без DATABASE_URL, не кра
 без него — авто-skip), `test:e2e` (Playwright, гейт `RUN_E2E=1`, нужен `pnpm exec playwright
 install chromium`).
 
+> **Известная проблема (`tsx` dev-режим api/worker + `astronomy-engine`).** `pnpm --filter
+> @stassist/api dev|start` и `pnpm --filter @stassist/worker dev|start` могут упасть на старте с
+> `TypeError: Cannot read properties of undefined (reading 'Mercury')`
+> (`packages/astro-core/src/ephemeris/planets.ts`) — это ESM/CJS-интероп несовместимость между
+> `tsx`/esbuild и dual-package экспортами `astronomy-engine` (пакет отдаёт разные сборки на
+> `import`/`require`, см. его `package.json` `exports`), не связанная с БД/S3 и не вызванная
+> изменениями этой задачи (воспроизводится и на чистом дереве). `pnpm -r build` (обычный `tsc`,
+> НЕ esbuild) собирает эти же пакеты без проблем. **Обходной путь**: гонять api/worker через
+> собранный `dist` — именно так и работает прод (см. `apps/api/Dockerfile`/`apps/worker/Dockerfile`
+> `CMD ["node", "dist/index.js"]`):
+> ```bash
+> pnpm -r build
+> node apps/api/dist/index.js       # вместо `pnpm --filter @stassist/api dev`
+> node apps/worker/dist/index.js    # вместо `pnpm --filter @stassist/worker dev`
+> ```
+> `apps/web` не зависит от `@stassist/astro-core` напрямую — `pnpm --filter @stassist/web dev`
+> не задет. Требует отдельного расследования/фикса (не в рамках этой задачи).
+
+### Supabase (dev/стейдж-альтернатива БД, ADR-8) + S3 (s3.cloud.ru)
+
+БД — по умолчанию локальный `DATABASE_URL` (docker-compose, без SSL). Как альтернатива на
+dev/стейдже — облачный **Supabase** с СИНТЕТИЧЕСКИМИ данными (152-ФЗ: реальные ПД россиян в
+зарубежную БД — нельзя, см. `docs/architecture/21-техническая-архитектура.md` §10, ADR-8):
+
+```bash
+export DATABASE_URL="$DATABASE_URL_SUPABASE_STAGE"   # значение — в .env, не коммитится
+pnpm db:migrate   # применяет drizzle/migrations/*.sql (pgcrypto/vector/pg_trgm — Supabase их поддерживает)
+pnpm db:seed      # применяет drizzle/seed/*.sql (идемпотентно)
+pnpm data:horoscopes-backfill   # наполняет horoscopes на сегодня (иначе таблица пустая)
+```
+
+Особенности Supabase, которые важно учесть:
+- **SSL обязателен.** `pg`/`pg-boss` в этом репозитории досчитывают `ssl` автоматически
+  (`packages/db/src/pg-ssl.ts`): для localhost/127.0.0.1 без SSL, для любого другого хоста без
+  явного `sslmode` в DSN — форсируют `{ rejectUnauthorized: false }`. Если DSN уже содержит
+  `?sslmode=require|no-verify|...` — используется он как есть (стандартный разбор `pg`).
+- **Пул-порт (6543) vs прямой/session-порт (5432).** Миграции (advisory lock) и `pg-boss`
+  (LISTEN/NOTIFY, подготовленные операторы) требуют session-режима — используйте прямой порт
+  Supabase (5432) или пуловый хост в session-режиме, НЕ transaction-pooler (6543).
+- `tools/db-migrate.ts`/`tools/db-seed.ts` содержат СВОЮ маленькую копию SSL-логики (не импортируют
+  `@stassist/db`) — см. doc-комментарий в файлах: причина — известная проблема `tsx` +
+  `astronomy-engine` выше.
+
+Объектное хранилище — по умолчанию `STORAGE=stub` (`MemoryObjectStorage`, in-memory + копия в
+`_work/tmp/storage`). Реальный адаптер — S3-совместимое API (**s3.cloud.ru** на проде, MinIO
+локально, см. `docker-compose.yml`):
+
+```bash
+export STORAGE=s3
+export S3_ENDPOINT=...        # см. .env.example — https://s3.cloud.ru (прод) / MinIO (локально)
+export S3_REGION=...
+export S3_BUCKET=...
+export S3_ACCESS_KEY_ID=...
+export S3_SECRET_ACCESS_KEY=...
+```
+
+`S3ObjectStorage` (`packages/shared/src/ports/s3-object-storage.ts`) — `@aws-sdk/client-s3` +
+`@aws-sdk/s3-request-presigner`, `forcePathStyle: true` (обязательно для не-AWS S3), presigned
+GET с настраиваемым TTL. Реальные значения — только в `.env` (не коммитится); плейсхолдеры и
+описание переменных — [.env.example](.env.example).
+
 ### Секреты
 
 По ТЗ секреты никогда не попадают в git/образы/фронтенд/логи/БД. Локально — файл `.env`

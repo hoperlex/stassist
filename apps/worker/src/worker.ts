@@ -8,7 +8,7 @@ import { PgBoss } from 'pg-boss';
 import type { Logger } from 'pino';
 import pino from 'pino';
 import { Pool } from 'pg';
-import { createDb } from '@stassist/db';
+import { createDb, resolvePgPoolConfig, resolvePgSsl } from '@stassist/db';
 import { createPorts, type Config, type LlmProvider } from '@stassist/shared';
 import { createLlmProviderChain } from '@stassist/llm';
 import { buildAstroCalendarWindow } from './astro-calendar/build-window.js';
@@ -134,10 +134,12 @@ export class Worker {
       return;
     }
 
-    const boss = new PgBoss(this.config.db.url);
+    // resolvePgSsl/resolvePgPoolConfig (см. @stassist/db/pg-ssl) — робастный ssl: локальный
+    // docker-compose Postgres без SSL, Supabase (dev/стейдж-альтернатива, ADR-8) — SSL обязателен.
+    const boss = new PgBoss({ connectionString: this.config.db.url, ssl: resolvePgSsl(this.config.db.url) });
     boss.on('error', (err) => this.logger.error({ err }, 'pg-boss error'));
 
-    const pool = new Pool({ connectionString: this.config.db.url });
+    const pool = new Pool(resolvePgPoolConfig(this.config.db.url));
     this.pool = pool;
     const db = createDb(pool);
     const ports = createPorts(this.config);

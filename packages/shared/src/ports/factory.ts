@@ -1,7 +1,10 @@
 /**
- * Единая точка сборки адаптеров портов по конфигурации. Ф2 подключает реальные адаптеры
- * `Mailer`(smtp)/`Geocoder`(nominatim) — `storage`/`payments` по-прежнему появятся в поздних
- * фазах и намеренно бросают понятную ошибку при попытке выбрать их не-stub драйвер раньше срока.
+ * Единая точка сборки адаптеров портов по конфигурации. Реальные адаптеры: `Mailer`(smtp),
+ * `Geocoder`(nominatim), `PaymentProvider`(yookassa), `ObjectStorage`(s3 — s3.cloud.ru/MinIO,
+ * см. s3-object-storage.ts). Как и `buildMailer`/`buildGeocoder`/`buildPaymentProvider` ниже,
+ * `buildStorage` бросает понятную ошибку, если выбран не-stub драйвер без нужных переменных —
+ * в production это перехватывает `parseConfig` раньше (fail-fast), в dev/test ошибка всплывает
+ * только когда порт реально используется (см. doc-комментарий config.ts §3 конвенций).
  *
  * `llm`/`embeddings`: этот пакет (`@stassist/shared`) НЕ содержит реальных LLM-адаптеров (нет
  * SDK-зависимостей здесь специально, см. §2 конвенций реализации) — `createPorts` всегда
@@ -12,6 +15,7 @@
  */
 import type { Config } from '../config.js';
 import { type ObjectStorage, MemoryObjectStorage } from './object-storage.js';
+import { S3ObjectStorage } from './s3-object-storage.js';
 import { type Mailer, ConsoleMailer, SmtpMailer } from './mailer.js';
 import { type Geocoder, FixtureGeocoder, NominatimGeocoder } from './geocoder.js';
 import { type PaymentProvider, FakePaymentProvider } from './payment-provider.js';
@@ -59,6 +63,30 @@ function buildPaymentProvider(config: Config): PaymentProvider {
   throw new Error(`PAYMENTS=${config.payments.driver}: неизвестный драйвер`);
 }
 
+/** Дефолт региона для S3-совместимых провайдеров без AWS-региона (s3.cloud.ru/MinIO не требуют
+ *  конкретного региона для маршрутизации — значение участвует только в SigV4-подписи). */
+const DEFAULT_S3_REGION = 'us-east-1';
+
+function buildStorage(config: Config): ObjectStorage {
+  if (config.storage.driver === 'stub') return new MemoryObjectStorage();
+  if (config.storage.driver === 's3') {
+    const { endpoint, region, bucket, accessKeyId, secretAccessKey } = config.storage;
+    if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) {
+      throw new Error(
+        'STORAGE=s3: не заданы S3_ENDPOINT/S3_BUCKET/S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY (в production это ловит parseConfig раньше, см. config.ts)',
+      );
+    }
+    return new S3ObjectStorage({
+      endpoint,
+      region: region ?? DEFAULT_S3_REGION,
+      bucket,
+      accessKeyId,
+      secretAccessKey,
+    });
+  }
+  throw new Error(`STORAGE=${config.storage.driver}: неизвестный драйвер`);
+}
+
 function buildGeocoder(config: Config): Geocoder {
   if (config.geocoder.driver === 'stub') return new FixtureGeocoder();
   if (config.geocoder.driver === 'nominatim') {
@@ -74,16 +102,10 @@ function buildGeocoder(config: Config): Geocoder {
 }
 
 export function createPorts(config: Config): Ports {
-  if (config.storage.driver !== 'stub') {
-    throw new Error(
-      `STORAGE=${config.storage.driver}: реальный адаптер появится в поздней фазе, сейчас доступен только stub`,
-    );
-  }
-
   // llm/embeddings: базовые порты — ВСЕГДА стабы (см. doc-комментарий выше). Реальные адаптеры
   // подключает вызывающий код через @stassist/llm, а не эта функция.
   return {
-    storage: new MemoryObjectStorage(),
+    storage: buildStorage(config),
     mailer: buildMailer(config),
     geocoder: buildGeocoder(config),
     payments: buildPaymentProvider(config),

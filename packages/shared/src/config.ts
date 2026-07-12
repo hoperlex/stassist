@@ -148,7 +148,13 @@ export interface Config {
   api: { port: number };
   web: { port: number };
   db: SubsystemStatus & { url: string | undefined };
-  storage: SubsystemStatus;
+  storage: SubsystemStatus & {
+    endpoint?: string;
+    region?: string;
+    bucket?: string;
+    accessKeyId?: string;
+    secretAccessKey?: string;
+  };
   mailer: SubsystemStatus & {
     smtp: { host?: string; port?: number; user?: string; pass?: string; from?: string };
   };
@@ -330,7 +336,15 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
     api: { port: env.API_PORT },
     web: { port: env.WEB_PORT },
     db: { configured: dbConfigured, driver: dbConfigured ? 'postgres' : 'none', url: env.DATABASE_URL },
-    storage: { configured: storageConfigured, driver: env.STORAGE },
+    storage: {
+      configured: storageConfigured,
+      driver: env.STORAGE,
+      endpoint: env.S3_ENDPOINT,
+      region: env.S3_REGION,
+      bucket: env.S3_BUCKET,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+    },
     mailer: {
       configured: env.MAILER === 'smtp',
       driver: env.MAILER,

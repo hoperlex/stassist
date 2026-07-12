@@ -28,6 +28,7 @@ export * from './legal/doc-versions.js';
 export * from './legal/community-rules.js';
 
 export * from './ports/object-storage.js';
+export * from './ports/s3-object-storage.js';
 export * from './ports/mailer.js';
 export * from './ports/geocoder.js';
 export * from './ports/payment-provider.js';

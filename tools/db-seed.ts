@@ -4,11 +4,29 @@
  * («их выходы коммитятся, сборка/тесты их только читают»; применение к БД — отдельный ручной
  * шаг). Требует DATABASE_URL; без него — понятная ошибка, НЕ часть build/CI-гейта.
  * Сиды написаны идемпотентно (`ON CONFLICT ... DO UPDATE`) — безопасно запускать повторно.
+ *
+ * SSL: `resolvePgPoolConfig` продублирована локально — см. подробное объяснение в
+ * doc-комментарии tools/db-migrate.ts («tsx резолвит @stassist/db в сырой TS-исходник, транзитивно
+ * ломающий astronomy-engine ESM/CJS-интероп под esbuild»); робастно работает и против локального
+ * Postgres (без SSL), и против Supabase (SSL обязателен, dev/стейдж-альтернатива по ADR-8).
  */
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Pool } from 'pg';
+import { Pool, type PoolConfig } from 'pg';
+
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+function resolvePgPoolConfig(connectionString: string): PoolConfig {
+  let needsSsl = false;
+  try {
+    const url = new URL(connectionString);
+    needsSsl = !url.searchParams.has('sslmode') && !url.searchParams.has('ssl') && !LOCAL_HOSTS.has(url.hostname);
+  } catch {
+    needsSsl = false;
+  }
+  return { connectionString, ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}) };
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEED_DIR = path.join(__dirname, '..', 'drizzle', 'seed');
@@ -26,7 +44,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const pool = new Pool({ connectionString });
+  const pool = new Pool(resolvePgPoolConfig(connectionString));
   try {
     for (const file of files) {
       const sql = await readFile(path.join(SEED_DIR, file), 'utf8');
