@@ -167,3 +167,6 @@ playwright/.cache/
 # Редакторские манифесты — регенерируются `pnpm data:editorial-manifest` из корпуса
 # (источник правды — reviewed/*.json + канонические билдеры, а не эти скаффолд-файлы).
 _work/editorial/_manifest/
+
+temp/
+
