@@ -1,0 +1,119 @@
+# Локальный/стейдж-стек: PostgreSQL (с pgvector) + MinIO (S3-совместимое хранилище) + три
+# процесса приложения (api/web/worker) + caddy (реверс-прокси, TLS).
+#
+# ТРЕБУЕТ ДОКЕР — в среде сборки Ф0 (этот агент) Docker недоступен, поэтому `docker compose up`
+# не был прогнан локально; файл написан по документации (docs/architecture/
+# 21-техническая-архитектура.md §7, docs/roadmap/prompts/f0-инфраструктура.md) и должен быть
+# провален вручную на машине с Docker (см. _report/build/f0-отчёт.md, раздел «требует ручного
+# шага»).
+#
+# ВАЖНО: образ postgres — pgvector/pgvector:pg15, НЕ обычный postgres:15 (тому не хватает
+# расширения vector, и первая же миграция 0000_extensions.sql упадёт на CREATE EXTENSION vector).
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stassist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stassist}
+      POSTGRES_DB: ${POSTGRES_DB:-stassist}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-stassist}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-stassist}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-stassist123}
+    ports:
+      - '${MINIO_API_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-stassist}:${POSTGRES_PASSWORD:-stassist}@postgres:5432/${POSTGRES_DB:-stassist}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - '3001'
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:3001/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-stassist}:${POSTGRES_PASSWORD:-stassist}@postgres:5432/${POSTGRES_DB:-stassist}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - '3000'
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-stassist}:${POSTGRES_PASSWORD:-stassist}@postgres:5432/${POSTGRES_DB:-stassist}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      # Без реального домена (dev/стейдж без DNS) caddy сам подставит `localhost`, и Caddyfile
+      # переключится на `tls internal` (самоподписанный сертификат) — см. caddy/Caddyfile.
+      CADDY_DOMAIN: ${CADDY_DOMAIN:-localhost}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+
+volumes:
+  postgres_data:
+  minio_data:
+  caddy_data:
+  caddy_config:

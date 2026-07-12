@@ -141,3 +141,18 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Stassist: turborepo, playwright, служебные рантайм-артефакты стабов (см. §2 конвенций
+# реализации — MemoryObjectStorage/ConsoleMailer пишут копии в _work/tmp для ручного просмотра
+# при разработке; сам _work/tmp — не источник правды, в git не нужен).
+.turbo/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+/_work/tmp/
+
+# tsbuildinfo/сгенерированные декларации внутри src (страховка от бага TS noEmitOnError=false —
+# см. _report/build/f0-отчёт.md; не должно возникать, но на всякий случай не коммитим)
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map

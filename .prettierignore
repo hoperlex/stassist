@@ -1,0 +1,9 @@
+node_modules
+dist
+.turbo
+coverage
+pnpm-lock.yaml
+drizzle/migrations/*.sql
+_work
+_report
+.pnpm-store

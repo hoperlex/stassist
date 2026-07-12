@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    // Для build (в отличие от typecheck/test) НЕ используем tsconfig-paths на исходники
+    // соседних пакетов: к моменту сборки этого пакета pnpm (топологический порядок `pnpm -r`)
+    // уже собрал его workspace-зависимости, поэтому @stassist/* резолвится как обычно —
+    // через node_modules → package.json types/main → dist соответствующего пакета.
+    // Иначе tsc затягивает исходники packages/* в этот же rootDir и падает с TS6059.
+    "paths": {}
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.integration.test.ts"]
+}

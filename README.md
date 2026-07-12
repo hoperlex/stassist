@@ -12,8 +12,9 @@
 | [docs/strategy/](docs/strategy/10-выводы-и-позиционирование.md) | Позиционирование, сегменты, монетизация, каналы роста, риски, KPI |
 | [docs/architecture/](docs/architecture/20-архитектура-услуг.md) | Архитектура услуг (M0–M10), [техническая архитектура](docs/architecture/21-техническая-архитектура.md), [модель данных](docs/architecture/22-модель-данных.md), [SEO-стратегия](docs/architecture/23-seo-стратегия.md) |
 | [docs/roadmap/](docs/roadmap/30-план-реализации.md) | План реализации по фазам Ф0–Ф8 + [самодостаточные промты](docs/roadmap/prompts/) для каждой фазы |
-| `_work/` | Служебные данные: JSON-профили топ-50, результаты адверсариальной верификации фактов |
-| `_report/` | `top50-матрица.xlsx` — Excel-каталог и матрица функций 50 конкурентов |
+| `_work/` | Служебные данные: JSON-профили топ-50, результаты адверсариальной верификации фактов, находки верификации фаз реализации (`_work/build/findings/`) |
+| `_report/` | `top50-матрица.xlsx` — Excel-каталог конкурентов; `_report/build/` — отчёты по фазам реализации (`f0-отчёт.md` и далее) |
+| `apps/`, `packages/`, `drizzle/` | Монорепозиторий реализации (см. раздел «Монорепозиторий» ниже) |
 
 ## Ключевые решения
 
@@ -25,6 +26,63 @@
 - Индивидуальные прогнозы: ИИ в MVP, маркетплейс живых астрологов — этап 2 (задел в модели данных).
 - 152-ФЗ: продовая БД с ПД — в РФ с запуска (Yandex Managed PostgreSQL); Supabase — dev/стейдж.
 - Главный канал роста — SEO-программатика + Telegram/Дзен (реклама эзотерики ограничена площадками).
+
+## Монорепозиторий (Ф0 — инфраструктура)
+
+Реализация ведётся по фазам ([docs/roadmap/30-план-реализации.md](docs/roadmap/30-план-реализации.md));
+Ф0 создала каркас монорепозитория — «скелет, который ходит»: три процесса (api/web/worker),
+CI, миграции БД, docker-compose/caddy для деплоя. Бизнес-логики ещё нет — она появится
+в следующих фазах.
+
+```
+stassist/
+  apps/
+    api/      # Fastify: healthz/readyz, security-плагины, zod-роуты
+    web/      # vike SSR (React 18 + AntD5) как middleware Fastify; страницы «/» и «/app»
+    worker/   # pg-boss с ленивой инициализацией (без БД — degraded, не крашится)
+  packages/
+    shared/          # zod-конфиг (degraded-режим), порты+стабы инфры (S3/mailer/geocoder/
+                      # платежи/LLM/эмбеддинги), общие схемы/константы
+    astro-core/      # расчётное ядро — наполнится в Ф1
+    numerology-core/ # нумерология/матрица судьбы — наполнится в Ф4/Ф6
+    llm/             # ИИ-конвейер — наполнится в Ф4
+    ui/              # общие React-компоненты — наполнится в Ф3
+  drizzle/           # SQL-first миграции (сгенерированы оффлайн из TS-схемы)
+  docker-compose.yml # postgres (pgvector) + minio + api/web/worker + caddy
+  caddy/Caddyfile    # реверс-прокси: '/' → web, '/api' и /healthz,/readyz → api
+  .github/workflows/ # CI: гейт собираемости + отдельные job-ы docker-образов/деплоя
+```
+
+### Быстрый старт
+
+```bash
+pnpm install
+pnpm -r typecheck && pnpm -r lint && pnpm -r test:unit && pnpm -r build   # зелёный гейт фазы
+pnpm --filter @stassist/api dev      # http://localhost:3001 (healthz/readyz)
+pnpm --filter @stassist/web dev      # http://localhost:3000 ('/' и '/app')
+pnpm --filter @stassist/worker dev   # degraded без DATABASE_URL, не крашится
+```
+
+Уровни тестов (см. [31-конвенции-реализации.md §1](docs/roadmap/31-конвенции-реализации.md)):
+`test:unit` (без сети/БД, гоняется всегда), `test:integration` (нужен `DATABASE_URL`,
+без него — авто-skip), `test:e2e` (Playwright, гейт `RUN_E2E=1`, нужен `pnpm exec playwright
+install chromium`).
+
+### Секреты
+
+По ТЗ секреты никогда не попадают в git/образы/фронтенд/логи/БД. Локально — файл `.env`
+(в `.gitignore`, никогда не коммитится), пример всех переменных — [.env.example](.env.example).
+На стейдже/проде — protected environment variables CI или Docker secrets, не сырые `.env` в
+образе. Схема и валидация — `packages/shared/src/config.ts` (zod): в `NODE_ENV=production`
+отсутствие обязательных для выбранной (не-stub) подсистемы переменных — падение процесса на
+старте (fail-fast); в `development`/`test` — degraded-режим (подсистема не инициализируется,
+`GET /healthz` всё равно отвечает 200). pino-логи используют redaction-лист
+(`apps/api/src/logging.ts`): `Authorization`/`Cookie`/пароли/токены/поля рождения никогда не
+попадают в логи в открытом виде.
+
+Плейсхолдеры `{{ЗАПОЛНИТ ЗАКАЗЧИК}}` в `.env.example` — внешние факты, которые агент
+не фабрикует (реквизиты ЮKassa, домен стейджа/прода, контакт для User-Agent Nominatim и т.д.),
+см. [31-конвенции-реализации.md §8](docs/roadmap/31-конвенции-реализации.md).
 
 ## Методика
 

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "paths": {
+      "@stassist/shared": ["packages/shared/src/index.ts"],
+      "@stassist/shared/*": ["packages/shared/src/*"],
+      "@stassist/astro-core": ["packages/astro-core/src/index.ts"],
+      "@stassist/astro-core/*": ["packages/astro-core/src/*"],
+      "@stassist/numerology-core": ["packages/numerology-core/src/index.ts"],
+      "@stassist/numerology-core/*": ["packages/numerology-core/src/*"],
+      "@stassist/llm": ["packages/llm/src/index.ts"],
+      "@stassist/llm/*": ["packages/llm/src/*"],
+      "@stassist/ui": ["packages/ui/src/index.ts"],
+      "@stassist/ui/*": ["packages/ui/src/*"]
+    },
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmitOnError": true,
+    "allowJs": false,
+    "useDefineForClassFields": true
+  }
+}

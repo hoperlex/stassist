@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Разделение по §1 конвенций реализации (docs/roadmap/31-конвенции-реализации.md): «гейт
+# собираемости» — единственный ОБЯЗАТЕЛЬНЫЙ job, не зависит от docker/БД/S3/LLM. Сборка образов
+# и деплой — отдельные условные job-ы, которые запускаются только там, где реально есть Docker
+# (self-hosted раннер / доступный docker-контекст) и не блокируют PR своим статусом.
+
+jobs:
+  gate:
+    name: Гейт собираемости (typecheck → lint → test:unit → build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Unit tests
+        run: pnpm -r test:unit
+
+      - name: Build
+        run: pnpm -r build
+
+  # Интеграционные тесты — отдельный job с реальным Postgres-сервисом контейнером GitHub Actions
+  # (доступен на ubuntu-latest раннерах без дополнительной docker-инфраструктуры). Не блокирует
+  # общий гейт: падение здесь не должно ронять PR-статус гейта собираемости.
+  integration:
+    name: Интеграционные тесты (Postgres)
+    runs-on: ubuntu-latest
+    needs: gate
+    continue-on-error: true
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: stassist
+          POSTGRES_PASSWORD: stassist
+          POSTGRES_DB: stassist
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stassist"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://stassist:stassist@localhost:5432/stassist
+      COOKIE_SECRET: ci-integration-test-cookie-secret-32-chars-min
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Применить миграции
+        run: pnpm db:migrate
+
+      - name: Интеграционные тесты
+        run: pnpm -r test:integration
+
+  # Сборка docker-образов — только там, где Docker реально доступен. Не входит в гейт (§1).
+  docker-images:
+    name: Docker-образы (api/web/worker)
+    runs-on: ubuntu-latest
+    needs: gate
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        app: [api, web, worker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.app }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: false
+          tags: stassist-${{ matrix.app }}:${{ github.sha }}
+
+  # Деплой на стейдж — условный job, требует секретов доступа к стейдж-хосту (см. .env.example,
+  # переменные STAGE_HOST/STAGE_DOMAIN/SSH_*). Плейсхолдер: реальные значения заполняет заказчик
+  # (см. _report/build/f0-отчёт.md).
+  deploy-stage:
+    name: Деплой на стейдж
+    runs-on: ubuntu-latest
+    needs: docker-images
+    if: github.ref == 'refs/heads/main' && vars.STAGE_HOST != ''
+    steps:
+      - uses: actions/checkout@v4
+      - name: Деплой по SSH на стейдж-хост
+        run: |
+          echo "Требует ручного шага/секретов: STAGE_HOST, STAGE_SSH_KEY, реестр образов (напр. ghcr.io)."
+          echo "См. _report/build/f0-отчёт.md — раздел «требует ручного шага»."

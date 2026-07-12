@@ -1,0 +1,35 @@
+# Реверс-прокси: '/' -> web, '/api' -> api, а также '/healthz','/readyz' -> api напрямую в
+# корне (иначе публичные curl-проверки health эндпоинтов, которые живут в корне api, а не под
+# /api/*, попадали бы на web и получали 404 — см. verification findings Ф0,
+# reverse-proxy-verification).
+#
+# Без реального домена (дев/стейдж) CADDY_DOMAIN по умолчанию 'localhost' — тогда `tls internal`
+# включает самоподписанный сертификат вместо ACME (которому нужен настоящий домен + DNS).
+# Для продового домена задайте CADDY_DOMAIN=stassist.ru (или иной реальный домен) — тогда
+# уберите `tls internal` и caddy сам получит сертификат через Let's Encrypt.
+
+{$CADDY_DOMAIN:localhost} {
+	tls internal
+
+	encode gzip zstd
+
+	handle /healthz {
+		reverse_proxy api:3001
+	}
+
+	handle /readyz {
+		reverse_proxy api:3001
+	}
+
+	handle /metrics {
+		reverse_proxy api:3001
+	}
+
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
