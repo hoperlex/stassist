@@ -17,6 +17,7 @@ import { CALENDAR_REFERENCE_LOCATION } from './astro-calendar/reference-location
 import { processPendingShares } from './share/process-pending-shares.js';
 import { DrizzleChunkRepository } from './llm/drizzle-chunk-repository.js';
 import { processQueuedAiReports } from './llm/generate-report-job.js';
+import { checkDailyHoroscopeReadiness, runHoroscopePipeline } from './horoscope/jobs.js';
 
 export type WorkerStatus = 'stopped' | 'degraded' | 'running';
 
@@ -52,6 +53,20 @@ export const SHARE_OG_CRON = '*/1 * * * *';
  */
 export const AI_REPORT_QUEUE = 'ai-report-generate';
 export const AI_REPORT_CRON = '*/1 * * * *';
+
+/**
+ * Ф5: гороскопный пайплайн (см. apps/worker/src/horoscope/jobs.ts, doc-комментарий там же).
+ * Слот 00:20 МСК (21:20 UTC) — на 10 минут ПОЗЖЕ ASTRO_CALENDAR_CRON (00:10 МСК), чтобы
+ * гороскопы читали СВЕЖИЙ `astro_calendar` того же прогона (см. находку [полнота] «дублирование
+ * astro_calendar и Ф5» в _work/build/findings/f5.md — без этого зазора был бы race между двумя
+ * задачами, запланированными на одну и ту же минуту).
+ */
+export const HOROSCOPE_QUEUE = 'horoscope-generate';
+export const HOROSCOPE_CRON = '20 21 * * *';
+
+/** Алерт «дневной комплект не готов к 01:00 МСК» (requirement 7 промта Ф5) — 22:00 UTC = 01:00 МСК. */
+export const HOROSCOPE_READINESS_QUEUE = 'horoscope-readiness-check';
+export const HOROSCOPE_READINESS_CRON = '0 22 * * *';
 
 export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
   return pino({ level: config.isProduction ? 'info' : 'warn' });
@@ -127,10 +142,35 @@ export class Worker {
     });
     await boss.schedule(AI_REPORT_QUEUE, AI_REPORT_CRON);
 
+    // Ф5: гороскопы и программатика (день/завтра каждый прогон, неделя/месяц/год — реже, см.
+    // apps/worker/src/horoscope/jobs.ts doc-комментарий).
+    await boss.createQueue(HOROSCOPE_QUEUE);
+    await boss.work(HOROSCOPE_QUEUE, async () => {
+      const summary = await runHoroscopePipeline({ db, llm: llmProvider, logger: this.logger });
+      this.logger.info({ summary }, 'horoscope-generate: прогон завершён');
+    });
+    await boss.schedule(HOROSCOPE_QUEUE, HOROSCOPE_CRON);
+
+    // Ф5: алерт «дневной комплект не готов к 01:00 МСК» (requirement 7 промта Ф5).
+    await boss.createQueue(HOROSCOPE_READINESS_QUEUE);
+    await boss.work(HOROSCOPE_READINESS_QUEUE, async () => {
+      await checkDailyHoroscopeReadiness({ db, llm: llmProvider, logger: this.logger });
+    });
+    await boss.schedule(HOROSCOPE_READINESS_QUEUE, HOROSCOPE_READINESS_CRON);
+
     this.boss = boss;
     this.status = 'running';
     this.logger.info(
-      { queues: [PING_QUEUE, ASTRO_CALENDAR_QUEUE, SHARE_OG_QUEUE, AI_REPORT_QUEUE] },
+      {
+        queues: [
+          PING_QUEUE,
+          ASTRO_CALENDAR_QUEUE,
+          SHARE_OG_QUEUE,
+          AI_REPORT_QUEUE,
+          HOROSCOPE_QUEUE,
+          HOROSCOPE_READINESS_QUEUE,
+        ],
+      },
       'worker: pg-boss запущен, очереди активны',
     );
   }

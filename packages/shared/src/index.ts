@@ -7,6 +7,8 @@ export * from './schemas/birth-profile.js';
 export * from './schemas/zodiac.js';
 export * from './schemas/calc.js';
 export * from './schemas/ai-report.js';
+export * from './schemas/horoscope.js';
+export * from './horoscope-date-keys.js';
 
 export * from './crypto/pd-cipher.js';
 export * from './legal/doc-versions.js';

@@ -14,6 +14,11 @@ export interface PageSeo {
   jsonLd?: object[];
   /** og:image — абсолютный URL (для страниц шеринга, см. pages/podelitsya). */
   ogImage?: string;
+  /** `<meta name="robots" content="noindex">` — страница с честным empty-state (`computed=false`,
+   *  БД/генерация недоступны) НЕ должна попадать в индекс как тонкий/пустой контент (см. findings
+   *  f5.md [seed-контента-на-старте]: «явная заглушка с noindex»). Как только генерация проходит
+   *  успешно (обычный случай — ленивая генерация при первом заходе), страница индексируется. */
+  noindex?: boolean;
 }
 
 export function breadcrumbJsonLd(appUrl: string, items: Array<{ name: string; path: string }>): object {
@@ -28,3 +33,22 @@ export function breadcrumbJsonLd(appUrl: string, items: Array<{ name: string; pa
     })),
   };
 }
+
+/**
+ * `Article` JSON-LD (см. docs/architecture/23-seo-стратегия.md §3: «JSON-LD: Article/NewsArticle
+ * (гороскопы, статьи)») — используется программатическими страницами Ф5 (гороскопы). `datePublished`/
+ * `dateModified` — honest lastmod (см. §3 «lastmod честный»), не текущий момент рендера.
+ */
+export function articleJsonLd(appUrl: string, opts: { headline: string; description: string; path: string; datePublished: string | null }): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: opts.headline,
+    description: opts.description,
+    url: `${appUrl}${opts.path}`,
+    ...(opts.datePublished ? { datePublished: opts.datePublished, dateModified: opts.datePublished } : {}),
+    publisher: { '@type': 'Organization', name: APP_TITLE_RU },
+  };
+}
+
+const APP_TITLE_RU = 'Stassist';

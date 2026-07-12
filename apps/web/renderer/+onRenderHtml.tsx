@@ -51,6 +51,7 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext: PageContextSe
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="${description}" />
     <title>${title}</title>
+    ${seo?.noindex ? dangerouslySkipEscape('<meta name="robots" content="noindex,follow" />') : ''}
     ${canonicalUrl ? dangerouslySkipEscape(`<link rel="canonical" href="${canonicalUrl}" />`) : ''}
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />

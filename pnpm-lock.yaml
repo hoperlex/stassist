@@ -310,6 +310,9 @@ importers:
 
   packages/llm:
     dependencies:
+      '@stassist/astro-core':
+        specifier: workspace:*
+        version: link:../astro-core
       '@stassist/numerology-core':
         specifier: workspace:*
         version: link:../numerology-core

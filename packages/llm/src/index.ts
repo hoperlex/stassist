@@ -63,3 +63,12 @@ export * from './reports/pipeline.js';
 // --- Чат: интент-роутер + конвейер ответа -----------------------------------------------------
 export * from './chat/intent-router.js';
 export * from './chat/chat-pipeline.js';
+
+// --- Ф5: гороскопы и программатика ------------------------------------------------------------
+export * from './horoscope/astro-events.js';
+export * from './horoscope/antidup.js';
+export * from './horoscope/tone.js';
+export * from './horoscope/build-prompt.js';
+export * from './horoscope/templates.js';
+export * from './horoscope/generate-batch.js';
+export * from './horoscope/personal.js';

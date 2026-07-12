@@ -30,6 +30,9 @@ import { shareRoutes } from './routes/share.js';
 import { publicGeocodeRoutes } from './routes/public-geocode.js';
 import { aiReportsRoutes } from './routes/ai-reports.js';
 import { interpretationRoutes } from './routes/interpretation.js';
+import { horoscopesRoutes } from './routes/horoscopes.js';
+import { astroWeatherRoutes } from './routes/astro-weather.js';
+import { personalHoroscopeRoutes } from './routes/personal-horoscope.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -107,6 +110,11 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
 
   // Ф4: ИИ-разборы кабинета (см. docs/roadmap/prompts/f4-llm-конвейер.md).
   await app.register(aiReportsRoutes, { config, prefix: `${apiV1}/ai-reports` });
+
+  // Ф5: гороскопы и программатика (см. docs/roadmap/prompts/f5-гороскопы-и-программатика.md).
+  await app.register(horoscopesRoutes, { config, prefix: `${apiV1}/horoscopes` });
+  await app.register(astroWeatherRoutes, { config, prefix: `${apiV1}/calc/astro-weather` });
+  await app.register(personalHoroscopeRoutes, { config, prefix: `${apiV1}/personal-horoscope` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

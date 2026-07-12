@@ -26,7 +26,8 @@
     "data:gen-chiron": "tsx tools/gen-chiron.ts",
     "data:seed-calc-presets": "pnpm --filter @stassist/shared --filter @stassist/astro-core --filter @stassist/db build && node --experimental-strip-types tools/seed-calc-presets.ts",
     "data:seed-compat-pages": "pnpm --filter @stassist/shared build && node --experimental-strip-types tools/seed-compat-pages.ts",
-    "data:corpus": "pnpm --filter @stassist/shared --filter @stassist/numerology-core --filter @stassist/llm build && node --experimental-strip-types tools/gen-corpus.ts"
+    "data:corpus": "pnpm --filter @stassist/shared --filter @stassist/numerology-core --filter @stassist/llm build && node --experimental-strip-types tools/gen-corpus.ts",
+    "data:horoscopes-backfill": "pnpm --filter @stassist/shared --filter @stassist/astro-core --filter @stassist/numerology-core --filter @stassist/db --filter @stassist/llm --filter @stassist/worker build && node --experimental-strip-types tools/data-horoscopes-backfill.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

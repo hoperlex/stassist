@@ -1,9 +1,19 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, ne } from 'drizzle-orm';
 import { aiReports, type Db } from '@stassist/db';
 import type { GenerateReportResult } from '@stassist/llm';
 import type { AiReportResponse, ReportKind } from '@stassist/shared';
 
-export type AiReportRow = typeof aiReports.$inferSelect;
+/**
+ * `kind: ReportKind` (не полный DB-enum) — этот репозиторий обслуживает ТОЛЬКО общий контракт
+ * `/ai-reports` (см. `reportKindSchema` в packages/shared/src/schemas/ai-report.ts). `kind:
+ * 'personal_horoscope'` (Ф5) — отдельный домен со своим репозиторием
+ * (apps/api/src/repositories/personal-horoscope-repository.ts) и своим роутом
+ * (apps/api/src/routes/personal-horoscope.ts), см. doc-комментарий packages/db/src/schema/
+ * enums.ts `aiReportKindEnum`. Запросы ниже ЯВНО исключают `personal_horoscope`
+ * (`ne(aiReports.kind, 'personal_horoscope')`), поэтому это не просто typescript-натяжка поверх
+ * инференса Drizzle, а гарантия и на уровне SQL — строка с этим kind никогда не попадёт сюда.
+ */
+export type AiReportRow = Omit<typeof aiReports.$inferSelect, 'kind'> & { kind: ReportKind };
 
 export function rowToResponse(row: AiReportRow): AiReportResponse {
   return {
@@ -28,19 +38,19 @@ export async function findDoneReportByCacheKey(db: Db, cacheKey: string): Promis
   const rows = await db
     .select()
     .from(aiReports)
-    .where(and(eq(aiReports.cacheKey, cacheKey), eq(aiReports.status, 'done')))
+    .where(and(eq(aiReports.cacheKey, cacheKey), eq(aiReports.status, 'done'), ne(aiReports.kind, 'personal_horoscope')))
     .orderBy(desc(aiReports.createdAt))
     .limit(1);
-  return rows[0] ?? null;
+  return (rows[0] as AiReportRow | undefined) ?? null;
 }
 
 export async function findAiReportForUser(db: Db, userId: string, id: string): Promise<AiReportRow | null> {
   const rows = await db
     .select()
     .from(aiReports)
-    .where(and(eq(aiReports.id, id), eq(aiReports.userId, userId)))
+    .where(and(eq(aiReports.id, id), eq(aiReports.userId, userId), ne(aiReports.kind, 'personal_horoscope')))
     .limit(1);
-  return rows[0] ?? null;
+  return (rows[0] as AiReportRow | undefined) ?? null;
 }
 
 export interface InsertQueuedParams {
@@ -68,7 +78,9 @@ export async function insertQueuedAiReport(db: Db, params: InsertQueuedParams): 
     })
     .returning();
   if (!row) throw new Error('insertQueuedAiReport: INSERT не вернул строку');
-  return row;
+  // params.kind уже типизирован как ReportKind (см. InsertQueuedParams) — .returning() просто
+  // отражает более широкий DB-enum (см. doc-комментарий AiReportRow выше).
+  return row as AiReportRow;
 }
 
 export interface InsertDoneParams extends InsertQueuedParams {
@@ -100,5 +112,5 @@ export async function insertDoneAiReport(db: Db, params: InsertDoneParams): Prom
     })
     .returning();
   if (!row) throw new Error('insertDoneAiReport: INSERT не вернул строку');
-  return row;
+  return row as AiReportRow;
 }

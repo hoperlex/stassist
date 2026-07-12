@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { buildAllSitemapUrls, buildSitemapXml, compatPairUrls, lunarCalendarMonthUrls } from './sitemap.js';
+import {
+  buildAllSitemapUrls,
+  buildSitemapXml,
+  compatPairUrls,
+  humorHoroscopeUrls,
+  lunarCalendarMonthUrls,
+  lunarDayUrls,
+  yearlyGoroskopUrls,
+  zodiacHoroscopeUrls,
+} from './sitemap.js';
 
 describe('compatPairUrls', () => {
   it('содержит ровно 78 канонических пар (без зеркал)', () => {
@@ -30,12 +39,58 @@ describe('buildSitemapXml', () => {
   });
 });
 
+describe('zodiacHoroscopeUrls (Ф5)', () => {
+  it('ровно 12×20=240 URL (5 периодов минус year, ×5 тем) без дублей', () => {
+    const urls = zodiacHoroscopeUrls();
+    expect(urls).toHaveLength(240);
+    expect(new Set(urls.map((u) => u.path)).size).toBe(240);
+    expect(urls.some((u) => u.path === '/goroskop/oven')).toBe(true);
+    expect(urls.some((u) => u.path === '/goroskop/oven/nedelya')).toBe(true);
+    expect(urls.some((u) => u.path === '/goroskop/oven/lyubov')).toBe(true);
+    expect(urls.some((u) => u.path === '/goroskop/oven/nedelya/lyubov')).toBe(true);
+  });
+});
+
+describe('yearlyGoroskopUrls (Ф5)', () => {
+  it('до октября — только текущий год: 12 западных + хаб + 12 восточных = 25', () => {
+    const urls = yearlyGoroskopUrls(new Date(Date.UTC(2026, 4, 1))); // май
+    expect(urls).toHaveLength(25);
+    expect(urls.some((u) => u.path === '/goroskop/2026/oven')).toBe(true);
+    expect(urls.some((u) => u.path === '/vostochnyj-goroskop/2026')).toBe(true);
+    expect(urls.some((u) => u.path === '/vostochnyj-goroskop/2026/krysa')).toBe(true);
+  });
+
+  it('с октября — текущий + следующий год: 50 URL', () => {
+    const urls = yearlyGoroskopUrls(new Date(Date.UTC(2026, 9, 5))); // октябрь
+    expect(urls).toHaveLength(50);
+    expect(urls.some((u) => u.path === '/goroskop/2027/oven')).toBe(true);
+  });
+});
+
+describe('lunarDayUrls / humorHoroscopeUrls (Ф5)', () => {
+  it('30 лунных дней', () => {
+    expect(lunarDayUrls()).toHaveLength(30);
+  });
+
+  it('12 антигороскопов + профессии', () => {
+    const urls = humorHoroscopeUrls();
+    expect(urls.some((u) => u.path === '/shutochnyj-goroskop/oven')).toBe(true);
+    expect(urls.some((u) => u.path === '/shutochnyj-goroskop/professiya/razrabotchik')).toBe(true);
+  });
+});
+
 describe('buildAllSitemapUrls', () => {
-  it('объединяет статические калькуляторы, 78 пар и месяцы лунного календаря без дублей', () => {
+  it('объединяет статические калькуляторы, 78 пар, лунный календарь и всю программатику Ф5 без дублей', () => {
     const urls = buildAllSitemapUrls(new Date(Date.UTC(2026, 0, 1)));
     const paths = urls.map((u) => u.path);
     expect(new Set(paths).size).toBe(paths.length);
     expect(paths).toContain('/natalnaya-karta');
     expect(paths).toContain('/lunnyj-kalendar/2026-01');
+    expect(paths).toContain('/goroskop');
+    expect(paths).toContain('/goroskop/oven');
+    expect(paths).toContain('/goroskop/2026/oven');
+    expect(paths).toContain('/vostochnyj-goroskop/2026/krysa');
+    expect(paths).toContain('/lunnyj-den/1');
+    expect(paths).toContain('/shutochnyj-goroskop/oven');
   });
 });

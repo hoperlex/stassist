@@ -92,7 +92,17 @@ export const wikiArticleSectionEnum = pgEnum('wiki_article_section', [
 
 export const wikiArticleStatusEnum = pgEnum('wiki_article_status', ['draft', 'reviewed', 'published']);
 
-/** См. `reportKindSchema` в packages/shared/src/schemas/ai-report.ts. */
+/**
+ * См. `reportKindSchema` в packages/shared/src/schemas/ai-report.ts. `personal_horoscope` — Ф5
+ * (см. docs/roadmap/31-конвенции-реализации.md §9, находку [полнота] в _work/build/findings/
+ * f5.md «хранилище+ключ кэша персонального гороскопа») НАМЕРЕННО НЕ добавлен в
+ * `reportKindSchema`/`aiReportCreateRequestSchema` — у него отдельный роут/контракт
+ * (`apps/api/src/routes/personal-horoscope.ts`, `packages/shared/src/schemas/horoscope.ts`
+ * `personalHoroscopeResponseSchema`), а не общий `/ai-reports` POST (иначе фриемиум-логика и
+ * период day/week персонального гороскопа просочились бы в общий контракт разборов). Таблицу
+ * `ai_reports` переиспользуем только как хранилище (см. apps/api/src/repositories/
+ * personal-horoscope-repository.ts) — отсюда значение есть только в этом DB-enum'е.
+ */
 export const aiReportKindEnum = pgEnum('ai_report_kind', [
   'natal_full',
   'big3',
@@ -102,6 +112,7 @@ export const aiReportKindEnum = pgEnum('ai_report_kind', [
   'matrix_full',
   'custom_question',
   'order',
+  'personal_horoscope',
 ]);
 
 /** См. `reportStatusSchema`. Жизненный цикл: queued → generating → done|failed; flagged —
@@ -117,3 +128,20 @@ export const aiReportStatusEnum = pgEnum('ai_report_status', [
 export const chatMessageRoleEnum = pgEnum('chat_message_role', ['user', 'assistant']);
 
 export const reportFeedbackRatingEnum = pgEnum('report_feedback_rating', ['good', 'bad']);
+
+// -------------------------------------------------------------------------------------------
+// Ф5: гороскопы и программатика (см. docs/architecture/22-модель-данных.md §5).
+// -------------------------------------------------------------------------------------------
+
+/** См. `horoscopeScopeSchema` в packages/shared/src/schemas/horoscope.ts. */
+export const horoscopeScopeEnum = pgEnum('horoscope_scope', ['zodiac', 'eastern', 'lunar_day', 'profession']);
+
+/** См. `horoscopePeriodSchema`. */
+export const horoscopePeriodEnum = pgEnum('horoscope_period', ['day', 'tomorrow', 'week', 'month', 'year']);
+
+/** См. `horoscopeTopicSchema`. */
+export const horoscopeTopicEnum = pgEnum('horoscope_topic', ['general', 'love', 'money', 'career', 'health']);
+
+/** См. `horoscopeStatusSchema` — жизненный цикл: draft (генерация в процессе/ещё не прошла
+ *  автомодерацию) → moderation (флагнуто фильтром, ждёт ручной проверки) | published. */
+export const horoscopeStatusEnum = pgEnum('horoscope_status', ['draft', 'moderation', 'published']);

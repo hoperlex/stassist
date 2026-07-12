@@ -33,6 +33,14 @@ function parseInput(row: AiReportRow): AiReportInput {
 
 export async function processOneAiReport(db: Db, llm: LlmProvider, chunkRepository: ChunkRepository, row: AiReportRow): Promise<void> {
   await markGenerating(db, row.id);
+  // Ф5: 'personal_horoscope' — отдельный домен (ai_reports переиспользован только как хранилище,
+  // см. doc-комментарий packages/db/src/schema/enums.ts `aiReportKindEnum` и
+  // packages/llm/src/horoscope/personal.ts) — генерируется СИНХРОННО в apps/api, никогда не через
+  // status='queued'. Строка с этим kind сюда попасть не должна; это defensive-guard, а не боевой путь.
+  if (row.kind === 'personal_horoscope') {
+    await markFailed(db, row.id, 'personal_horoscope не обрабатывается общей очередью ai_reports (см. apps/api/src/routes/personal-horoscope.ts)');
+    return;
+  }
   if (!row.chartId) {
     await markFailed(db, row.id, 'ai_reports.chart_id не задан — нечего анализировать');
     return;

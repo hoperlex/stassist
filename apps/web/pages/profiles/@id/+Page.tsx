@@ -3,6 +3,7 @@ import { Alert, Card, Descriptions, Spin, Table, Typography } from 'antd';
 import { ChartWheel } from '@stassist/ui';
 import type { ChartData } from '@stassist/shared';
 import { api, ApiError, getAccessToken } from '../../../lib/api-client.js';
+import { PersonalHoroscopeCard } from '../../../lib/PersonalHoroscopeCard.js';
 
 const { Title, Paragraph } = Typography;
 
@@ -31,6 +32,7 @@ export function Page(): React.JSX.Element {
   const [chart, setChart] = useState<ChartDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -39,6 +41,7 @@ export function Page(): React.JSX.Element {
     }
     const id = window.location.pathname.split('/').filter(Boolean).pop();
     if (!id) return;
+    setProfileId(id);
     api
       .get<ChartDto>(`/birth-profiles/${id}/chart`)
       .then(setChart)
@@ -51,6 +54,7 @@ export function Page(): React.JSX.Element {
       <Paragraph>
         <a href="/profiles">← Ко всем профилям</a>
       </Paragraph>
+      {profileId && <PersonalHoroscopeCard birthProfileId={profileId} />}
       <Title level={3}>Натальная карта</Title>
       {loading && <Spin />}
       {error && <Alert type="error" showIcon message={error} />}

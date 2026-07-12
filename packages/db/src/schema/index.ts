@@ -23,3 +23,6 @@ export * from './interpretation-chunks.js';
 export * from './ai-reports.js';
 export * from './chat.js';
 export * from './report-feedback.js';
+
+// Ф5: гороскопы и программатика (см. docs/architecture/22-модель-данных.md §5).
+export * from './horoscopes.js';
