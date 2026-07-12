@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Form, Input, List, Select, Spin, Tag, Typography } from 'antd';
 // Импорт напрямую из подмодуля (а НЕ `from '@stassist/shared'`) — баррель-индекс тянет серверные
 // порты/node:crypto в клиентский бандл (тот же приём, что pages/natalnaya-karta/+Page.tsx).
-import { PDF_PRODUCT_CATALOG, type OrderResponse, type PdfOrderVariant, type PdfProductType } from '@stassist/shared/schemas/order.js';
+import { PDF_PRODUCT_CATALOG, type OrderResponse, type OrderSubject, type PdfOrderVariant, type PdfProductType } from '@stassist/shared/schemas/order.js';
 import { api, ApiError, getAccessToken } from '../../../lib/api-client.js';
 import { InfoDisclaimer } from '../../../lib/InfoDisclaimer.js';
 
@@ -217,7 +217,10 @@ export function Page(): React.JSX.Element {
         <Text type="secondary">У вас пока нет заказов PDF-отчётов.</Text>
       ) : (
         <List
-          dataSource={orders}
+          // Ф8: /orders теперь отдаёт ВСЕ виды заказов (pdf_report + custom_forecast, см.
+          // packages/shared/src/schemas/order.ts «orderCreateRequestSchema — union по kind») —
+          // эта страница показывает только PDF-заказы (индивидуальные прогнозы — /app/zakazat-prognoz).
+          dataSource={orders.filter((o): o is OrderResponse & { subject: OrderSubject } => o.kind === 'pdf_report')}
           renderItem={(o) => (
             <List.Item
               actions={

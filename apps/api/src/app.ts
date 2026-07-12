@@ -45,6 +45,14 @@ import { friendshipsRoutes } from './routes/friendships.js';
 import { reportsUgcRoutes } from './routes/reports-ugc.js';
 import { moderationRoutes } from './routes/moderation.js';
 import { reputationRoutes } from './routes/reputation.js';
+import { plansRoutes } from './routes/plans.js';
+import { subscriptionsRoutes } from './routes/subscriptions.js';
+import { paymentsRoutes } from './routes/payments.js';
+import { webhooksRoutes } from './routes/webhooks.js';
+import { promoCodesRoutes } from './routes/promo-codes.js';
+import { quizRoutes } from './routes/quiz.js';
+import { paywallRoutes } from './routes/paywall.js';
+import { emailOptoutsRoutes } from './routes/email-optouts.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -145,6 +153,17 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(reportsUgcRoutes, { config, prefix: `${apiV1}/reports-ugc` });
   await app.register(moderationRoutes, { config, prefix: `${apiV1}/moderation` });
   await app.register(reputationRoutes, { config, prefix: `${apiV1}/reputation` });
+
+  // Ф8: биллинг/подписка/пейвол/квиз/промокоды/вебхуки (см. docs/roadmap/prompts/
+  // f8-монетизация-и-запуск.md).
+  await app.register(plansRoutes, { prefix: `${apiV1}/plans` });
+  await app.register(subscriptionsRoutes, { config, prefix: `${apiV1}/subscriptions` });
+  await app.register(paymentsRoutes, { config, prefix: `${apiV1}/payments` });
+  await app.register(webhooksRoutes, { config, prefix: `${apiV1}/webhooks` });
+  await app.register(promoCodesRoutes, { config, prefix: `${apiV1}/promo-codes` });
+  await app.register(quizRoutes, { config, prefix: `${apiV1}/quiz` });
+  await app.register(paywallRoutes, { config, prefix: `${apiV1}/paywall` });
+  await app.register(emailOptoutsRoutes, { config, prefix: `${apiV1}/email-optouts` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

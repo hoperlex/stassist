@@ -88,6 +88,11 @@ export const envSchema = z.object({
   PAYMENTS: z.enum(['stub', 'yookassa']).default('stub'),
   YOOKASSA_SHOP_ID: z.string().optional(),
   YOOKASSA_SECRET_KEY: z.string().optional(),
+  /** Ф8: наш собственный HMAC-слой поверх вебхука (см. doc-комментарий
+   *  packages/shared/src/schemas/billing.ts `WEBHOOK_SIGNATURE_HEADER`) — опционален даже при
+   *  PAYMENTS=yookassa (реальная защита прода — IP allowlist ЮKassa, см. launch-checklist.md);
+   *  если задан, `apps/api` требует подпись на входящих вебхуках. */
+  YOOKASSA_WEBHOOK_SECRET: z.string().optional(),
 
   // --- LLM / эмбеддинги ---
   LLM_PROVIDER: z
@@ -108,6 +113,20 @@ export const envSchema = z.object({
    *  [контракт-эмбеддингов] в _work/build/findings/f4.md (у Anthropic нет embeddings API). */
   EMBED_PROVIDER: z.enum(['stub', 'anthropic', 'openrouter', 'cohere']).default('stub'),
   COHERE_API_KEY: z.string().optional(),
+
+  /** Ф8 SEO-финализация (req.6 промта Ф8 «снятие noindex… — env-флаг»): ДЕФОЛТ `true`
+   *  (безопасно — сайт НЕ индексируется, пока заказчик явно не включит прод-запуск) —
+   *  fail-safe в правильную сторону (случайно забытый флаг не даёт утечь черновику в индекс, а не
+   *  наоборот). Выставляется `false` в проде ПОСЛЕ прохождения юридического гейта (см.
+   *  launch-checklist.md). Форсит `noindex` на ВСЕХ страницах поверх честного per-page noindex
+   *  (см. apps/web/renderer/+onRenderHtml.tsx, apps/web/lib/seo.ts). */
+  // z.coerce.boolean() НЕ подходит: Boolean('false') === true (классическая ловушка) — явный
+  // разбор строки 'true'/'false' (регистронезависимо), любое другое значение → true (fail-safe
+  // в сторону noindex, см. doc-комментарий поля выше).
+  SEO_NOINDEX_ALL: z
+    .string()
+    .default('true')
+    .transform((v) => v.trim().toLowerCase() !== 'false'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -134,7 +153,7 @@ export interface Config {
     smtp: { host?: string; port?: number; user?: string; pass?: string; from?: string };
   };
   geocoder: SubsystemStatus & { nominatimUrl?: string; nominatimUserAgent?: string };
-  payments: SubsystemStatus;
+  payments: SubsystemStatus & { shopId?: string; secretKey?: string; webhookSecret?: string };
   /** Ф4: `@stassist/llm` строит реальные адаптеры поверх этих полей (см. createLlmProviderChain) —
    *  сам `packages/shared` реальных LLM-адаптеров не содержит (см. ports/factory.ts). */
   llm: SubsystemStatus & {
@@ -152,6 +171,8 @@ export interface Config {
   };
   /** Список подсистем, не готовых к боевой работе (degraded) — для лога при старте. */
   degraded: string[];
+  /** Ф8 SEO-финализация — см. env SEO_NOINDEX_ALL выше. */
+  seo: { noindexAll: boolean };
   /** Auth: подпись access JWT (EdDSA) — см. apps/api/src/auth/jwt.ts. */
   auth: {
     jwtPrivateKeyPem: string;
@@ -327,7 +348,13 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
       nominatimUrl: env.NOMINATIM_URL,
       nominatimUserAgent: env.NOMINATIM_USER_AGENT,
     },
-    payments: { configured: env.PAYMENTS === 'yookassa', driver: env.PAYMENTS },
+    payments: {
+      configured: env.PAYMENTS === 'yookassa',
+      driver: env.PAYMENTS,
+      shopId: env.YOOKASSA_SHOP_ID,
+      secretKey: env.YOOKASSA_SECRET_KEY,
+      webhookSecret: env.YOOKASSA_WEBHOOK_SECRET,
+    },
     llm: {
       configured: env.LLM_PROVIDER !== 'stub',
       driver: env.LLM_PROVIDER,
@@ -344,6 +371,7 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
       cohereApiKey: env.COHERE_API_KEY,
     },
     degraded,
+    seo: { noindexAll: env.SEO_NOINDEX_ALL },
     auth: {
       jwtPrivateKeyPem: normalizePem(env.JWT_PRIVATE_KEY),
       jwtPublicKeyPem: normalizePem(env.JWT_PUBLIC_KEY),

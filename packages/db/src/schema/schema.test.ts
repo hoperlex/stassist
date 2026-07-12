@@ -127,6 +127,55 @@ describe('таблицы Ф7', () => {
   });
 });
 
+describe('таблицы Ф8', () => {
+  it('plans содержит цену/период/триал/фичи (doc 22 §4)', () => {
+    const cols = Object.keys(getTableColumns(schema.plans));
+    expect(cols).toEqual(expect.arrayContaining(['code', 'titleRu', 'priceKop', 'period', 'trialDays', 'features']));
+  });
+
+  it('subscriptions хранит cancelAtPeriodEnd (отмена в 1 клик — статус до конца периода)', () => {
+    const cols = Object.keys(getTableColumns(schema.subscriptions));
+    expect(cols).toEqual(
+      expect.arrayContaining(['userId', 'planCode', 'status', 'currentPeriodEnd', 'cancelAtPeriodEnd', 'provider', 'providerSubId']),
+    );
+  });
+
+  it('payments содержит idempotencyKey и receiptStatus (54-ФЗ каркас)', () => {
+    const cols = Object.keys(getTableColumns(schema.payments));
+    expect(cols).toEqual(
+      expect.arrayContaining(['orderId', 'subscriptionId', 'provider', 'providerPaymentId', 'amountKop', 'status', 'receiptStatus', 'idempotencyKey']),
+    );
+  });
+
+  it('webhook_events.eventId — идемпотентность доставки', () => {
+    const cols = Object.keys(getTableColumns(schema.webhookEvents));
+    expect(cols).toEqual(expect.arrayContaining(['provider', 'eventId', 'type', 'payload', 'processedAt']));
+  });
+
+  it('experiments/experiment_events/quiz_answers/email_optouts — A/B и квиз-каркас (doc 22 §7б)', () => {
+    expect(Object.keys(getTableColumns(schema.experiments))).toEqual(expect.arrayContaining(['code', 'variants', 'active']));
+    expect(Object.keys(getTableColumns(schema.experimentEvents))).toEqual(
+      expect.arrayContaining(['userId', 'anonId', 'experimentCode', 'variant', 'event', 'meta']),
+    );
+    expect(Object.keys(getTableColumns(schema.quizAnswers))).toEqual(
+      expect.arrayContaining(['userId', 'quizCode', 'answers', 'completedAt']),
+    );
+    expect(Object.keys(getTableColumns(schema.emailOptouts))).toEqual(expect.arrayContaining(['email', 'scope']));
+  });
+
+  it('имена таблиц Ф8 — snake_case', () => {
+    expect(getTableName(schema.plans)).toBe('plans');
+    expect(getTableName(schema.subscriptions)).toBe('subscriptions');
+    expect(getTableName(schema.payments)).toBe('payments');
+    expect(getTableName(schema.webhookEvents)).toBe('webhook_events');
+    expect(getTableName(schema.promoCodes)).toBe('promo_codes');
+    expect(getTableName(schema.experiments)).toBe('experiments');
+    expect(getTableName(schema.experimentEvents)).toBe('experiment_events');
+    expect(getTableName(schema.quizAnswers)).toBe('quiz_answers');
+    expect(getTableName(schema.emailOptouts)).toBe('email_optouts');
+  });
+});
+
 describe('createDb', () => {
   it('не подключается к сети при создании (ленивая обёртка)', () => {
     // Фиктивный "пул" — createDb не должен трогать его методы синхронно.

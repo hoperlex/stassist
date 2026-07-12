@@ -2,17 +2,23 @@ import { describe, expect, it } from 'vitest';
 import {
   arkanUrls,
   buildAllSitemapUrls,
+  buildSitemapIndexXml,
   buildSitemapXml,
+  calculatorsClusterUrls,
   celebrityUrls,
   compatPairUrls,
+  goroskopyClusterUrls,
   humorHoroscopeUrls,
+  kamniClusterUrls,
   kamniPoZnakuUrls,
   lunarCalendarMonthUrls,
   lunarDayUrls,
   planetInSignAndHouseUrls,
   planetyHubUrl,
+  SITEMAP_CLUSTER_PATHS,
   stoneUrls,
   wikiArticleUrls,
+  wikiClusterUrls,
   wikiSectionUrls,
   yearlyGoroskopUrls,
   zodiacHoroscopeUrls,
@@ -161,5 +167,36 @@ describe('wikiSectionUrls / wikiArticleUrls / planetyHubUrl / arkanUrls / celebr
 
   it('celebrityUrls строит /karta/{slug} по переданным слагам', () => {
     expect(celebrityUrls(['albert-eynshteyn'])).toEqual([{ path: '/karta/albert-eynshteyn', changefreq: 'monthly' }]);
+  });
+});
+
+describe('Ф8: sitemap-индексы по кластерам (doc 23 §3, промт Ф8 req.6)', () => {
+  it('buildSitemapIndexXml строит валидный <sitemapindex> с абсолютными URL', () => {
+    const xml = buildSitemapIndexXml('https://stassist.ru', Object.values(SITEMAP_CLUSTER_PATHS));
+    expect(xml).toContain('<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(xml).toContain('<loc>https://stassist.ru/sitemaps/goroskopy.xml</loc>');
+    expect(xml).toContain('<loc>https://stassist.ru/sitemaps/wiki.xml</loc>');
+  });
+
+  it('4 кластера покрывают ВЕСЬ buildAllSitemapUrls (без потерь) плюс честный хаб /kamni', () => {
+    const now = new Date(Date.UTC(2026, 0, 1));
+    const allPaths = new Set(buildAllSitemapUrls(now).map((u) => u.path));
+    const clusteredPaths = new Set([
+      ...calculatorsClusterUrls(now),
+      ...goroskopyClusterUrls(now),
+      ...kamniClusterUrls([]),
+      ...wikiClusterUrls([], []),
+    ].map((u) => u.path));
+    for (const path of allPaths) expect(clusteredPaths.has(path)).toBe(true);
+    // Кластерная версия честнее: включает хаб /kamni (stoneUrls всегда его добавляет), которого
+    // не было в старом плоском buildAllSitemapUrls — единственная разница, не потеря.
+    expect([...clusteredPaths].filter((p) => !allPaths.has(p))).toEqual(['/kamni']);
+  });
+
+  it('каждый кластер непустой (статическая часть)', () => {
+    expect(calculatorsClusterUrls().length).toBeGreaterThan(0);
+    expect(goroskopyClusterUrls().length).toBeGreaterThan(0);
+    expect(kamniClusterUrls([]).length).toBeGreaterThan(0);
+    expect(wikiClusterUrls([], []).length).toBeGreaterThan(0);
   });
 });

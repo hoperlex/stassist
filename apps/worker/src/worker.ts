@@ -20,6 +20,10 @@ import { processQueuedAiReports } from './llm/generate-report-job.js';
 import { checkDailyHoroscopeReadiness, runHoroscopePipeline } from './horoscope/jobs.js';
 import { processPaidOrders } from './pdf/generate-pdf-order-job.js';
 import { getPdKeyring } from './pdf/pd-keyring.js';
+import { processPaidCustomForecastOrders } from './forecast/generate-custom-forecast-job.js';
+import { runSubscriptionRenewalSweep } from './billing/subscription-renewal-job.js';
+import { retryUnprocessedWebhooks } from './billing/webhook-retry-job.js';
+import { sendAbandonedCalcEmails, sendTrialEndingEmails, sendWeeklyDigestEmails } from './email/lifecycle-emails.js';
 
 export type WorkerStatus = 'stopped' | 'degraded' | 'running';
 
@@ -77,6 +81,34 @@ export const HOROSCOPE_READINESS_CRON = '0 22 * * *';
  */
 export const ORDER_PDF_QUEUE = 'order-pdf-generate';
 export const ORDER_PDF_CRON = '*/1 * * * *';
+
+/**
+ * Ф8: индивидуальные прогнозы (req.4 промта Ф8, см. apps/worker/src/forecast/) — тот же
+ * poll-по-статусу паттерн, что ORDER_PDF_QUEUE.
+ */
+export const CUSTOM_FORECAST_QUEUE = 'custom-forecast-generate';
+export const CUSTOM_FORECAST_CRON = '*/1 * * * *';
+
+/** Ф8: рекуррентное продление/грейс/истечение подписок (req.2 промта Ф8, см.
+ *  apps/worker/src/billing/subscription-renewal-job.ts) — раз в сутки, слот НЕ пересекается с
+ *  гороскопным/календарным конвейером (00:10/00:20 МСК), 03:00 МСК = 00:00 UTC. */
+export const SUBSCRIPTION_RENEWAL_QUEUE = 'subscription-renewal-sweep';
+export const SUBSCRIPTION_RENEWAL_CRON = '0 0 * * *';
+
+/** Ф8: retry-очередь вебхуков (req.1 промта Ф8 «retry-очередь в worker», см.
+ *  apps/worker/src/billing/webhook-retry-job.ts). */
+export const WEBHOOK_RETRY_QUEUE = 'webhook-retry';
+export const WEBHOOK_RETRY_CRON = '*/2 * * * *';
+
+/** Ф8: e-mail-цепочки (req.8 промта Ф8, см. apps/worker/src/email/lifecycle-emails.ts) — часовой
+ *  cron под «окно 1ч» упрощение (см. doc-комментарий lifecycle-emails.ts). */
+export const ABANDONED_CALC_EMAIL_QUEUE = 'abandoned-calc-email';
+export const ABANDONED_CALC_EMAIL_CRON = '15 * * * *';
+export const TRIAL_ENDING_EMAIL_QUEUE = 'trial-ending-email';
+export const TRIAL_ENDING_EMAIL_CRON = '25 * * * *';
+/** Еженедельный дайджест — понедельник 08:00 МСК = 05:00 UTC. */
+export const WEEKLY_DIGEST_EMAIL_QUEUE = 'weekly-digest-email';
+export const WEEKLY_DIGEST_EMAIL_CRON = '0 5 * * 1';
 
 export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
   return pino({ level: config.isProduction ? 'info' : 'warn' });
@@ -186,6 +218,60 @@ export class Worker {
     });
     await boss.schedule(ORDER_PDF_QUEUE, ORDER_PDF_CRON);
 
+    // Ф8: индивидуальные прогнозы (см. apps/worker/src/forecast/generate-custom-forecast-job.ts).
+    await boss.createQueue(CUSTOM_FORECAST_QUEUE);
+    await boss.work(CUSTOM_FORECAST_QUEUE, async () => {
+      const processed = await processPaidCustomForecastOrders({
+        db,
+        llm: llmProvider,
+        storage: ports.storage,
+        mailer: ports.mailer,
+        appUrl: this.config.appUrl,
+        logger: this.logger,
+      });
+      if (processed > 0) this.logger.info({ processed }, 'custom-forecast-generate: заказы обработаны');
+    });
+    await boss.schedule(CUSTOM_FORECAST_QUEUE, CUSTOM_FORECAST_CRON);
+
+    // Ф8: рекуррентное продление/грейс/истечение подписок (см. apps/worker/src/billing/
+    // subscription-renewal-job.ts).
+    await boss.createQueue(SUBSCRIPTION_RENEWAL_QUEUE);
+    await boss.work(SUBSCRIPTION_RENEWAL_QUEUE, async () => {
+      const summary = await runSubscriptionRenewalSweep({ db, payments: ports.payments, logger: this.logger });
+      this.logger.info({ summary }, 'subscription-renewal-sweep: прогон завершён');
+    });
+    await boss.schedule(SUBSCRIPTION_RENEWAL_QUEUE, SUBSCRIPTION_RENEWAL_CRON);
+
+    // Ф8: retry-очередь вебхуков (см. apps/worker/src/billing/webhook-retry-job.ts).
+    await boss.createQueue(WEBHOOK_RETRY_QUEUE);
+    await boss.work(WEBHOOK_RETRY_QUEUE, async () => {
+      const processed = await retryUnprocessedWebhooks({ db, logger: this.logger });
+      if (processed > 0) this.logger.info({ processed }, 'webhook-retry: события обработаны повторно');
+    });
+    await boss.schedule(WEBHOOK_RETRY_QUEUE, WEBHOOK_RETRY_CRON);
+
+    // Ф8: e-mail-цепочки (см. apps/worker/src/email/lifecycle-emails.ts).
+    await boss.createQueue(ABANDONED_CALC_EMAIL_QUEUE);
+    await boss.work(ABANDONED_CALC_EMAIL_QUEUE, async () => {
+      const sent = await sendAbandonedCalcEmails({ db, mailer: ports.mailer, appUrl: this.config.appUrl, logger: this.logger });
+      if (sent > 0) this.logger.info({ sent }, 'abandoned-calc-email: письма отправлены');
+    });
+    await boss.schedule(ABANDONED_CALC_EMAIL_QUEUE, ABANDONED_CALC_EMAIL_CRON);
+
+    await boss.createQueue(TRIAL_ENDING_EMAIL_QUEUE);
+    await boss.work(TRIAL_ENDING_EMAIL_QUEUE, async () => {
+      const sent = await sendTrialEndingEmails({ db, mailer: ports.mailer, appUrl: this.config.appUrl, logger: this.logger });
+      if (sent > 0) this.logger.info({ sent }, 'trial-ending-email: письма отправлены');
+    });
+    await boss.schedule(TRIAL_ENDING_EMAIL_QUEUE, TRIAL_ENDING_EMAIL_CRON);
+
+    await boss.createQueue(WEEKLY_DIGEST_EMAIL_QUEUE);
+    await boss.work(WEEKLY_DIGEST_EMAIL_QUEUE, async () => {
+      const sent = await sendWeeklyDigestEmails({ db, mailer: ports.mailer, appUrl: this.config.appUrl, logger: this.logger });
+      if (sent > 0) this.logger.info({ sent }, 'weekly-digest-email: письма отправлены');
+    });
+    await boss.schedule(WEEKLY_DIGEST_EMAIL_QUEUE, WEEKLY_DIGEST_EMAIL_CRON);
+
     this.boss = boss;
     this.status = 'running';
     this.logger.info(
@@ -198,6 +284,12 @@ export class Worker {
           HOROSCOPE_QUEUE,
           HOROSCOPE_READINESS_QUEUE,
           ORDER_PDF_QUEUE,
+          CUSTOM_FORECAST_QUEUE,
+          SUBSCRIPTION_RENEWAL_QUEUE,
+          WEBHOOK_RETRY_QUEUE,
+          ABANDONED_CALC_EMAIL_QUEUE,
+          TRIAL_ENDING_EMAIL_QUEUE,
+          WEEKLY_DIGEST_EMAIL_QUEUE,
         ],
       },
       'worker: pg-boss запущен, очереди активны',

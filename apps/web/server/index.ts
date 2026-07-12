@@ -16,7 +16,15 @@ import middie from '@fastify/middie';
 import fastifyStatic from '@fastify/static';
 import httpProxy from '@fastify/http-proxy';
 import { loadConfig, type CelebrityListResponse, type StoneListResponse, type WikiArticleListResponse } from '@stassist/shared';
-import { buildAllSitemapUrls, buildSitemapXml, celebrityUrls, stoneUrls, wikiArticleUrls } from '../lib/sitemap.js';
+import {
+  buildSitemapIndexXml,
+  buildSitemapXml,
+  calculatorsClusterUrls,
+  goroskopyClusterUrls,
+  kamniClusterUrls,
+  SITEMAP_CLUSTER_PATHS,
+  wikiClusterUrls,
+} from '../lib/sitemap.js';
 import { serverApiGet } from '../lib/server-api.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -64,42 +72,67 @@ async function buildWebServer() {
     app.use(viteServer.middlewares);
   }
 
-  // SEO (см. docs/architecture/23-seo-стратегия.md §3): sitemap для калькуляторов + 78 пар
-  // совместимости + ближайшие месяцы лунного календаря; robots запрещает кабинет/API.
+  // SEO (см. docs/architecture/23-seo-стратегия.md §3, промт Ф8 req.6 «sitemap-индексы»):
+  // `/sitemap.xml` — sitemap-ИНДЕКС (не гигантский плоский список) ссылается на 4 кластерных
+  // sitemap-файла; robots запрещает кабинет/API (или весь сайт при SEO_NOINDEX_ALL — см. ниже).
   // Регистрируются ДО catch-all vike-роута ниже.
   app.get('/sitemap.xml', async (_req, reply) => {
-    const urls = buildAllSitemapUrls();
-    // Ф6: кластер камней — слаги реальны (БД, не вычисляются формулой), поэтому запрашиваются
-    // через REST (web не трогает БД напрямую, см. заголовок apps/web/lib/sitemap.ts). Деградирует
-    // до пустого списка без API/БД — честный (неполный, но не падающий) sitemap.
-    let stoneSlugUrls: ReturnType<typeof stoneUrls> = [];
+    reply.header('content-type', 'application/xml');
+    return reply.send(buildSitemapIndexXml(config.appUrl, Object.values(SITEMAP_CLUSTER_PATHS)));
+  });
+
+  app.get(SITEMAP_CLUSTER_PATHS.kalkulyatory, async (_req, reply) => {
+    reply.header('content-type', 'application/xml');
+    return reply.send(buildSitemapXml(config.appUrl, calculatorsClusterUrls()));
+  });
+
+  app.get(SITEMAP_CLUSTER_PATHS.goroskopy, async (_req, reply) => {
+    reply.header('content-type', 'application/xml');
+    return reply.send(buildSitemapXml(config.appUrl, goroskopyClusterUrls()));
+  });
+
+  app.get(SITEMAP_CLUSTER_PATHS.kamni, async (_req, reply) => {
+    // Слаги камней реальны (БД, не вычисляются формулой) — запрашиваются через REST (web не
+    // трогает БД напрямую, см. заголовок apps/web/lib/sitemap.ts). Деградирует до пустого
+    // списка без API/БД — честный (неполный, но не падающий) sitemap.
+    let slugs: string[] = [];
     try {
       const stones = await serverApiGet<StoneListResponse>('/stones');
-      stoneSlugUrls = stoneUrls(stones.items.map((s) => s.slug));
+      slugs = stones.items.map((s) => s.slug);
     } catch {
-      stoneSlugUrls = [];
-    }
-    // Ф7: вики-статьи (реальные слаги из БД, редакционный контент) + знаменитости — тот же паттерн,
-    // что stoneUrls выше (web не трогает БД напрямую, только REST, см. apps/web/lib/sitemap.ts).
-    let wikiSlugUrls: ReturnType<typeof wikiArticleUrls> = [];
-    try {
-      const articles = await serverApiGet<WikiArticleListResponse>('/wiki-articles?limit=500');
-      wikiSlugUrls = wikiArticleUrls(articles.items.map((a) => ({ section: a.section, slug: a.slug })));
-    } catch {
-      wikiSlugUrls = [];
-    }
-    let celebritySlugUrls: ReturnType<typeof celebrityUrls> = [];
-    try {
-      const celebrities = await serverApiGet<CelebrityListResponse>('/celebrities?limit=500');
-      celebritySlugUrls = celebrityUrls(celebrities.items.map((c) => c.slug));
-    } catch {
-      celebritySlugUrls = [];
+      slugs = [];
     }
     reply.header('content-type', 'application/xml');
-    return reply.send(buildSitemapXml(config.appUrl, [...urls, ...stoneSlugUrls, ...wikiSlugUrls, ...celebritySlugUrls]));
+    return reply.send(buildSitemapXml(config.appUrl, kamniClusterUrls(slugs)));
+  });
+
+  app.get(SITEMAP_CLUSTER_PATHS.wiki, async (_req, reply) => {
+    let articles: Array<{ section: string; slug: string }> = [];
+    try {
+      const res = await serverApiGet<WikiArticleListResponse>('/wiki-articles?limit=1000');
+      articles = res.items.map((a) => ({ section: a.section, slug: a.slug }));
+    } catch {
+      articles = [];
+    }
+    let celebritySlugs: string[] = [];
+    try {
+      const celebrities = await serverApiGet<CelebrityListResponse>('/celebrities?limit=1000');
+      celebritySlugs = celebrities.items.map((c) => c.slug);
+    } catch {
+      celebritySlugs = [];
+    }
+    reply.header('content-type', 'application/xml');
+    return reply.send(buildSitemapXml(config.appUrl, wikiClusterUrls(articles, celebritySlugs)));
   });
   app.get('/robots.txt', async (_req, reply) => {
     reply.header('content-type', 'text/plain');
+    // Ф8 SEO-финализация (req.6 промта Ф8): SEO_NOINDEX_ALL=true (дефолт, см. packages/shared/
+    // src/config.ts) → «Disallow: /» целиком — пока заказчик явно не включит прод-запуск,
+    // поисковики НЕ должны заходить на черновик вовсе (совпадает с per-page noindex-мета, но
+    // экономит краулинговый бюджет и избегает случайной индексации до юр-гейта).
+    if (config.seo.noindexAll) {
+      return reply.send(['User-agent: *', 'Disallow: /'].join('\n'));
+    }
     return reply.send(
       ['User-agent: *', 'Disallow: /app', 'Disallow: /api/', 'Disallow: /profiles', `Sitemap: ${config.appUrl}/sitemap.xml`].join('\n'),
     );

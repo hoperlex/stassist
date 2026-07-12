@@ -41,3 +41,15 @@ export * from './reactions.js';
 export * from './friendships.js';
 export * from './reports-ugc.js';
 export * from './reputation.js';
+
+// Ф8: биллинг, эксперименты/пейвол, квиз-онбординг, email-отписки (см. docs/architecture/
+// 22-модель-данных.md §4, §7б, docs/roadmap/prompts/f8-монетизация-и-запуск.md).
+export * from './plans.js';
+export * from './subscriptions.js';
+export * from './payments.js';
+export * from './webhook-events.js';
+export * from './promo-codes.js';
+export * from './experiments.js';
+export * from './experiment-events.js';
+export * from './quiz-answers.js';
+export * from './email-optouts.js';

@@ -101,6 +101,24 @@ export {
   type FourPillars,
 } from './bazi/index.js';
 
+// --- элективная астрология (Ф8, поиск благоприятных окон — см. electives/find-electives.ts) ---
+export {
+  findElectiveWindows,
+  scoreElectiveMoment,
+  transitPositionsAt,
+  ASPECT_VALENCE,
+  BODY_SIGNIFICANCE,
+  MAX_SCAN_DAYS,
+  DEFAULT_SAMPLE_STEP_HOURS,
+  VOID_MOON_PENALTY,
+  MERCURY_RETRO_PENALTY,
+  type ElectiveWindow,
+  type ElectiveSampleScore,
+  type ElectiveAspectContribution,
+  type FindElectiveWindowsOptions,
+  type TransitPositionAt,
+} from './electives/find-electives.js';
+
 // --- утилиты углов (полезны в пакетах-потребителях: llm-сериализатор, ui) ---
 export {
   normalizeDegrees,

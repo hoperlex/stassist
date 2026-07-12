@@ -90,16 +90,143 @@ export const orderSubjectSchema = z
   });
 export type OrderSubject = z.infer<typeof orderSubjectSchema>;
 
-export const orderCreateRequestSchema = z.object({
-  kind: orderKindSchema,
-  subject: orderSubjectSchema,
+// -------------------------------------------------------------------------------------------
+// Ф8: индивидуальные прогнозы (`kind='custom_forecast'`, req.4 промта Ф8, doc 20 M3). Мастер
+// заказа: событие/период/вопрос → параметры → глубина → оплата → конвейер Ф4 с расчётами по типу.
+// -------------------------------------------------------------------------------------------
+
+/**
+ * 3 типа заказа (буквально из промта Ф8 req.4 «событие/период/вопрос»):
+ * - `event_date` — «транзиты на дату» (конкретное событие: собеседование, встреча, операция…).
+ * - `period_map` — «карта периода» (обзор транзитов на интервал, напр. следующие 1-3 месяца).
+ * - `electives_question` — «элективные окна в интервале» (поиск благоприятной даты для вопроса,
+ *   см. `findElectiveWindows` в `@stassist/astro-core`, doc-комментарий там же — правила скоринга
+ *   ЗАДОКУМЕНТИРОВАНЫ явно, не выдуманы «на глаз», закрывает находку [полнота/зависимости] f8.md).
+ */
+export const customForecastTypeSchema = z.enum(['event_date', 'period_map', 'electives_question']);
+export type CustomForecastType = z.infer<typeof customForecastTypeSchema>;
+
+/** «Глубина» из промта Ф8 req.4 — влияет на объём LLM-текста И (для electives_question) на шаг
+ *  сэмплирования astro-core (`deep` = 6ч/точка вместо 12ч, см. `DEFAULT_SAMPLE_STEP_HOURS`). */
+export const customForecastDepthSchema = z.enum(['standard', 'deep']);
+export type CustomForecastDepth = z.infer<typeof customForecastDepthSchema>;
+
+const isoDateOnlySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ожидается формат ГГГГ-ММ-ДД');
+
+/** Верхняя граница интервала «карта периода» — держим заказ в разумных рамках (страницы PDF). */
+export const MAX_PERIOD_MAP_DAYS = 90;
+/** Совпадает с `MAX_SCAN_DAYS` в `@stassist/astro-core` (защита от неограниченного расчёта). */
+export const MAX_ELECTIVES_INTERVAL_DAYS = 120;
+
+function daysBetweenIsoDates(fromIso: string, toIso: string): number {
+  return (new Date(`${toIso}T00:00:00Z`).getTime() - new Date(`${fromIso}T00:00:00Z`).getTime()) / (1000 * 60 * 60 * 24);
+}
+
+/** Свободный текст вопроса — контекст мастера заказа для ВСЕХ 3 типов (не меняет расчёт, расчёт
+ *  детерминирован — только участвует в тексте сопровождения LLM-конвейера Ф4). */
+const forecastQuestionSchema = z.string().trim().min(3).max(500).optional();
+/** Штрафовать ли ретроградный Меркурий при скоринге (см. `findElectiveWindows`
+ *  `weighRetrogradeMercury` в astro-core, doc-комментарий там же правило 7) — актуально для
+ *  вопросов о договорах/переговорах/поездках, по умолчанию выключено (не выдумываем
+ *  универсальную значимость ретро-Меркурия для любого вопроса). */
+const weighRetrogradeMercurySchema = z.boolean().default(false);
+
+const eventDateSubjectSchema = z.object({
+  type: z.literal('event_date'),
+  birthProfileId: z.string().uuid(),
+  depth: customForecastDepthSchema.default('standard'),
+  question: forecastQuestionSchema,
+  eventDate: isoDateOnlySchema,
+  weighRetrogradeMercury: weighRetrogradeMercurySchema,
 });
+
+const periodMapSubjectSchema = z.object({
+  type: z.literal('period_map'),
+  birthProfileId: z.string().uuid(),
+  depth: customForecastDepthSchema.default('standard'),
+  question: forecastQuestionSchema,
+  periodStart: isoDateOnlySchema,
+  periodEnd: isoDateOnlySchema,
+  weighRetrogradeMercury: weighRetrogradeMercurySchema,
+});
+
+const electivesQuestionSubjectSchema = z.object({
+  type: z.literal('electives_question'),
+  birthProfileId: z.string().uuid(),
+  depth: customForecastDepthSchema.default('standard'),
+  question: forecastQuestionSchema,
+  intervalStart: isoDateOnlySchema,
+  intervalEnd: isoDateOnlySchema,
+  weighRetrogradeMercury: weighRetrogradeMercurySchema,
+});
+
+/**
+ * Дискриминированное объединение по `type` (а НЕ один `z.object` с опциональными полями всех 3
+ * веток + `.refine()` на обязательность) — так `z.infer` даёт НАСТОЯЩИЙ TS discriminated union
+ * (узкие типы `EventDateSubject`/`PeriodMapSubject`/`ElectivesQuestionSubject` через
+ * `Extract<CustomForecastSubject, { type: '…' }>` в apps/worker/src/forecast/), а не единственный
+ * плоский тип с необязательными полями. Проверки длины интервала — `.refine()` ПОВЕРХ уже
+ * собранного union (не в отдельных ветках — `discriminatedUnion` требует чистых `ZodObject` без
+ * `.refine()` внутри каждой ветки).
+ */
+export const customForecastSubjectSchema = z
+  .discriminatedUnion('type', [eventDateSubjectSchema, periodMapSubjectSchema, electivesQuestionSubjectSchema])
+  .refine((s) => s.type !== 'period_map' || daysBetweenIsoDates(s.periodStart, s.periodEnd) > 0, {
+    message: 'periodEnd должен быть позже periodStart',
+    path: ['periodEnd'],
+  })
+  .refine((s) => s.type !== 'period_map' || daysBetweenIsoDates(s.periodStart, s.periodEnd) <= MAX_PERIOD_MAP_DAYS, {
+    message: `Интервал "карты периода" не должен превышать ${MAX_PERIOD_MAP_DAYS} дней`,
+    path: ['periodEnd'],
+  })
+  .refine((s) => s.type !== 'electives_question' || daysBetweenIsoDates(s.intervalStart, s.intervalEnd) > 0, {
+    message: 'intervalEnd должен быть позже intervalStart',
+    path: ['intervalEnd'],
+  })
+  .refine(
+    (s) => s.type !== 'electives_question' || daysBetweenIsoDates(s.intervalStart, s.intervalEnd) <= MAX_ELECTIVES_INTERVAL_DAYS,
+    { message: `Интервал поиска не должен превышать ${MAX_ELECTIVES_INTERVAL_DAYS} дней`, path: ['intervalEnd'] },
+  );
+export type CustomForecastSubject = z.infer<typeof customForecastSubjectSchema>;
+
+export interface CustomForecastCatalogEntry {
+  titleRu: string;
+  priceKop: number;
+}
+
+/** Цены — ориентировочные демо-значения (тот же статус, что `PDF_PRODUCT_CATALOG`, см.
+ *  doc-комментарий там же: реальный прайсинг — задача бизнеса при онбординге платёжки). */
+export const CUSTOM_FORECAST_CATALOG: Record<CustomForecastType, Record<CustomForecastDepth, CustomForecastCatalogEntry>> = {
+  event_date: {
+    standard: { titleRu: 'Прогноз на дату события — стандарт', priceKop: 39_000 },
+    deep: { titleRu: 'Прогноз на дату события — расширенный', priceKop: 69_000 },
+  },
+  period_map: {
+    standard: { titleRu: 'Карта периода — стандарт', priceKop: 59_000 },
+    deep: { titleRu: 'Карта периода — расширенная', priceKop: 99_000 },
+  },
+  electives_question: {
+    standard: { titleRu: 'Благоприятное окно — стандартный поиск', priceKop: 79_000 },
+    deep: { titleRu: 'Благоприятное окно — расширенный поиск', priceKop: 129_000 },
+  },
+};
+
+export function customForecastPriceKop(type: CustomForecastType, depth: CustomForecastDepth): number {
+  return CUSTOM_FORECAST_CATALOG[type][depth].priceKop;
+}
+
+export const orderCreateRequestSchema = z.union([
+  z.object({ kind: z.literal('pdf_report'), subject: orderSubjectSchema }),
+  z.object({ kind: z.literal('custom_forecast'), subject: customForecastSubjectSchema }),
+]);
 export type OrderCreateRequest = z.infer<typeof orderCreateRequestSchema>;
+
+const orderResponseSubjectSchema = z.union([orderSubjectSchema, customForecastSubjectSchema]);
 
 export const orderResponseSchema = z.object({
   id: z.string().uuid(),
   kind: orderKindSchema,
-  subject: orderSubjectSchema,
+  subject: orderResponseSubjectSchema,
   status: orderStatusSchema,
   priceKop: z.number().int(),
   reportId: z.string().uuid().nullable(),

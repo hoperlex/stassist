@@ -1,13 +1,21 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { orders, type Db } from '@stassist/db';
 
 export type OrderRow = typeof orders.$inferSelect;
 
 /** Заказы, готовые к генерации PDF (демо-оплата уже подтверждена синхронно в apps/api, см.
  *  `apps/api/src/routes/orders.ts` `DEMO_PAYMENTS_AUTO_CONFIRM`) — тот же паттерн poll-по-статусу,
- *  что `findQueuedAiReports`/`findPendingChartShares`. */
+ *  что `findQueuedAiReports`/`findPendingChartShares`. Ф8: фильтр `kind='pdf_report'` ОБЯЗАТЕЛЕН —
+ *  с появлением `kind='custom_forecast'` (см. apps/worker/src/forecast/) оба job'а сканируют одну
+ *  и ту же таблицу `orders` по `status='paid'`; без фильтра по `kind` этот job попытался бы
+ *  распарсить чужой формат `subject` (см. `orderSubjectSchema.parse` в generate-pdf-order-job.ts)
+ *  и ошибочно отменил бы заказ. */
 export async function findPaidOrders(db: Db, limit = 5): Promise<OrderRow[]> {
-  return db.select().from(orders).where(eq(orders.status, 'paid')).limit(limit);
+  return db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.status, 'paid'), eq(orders.kind, 'pdf_report')))
+    .limit(limit);
 }
 
 export async function markOrderAiDone(db: Db, id: string, reportId: string): Promise<void> {

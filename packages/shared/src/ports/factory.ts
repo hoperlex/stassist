@@ -15,6 +15,7 @@ import { type ObjectStorage, MemoryObjectStorage } from './object-storage.js';
 import { type Mailer, ConsoleMailer, SmtpMailer } from './mailer.js';
 import { type Geocoder, FixtureGeocoder, NominatimGeocoder } from './geocoder.js';
 import { type PaymentProvider, FakePaymentProvider } from './payment-provider.js';
+import { YookassaPaymentProvider } from './yookassa-payment-provider.js';
 import { type LlmProvider, StubLlmProvider } from './llm-provider.js';
 import { type EmbeddingProvider, StubEmbeddingProvider } from './embedding-provider.js';
 
@@ -41,6 +42,23 @@ function buildMailer(config: Config): Mailer {
   throw new Error(`MAILER=${config.mailer.driver}: неизвестный драйвер`);
 }
 
+/** Ф8: реальный адаптер ЮKassa (см. yookassa-payment-provider.ts) — сеть, не поднимается в
+ *  unit-гейте (только `PAYMENTS=stub`/`FakePaymentProvider` участвует в тестах, см. §2 конвенций
+ *  реализации и doc-комментарий YookassaPaymentProvider). */
+function buildPaymentProvider(config: Config): PaymentProvider {
+  if (config.payments.driver === 'stub') return new FakePaymentProvider();
+  if (config.payments.driver === 'yookassa') {
+    const { shopId, secretKey } = config.payments;
+    if (!shopId || !secretKey) {
+      throw new Error(
+        'PAYMENTS=yookassa: не заданы YOOKASSA_SHOP_ID/YOOKASSA_SECRET_KEY (в production это ловит parseConfig раньше, см. config.ts)',
+      );
+    }
+    return new YookassaPaymentProvider({ shopId, secretKey, returnUrl: `${config.appUrl}/app/podpiska` });
+  }
+  throw new Error(`PAYMENTS=${config.payments.driver}: неизвестный драйвер`);
+}
+
 function buildGeocoder(config: Config): Geocoder {
   if (config.geocoder.driver === 'stub') return new FixtureGeocoder();
   if (config.geocoder.driver === 'nominatim') {
@@ -61,11 +79,6 @@ export function createPorts(config: Config): Ports {
       `STORAGE=${config.storage.driver}: реальный адаптер появится в поздней фазе, сейчас доступен только stub`,
     );
   }
-  if (config.payments.driver !== 'stub') {
-    throw new Error(
-      `PAYMENTS=${config.payments.driver}: реальный адаптер появится в поздней фазе, сейчас доступен только stub`,
-    );
-  }
 
   // llm/embeddings: базовые порты — ВСЕГДА стабы (см. doc-комментарий выше). Реальные адаптеры
   // подключает вызывающий код через @stassist/llm, а не эта функция.
@@ -73,7 +86,7 @@ export function createPorts(config: Config): Ports {
     storage: new MemoryObjectStorage(),
     mailer: buildMailer(config),
     geocoder: buildGeocoder(config),
-    payments: new FakePaymentProvider(),
+    payments: buildPaymentProvider(config),
     llm: new StubLlmProvider(),
     embeddings: new StubEmbeddingProvider(),
   };

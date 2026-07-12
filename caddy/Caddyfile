@@ -8,6 +8,14 @@
 # Для продового домена задайте CADDY_DOMAIN=stassist.ru (или иной реальный домен) — тогда
 # уберите `tls internal` и caddy сам получит сертификат через Let's Encrypt.
 
+# Ф8 SEO-финализация (req.6 промта Ф8 «редиректы www/слэши»): канонический домен — БЕЗ www,
+# www.{CADDY_DOMAIN} 301-редиректит на голый домен (устраняет дубли в индексе поисковика). На
+# localhost/дев (CADDY_DOMAIN не задан) блок недостижим — не мешает локальной разработке.
+www.{$CADDY_DOMAIN:localhost} {
+	tls internal
+	redir https://{$CADDY_DOMAIN:localhost}{uri} permanent
+}
+
 {$CADDY_DOMAIN:localhost} {
 	tls internal
 

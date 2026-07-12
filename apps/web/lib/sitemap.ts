@@ -34,6 +34,14 @@ const STATIC_CALCULATOR_URLS: SitemapUrl[] = [
   // Ф5: хабы гороскопной программатики (см. docs/architecture/23-seo-стратегия.md §2).
   { path: '/goroskop', changefreq: 'daily' },
   { path: '/shutochnyj-goroskop', changefreq: 'weekly' },
+  // Ф8: маркетинговые/E-E-A-T страницы (владелец Ф8, находка [страницы-без-владельца] f8.md).
+  { path: '/tarify', changefreq: 'monthly' },
+  { path: '/o-nas', changefreq: 'monthly' },
+  { path: '/faq', changefreq: 'monthly' },
+  { path: '/methodology', changefreq: 'monthly' },
+  { path: '/redakciya', changefreq: 'monthly' },
+  { path: '/redakciya/glavnyj-redaktor', changefreq: 'monthly' },
+  { path: '/redakciya/redaktor-numerolog', changefreq: 'monthly' },
 ];
 
 /** Текущий месяц + N следующих (лунный календарь предрасчитан на 18 мес. вперёд, см. worker). */
@@ -190,6 +198,60 @@ export function buildAllSitemapUrls(now: Date = new Date()): SitemapUrl[] {
     planetyHubUrl(),
     ...arkanUrls(),
   ];
+}
+
+// -------------------------------------------------------------------------------------------
+// Ф8: SEO-финализация — sitemap-ИНДЕКСЫ по кластерам (doc 23 §3 «Sitemap-индексы по кластерам»,
+// промт Ф8 req.6). Кластеры группируют уже существующие генераторы URL выше (без изменений их
+// сигнатур — обратная совместимость с buildAllSitemapUrls() и существующими тестами сохранена,
+// это ДОБАВЛЕНИЕ поверх). Динамические части (реальные слаги камней/вики/знаменитостей из БД)
+// передаются вызывающим кодом (apps/web/server/index.ts) — тот же паттерн, что stoneUrls()/
+// wikiArticleUrls() выше («web» не трогает БД напрямую, только REST).
+// -------------------------------------------------------------------------------------------
+
+export function calculatorsClusterUrls(now: Date = new Date()): SitemapUrl[] {
+  return [...STATIC_CALCULATOR_URLS, ...compatPairUrls(), ...lunarCalendarMonthUrls(now, 3)];
+}
+
+export function goroskopyClusterUrls(now: Date = new Date()): SitemapUrl[] {
+  return [...zodiacHoroscopeUrls(), ...yearlyGoroskopUrls(now), ...lunarDayUrls(), ...humorHoroscopeUrls()];
+}
+
+/** `stoneSlugs` — реальные слаги камней из БД (динамический контент, см. заголовок раздела Ф6). */
+export function kamniClusterUrls(stoneSlugs: readonly string[]): SitemapUrl[] {
+  return [...kamniPoZnakuUrls(), ...stoneUrls(stoneSlugs)];
+}
+
+/** `articles`/`celebritySlugs` — реальные значения из БД (см. заголовок раздела Ф7). */
+export function wikiClusterUrls(
+  articles: ReadonlyArray<{ section: string; slug: string }>,
+  celebritySlugs: readonly string[],
+): SitemapUrl[] {
+  return [
+    ...wikiHubUrls(),
+    ...wikiSectionUrls(),
+    ...wikiArticleUrls(articles),
+    planetyHubUrl(),
+    ...planetInSignAndHouseUrls(),
+    ...arkanUrls(),
+    ...celebrityUrls(celebritySlugs),
+  ];
+}
+
+/** URL кластерных sitemap-файлов (относительно домена) — единый источник правды для индекса
+ *  (`buildSitemapIndexXml`) и регистрации роутов (apps/web/server/index.ts). */
+export const SITEMAP_CLUSTER_PATHS = {
+  kalkulyatory: '/sitemaps/kalkulyatory.xml',
+  goroskopy: '/sitemaps/goroskopy.xml',
+  kamni: '/sitemaps/kamni.xml',
+  wiki: '/sitemaps/wiki.xml',
+} as const;
+
+/** Sitemap-ИНДЕКС (`<sitemapindex>`, стандарт sitemaps.org) — верхнеуровневый `/sitemap.xml`
+ *  ссылается на кластерные файлы вместо одного гигантского списка (doc 23 §3). */
+export function buildSitemapIndexXml(appUrl: string, clusterPaths: readonly string[]): string {
+  const entries = clusterPaths.map((path) => `<sitemap><loc>${appUrl}${path}</loc></sitemap>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries}</sitemapindex>`;
 }
 
 export function buildSitemapXml(appUrl: string, urls: readonly SitemapUrl[]): string {

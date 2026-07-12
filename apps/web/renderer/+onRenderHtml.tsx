@@ -38,9 +38,36 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext: PageContextSe
   const seo: PageSeo | undefined = (pageContext.data as any)?.seo;
   const title = seo?.title ?? DEFAULT_TITLE;
   const description = seo?.description ?? DEFAULT_DESCRIPTION;
-  const appUrl = loadConfig().appUrl;
+  const config = loadConfig();
+  const appUrl = config.appUrl;
   const canonicalUrl = seo ? `${appUrl}${seo.canonicalPath}` : undefined;
+  // Ф8 SEO-финализация (req.6 промта Ф8): SEO_NOINDEX_ALL форсит noindex глобально (env-флаг,
+  // см. packages/shared/src/config.ts) поверх честного per-page noindex (пустой контент и т.п.).
+  const noindex = config.seo.noindexAll || Boolean(seo?.noindex);
   const jsonLdBlocks = (seo?.jsonLd ?? []).map(
+    (obj) => `<script type="application/ld+json">${dangerouslySkipEscape(JSON.stringify(obj))}</script>`,
+  );
+  // Organization/WebSite JSON-LD — сайт-глобальный, на КАЖДОЙ странице (req. SEO-финализации Ф8,
+  // doc 23 §3 «JSON-LD: … Organization, WebSite+SearchAction»).
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Stassist',
+    url: appUrl,
+    logo: `${appUrl}/favicon.svg`,
+  };
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Stassist',
+    url: appUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${appUrl}/wiki/poisk?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+  const globalJsonLdBlocks = [organizationJsonLd, websiteJsonLd].map(
     (obj) => `<script type="application/ld+json">${dangerouslySkipEscape(JSON.stringify(obj))}</script>`,
   );
 
@@ -51,13 +78,14 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext: PageContextSe
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="${description}" />
     <title>${title}</title>
-    ${seo?.noindex ? dangerouslySkipEscape('<meta name="robots" content="noindex,follow" />') : ''}
+    ${noindex ? dangerouslySkipEscape('<meta name="robots" content="noindex,follow" />') : ''}
     ${canonicalUrl ? dangerouslySkipEscape(`<link rel="canonical" href="${canonicalUrl}" />`) : ''}
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     ${canonicalUrl ? dangerouslySkipEscape(`<meta property="og:url" content="${canonicalUrl}" />`) : ''}
     ${seo?.ogImage ? dangerouslySkipEscape(`<meta property="og:image" content="${seo.ogImage}" />`) : ''}
     ${dangerouslySkipEscape(jsonLdBlocks.join(''))}
+    ${dangerouslySkipEscape(globalJsonLdBlocks.join(''))}
     ${dangerouslySkipEscape(styleText)}
   </head>
   <body>

@@ -48,6 +48,16 @@ describe('parseConfig — degraded-режим (development/test)', () => {
     expect(config.degraded).toContain('auth-keys(dev-default)');
   });
 
+  it('SEO_NOINDEX_ALL по умолчанию true (fail-safe — сайт не индексируется, пока не включат явно)', () => {
+    const config = parseConfig(BASE_ENV);
+    expect(config.seo.noindexAll).toBe(true);
+  });
+
+  it('SEO_NOINDEX_ALL=false снимает глобальный noindex (прод-запуск, req.6 промта Ф8)', () => {
+    const config = parseConfig({ ...BASE_ENV, SEO_NOINDEX_ALL: 'false' } as NodeJS.ProcessEnv);
+    expect(config.seo.noindexAll).toBe(false);
+  });
+
   it('строит keyring шифрования ПД из PD_ENCRYPTION_KEY_VERSION/PD_ENCRYPTION_KEY', () => {
     const config = parseConfig(BASE_ENV);
     expect(config.pdEncryption.activeVersion).toBe(1);

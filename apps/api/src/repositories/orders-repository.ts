@@ -3,14 +3,17 @@
  */
 import { and, desc, eq } from 'drizzle-orm';
 import { aiReports, orders, type Db } from '@stassist/db';
-import type { OrderKind, OrderSubject } from '@stassist/shared';
+import type { CustomForecastSubject, OrderKind, OrderSubject } from '@stassist/shared';
 
 export type OrderRow = typeof orders.$inferSelect;
 
 export interface InsertOrderParams {
   userId: string;
   kind: OrderKind;
-  subject: OrderSubject;
+  /** Ф8: форма зависит от `kind` (pdf_report → OrderSubject, custom_forecast →
+   *  CustomForecastSubject) — хранится как jsonb, см. doc-комментарий routes/orders.ts
+   *  `parseOrderSubjectByKind`. */
+  subject: OrderSubject | CustomForecastSubject;
   priceKop: number;
 }
 

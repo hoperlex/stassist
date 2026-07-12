@@ -223,3 +223,58 @@ export const ugcViolationReasonEnum = pgEnum('ugc_violation_reason', [
 
 /** См. `reportsUgcStatusSchema`. */
 export const reportsUgcStatusEnum = pgEnum('reports_ugc_status', ['pending', 'resolved', 'dismissed']);
+
+// -------------------------------------------------------------------------------------------
+// Ф8: биллинг, эксперименты/пейвол, квиз-онбординг, email-отписки (см. docs/architecture/
+// 22-модель-данных.md §4, §7б, docs/roadmap/prompts/f8-монетизация-и-запуск.md).
+// -------------------------------------------------------------------------------------------
+
+/** См. `planCodeSchema` в packages/shared/src/schemas/billing.ts — единый источник правды по
+ *  ценам/фичам (`PLAN_CATALOG`); эта таблица (`plans`) — материализация тех же кодов для FK
+ *  `subscriptions.plan_code`, сидируется прямо в миграции 0008 (см. doc-комментарий там же). */
+export const planCodeEnum = pgEnum('plan_code', ['free', 'premium_m', 'premium_y']);
+
+/** 'none' — для `free` (бессрочно, без цикла списаний); 'month'/'year' — платные планы. */
+export const planPeriodEnum = pgEnum('plan_period', ['none', 'month', 'year']);
+
+/**
+ * См. `subscriptionStatusSchema`. Жизненный цикл (закрывает находку [консистентность-модель-
+ * данных] f8.md — набор синхронизирован с doc 22 §4, `expired` добавлен явно): `trial`/`active` →
+ * отмена пользователем ставит `cancel_at_period_end=true`, статус ОСТАЁТСЯ `active` до конца
+ * периода (юридическое требование прозрачности — доступ не обрывается сразу) → по достижении
+ * `current_period_end` worker переводит в `expired`. `past_due` — неудачное списание, грейс 3 дня
+ * (см. промт Ф8 req.2), после грейса → `expired`. `cancelled` — используется для мгновенной
+ * отмены (напр. возврат/отмена триала до первого списания), в общем потоке «отмена в 1 клик» —
+ * это `cancel_at_period_end`, а не мгновенный `cancelled`.
+ */
+export const subscriptionStatusEnum = pgEnum('subscription_status', [
+  'trial',
+  'active',
+  'past_due',
+  'cancelled',
+  'expired',
+]);
+
+/** 'stub' — FakePaymentProvider (дефолт локально, см. §2 конвенций реализации). */
+export const paymentProviderEnum = pgEnum('payment_provider', ['yookassa', 'cloudpayments', 'stub']);
+
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'succeeded', 'canceled', 'refunded']);
+
+/** 54-ФЗ, каркас (см. промт Ф8 req.1 «чеки 54-ФЗ через встроенную фискализацию провайдера»):
+ *  `not_required` — стаб-платежи/бесплатные операции; `pending`/`sent`/`failed` — реальный статус
+ *  чека от ЮKassa. Полная интеграция номенклатуры/НДС — ручной шаг онбординга (см.
+ *  launch-checklist.md), здесь только каркас статуса. */
+export const receiptStatusEnum = pgEnum('receipt_status', ['not_required', 'pending', 'sent', 'failed']);
+
+/** См. `promoCodeKindSchema`. */
+export const promoCodeKindEnum = pgEnum('promo_code_kind', [
+  'percent_discount',
+  'fixed_discount_kop',
+  'trial_extension_days',
+]);
+
+/** См. `experimentEventKindSchema` — A/B-каркас пейвола (doc 22 §7б). */
+export const experimentEventKindEnum = pgEnum('experiment_event_kind', ['exposed', 'converted']);
+
+/** См. `emailOptoutScopeSchema`. */
+export const emailOptoutScopeEnum = pgEnum('email_optout_scope', ['all', 'digest', 'marketing']);

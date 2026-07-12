@@ -14,6 +14,8 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
   apiErrorSchema,
+  customForecastPriceKop,
+  customForecastSubjectSchema,
   orderCreateRequestSchema,
   orderListResponseSchema,
   orderResponseSchema,
@@ -44,8 +46,16 @@ const DEMO_PAYMENTS_AUTO_CONFIRM = true;
 
 const idParamsSchema = z.object({ id: z.string().uuid() });
 
+/** Ф8: `row.subject` — форма зависит от `row.kind` (pdf_report → orderSubjectSchema,
+ *  custom_forecast → customForecastSubjectSchema, см. doc-комментарий packages/shared/src/
+ *  schemas/order.ts «orderCreateRequestSchema — union по kind»). */
+function parseOrderSubjectByKind(kind: OrderRow['kind'], raw: unknown) {
+  if (kind === 'custom_forecast') return customForecastSubjectSchema.parse(raw);
+  return orderSubjectSchema.parse(raw);
+}
+
 async function toResponse(config: Config, db: NonNullable<ReturnType<typeof requireDbOr503>>, row: OrderRow): Promise<OrderResponse> {
-  const subject = orderSubjectSchema.parse(row.subject);
+  const subject = parseOrderSubjectByKind(row.kind, row.subject);
   let pdfUrl: string | null = null;
   if (row.status === 'delivered' && row.reportId) {
     const pdfKey = await getReportPdfKey(db, row.reportId);
@@ -80,28 +90,41 @@ export const ordersRoutes: FastifyPluginAsyncZod<OrdersRoutesOptions> = async (a
       const db = requireDbOr503(config, reply, req.id);
       if (!db) return;
       const userId = req.authUser!.id;
-      const { kind, subject } = req.body;
 
       const keyring = getPdKeyring(config);
-      const profile = await getBirthProfile(db, userId, subject.birthProfileId, keyring);
+      const profile = await getBirthProfile(db, userId, req.body.subject.birthProfileId, keyring);
       if (!profile) {
         return reply.status(404).send({ error: { message: 'Профиль рождения не найден', requestId: req.id } });
       }
-      if (subject.variant === 'compat' && subject.partnerBirthProfileId) {
-        const partner = await getBirthProfile(db, userId, subject.partnerBirthProfileId, keyring);
-        if (!partner) {
-          return reply.status(404).send({ error: { message: 'Профиль рождения партнёра не найден', requestId: req.id } });
+
+      let priceKop: number;
+      let description: string;
+      if (req.body.kind === 'pdf_report') {
+        const { subject } = req.body;
+        if (subject.variant === 'compat' && subject.partnerBirthProfileId) {
+          const partner = await getBirthProfile(db, userId, subject.partnerBirthProfileId, keyring);
+          if (!partner) {
+            return reply.status(404).send({ error: { message: 'Профиль рождения партнёра не найден', requestId: req.id } });
+          }
         }
+        priceKop = PDF_PRODUCT_CATALOG[subject.productType].priceKop;
+        description = PDF_PRODUCT_CATALOG[subject.productType].titleRu;
+      } else {
+        // custom_forecast (Ф8, req.4) — мастер заказа «событие/период/вопрос», см. doc-комментарий
+        // customForecastSubjectSchema в packages/shared/src/schemas/order.ts. Конвейер генерации —
+        // apps/worker/src/forecast/generate-custom-forecast-job.ts (тот же poll-по-статусу
+        // паттерн, что PDF-заказы Ф6).
+        priceKop = customForecastPriceKop(req.body.subject.type, req.body.subject.depth);
+        description = `Индивидуальный прогноз — Stassist`;
       }
 
-      const priceKop = PDF_PRODUCT_CATALOG[subject.productType].priceKop;
-      let order = await insertOrder(db, { userId, kind, subject, priceKop });
+      let order = await insertOrder(db, { userId, kind: req.body.kind, subject: req.body.subject, priceKop });
 
       if (DEMO_PAYMENTS_AUTO_CONFIRM) {
         const ports = getPorts(config, db);
         await ports.payments.createPayment({
           amountKop: priceKop,
-          description: PDF_PRODUCT_CATALOG[subject.productType].titleRu,
+          description,
           idempotencyKey: order.id,
         });
         const paid = await markOrderPaid(db, order.id);
