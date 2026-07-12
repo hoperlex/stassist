@@ -204,3 +204,6 @@
   .foot-links a{ color:var(--ink-2); font-size:14px; font-weight:500; }
   .foot-links a:hover{ color:var(--ink); }
   .disclaimer{ color:var(--ink-3); font-size:13px; margin-top:26px; line-height:1.55; max-width:760px; font-weight:500; }
+  .copyright{ color:var(--ink-3); font-size:13px; margin-top:14px; line-height:1.55; font-weight:500; }
+  .copyright a{ color:var(--ink-2); text-decoration:none; }
+  .copyright a:hover{ color:var(--ink); }

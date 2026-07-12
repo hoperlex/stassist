@@ -208,3 +208,6 @@
   .footer-brand .fb-name b{color:var(--gold); font-weight:400}
   .footer-links{display:flex; flex-wrap:wrap; gap:8px 26px; font-size:14px; color:var(--ink-2); font-weight:500}
   .footer-note{margin-top:26px; font-size:13px; color:var(--ink-3); line-height:1.55; max-width:760px}
+  .footer-copyright{margin-top:14px; font-size:13px; color:var(--ink-3); line-height:1.55}
+  .footer-copyright a{color:var(--ink-2); text-decoration:none}
+  .footer-copyright a:hover{color:var(--gold)}

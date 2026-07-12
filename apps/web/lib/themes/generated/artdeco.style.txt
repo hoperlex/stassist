@@ -208,3 +208,6 @@
   .footlinks a + a::before{content:"";position:absolute;left:-1px;top:50%;width:3px;height:3px;background:var(--gold);transform:translateY(-50%) rotate(45deg);opacity:.7}
   .footlinks a:hover{color:var(--gold-bright)}
   .disclaimer{text-align:center;color:var(--ink-dim);font-size:12.5px;letter-spacing:.02em;max-width:760px;margin:0 auto;line-height:1.7}
+  .copyright{text-align:center;color:var(--ink-dim);font-size:12.5px;letter-spacing:.02em;max-width:760px;margin:14px auto 0;line-height:1.7}
+  .copyright a{color:var(--gold);text-decoration:none}
+  .copyright a:hover{color:var(--gold-bright)}
