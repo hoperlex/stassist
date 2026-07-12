@@ -13,6 +13,7 @@ import { createCache, extractStyle, StyleProvider } from '@ant-design/cssinjs';
 import { escapeInject, dangerouslySkipEscape } from 'vike/server';
 import type { OnRenderHtmlAsync, PageContextServer } from 'vike/types';
 import { loadConfig } from '@stassist/shared';
+import { AppRoot } from '../lib/site/AppRoot.js';
 import type { PageSeo } from '../lib/seo.js';
 
 const DEFAULT_TITLE = 'Зодиакум — русскоязычный астрологический портал';
@@ -20,16 +21,10 @@ const DEFAULT_DESCRIPTION =
   'Гороскопы, ИИ-астропомощник, нумерология и матрица судьбы, база знаний. Скоро запуск.';
 
 export const onRenderHtml: OnRenderHtmlAsync = async (pageContext: PageContextServer) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Page = pageContext.Page as React.ComponentType<any> | undefined;
-  if (!Page) {
-    throw new Error('pages/**/+Page.tsx не найден для текущего маршрута');
-  }
-
   const cache = createCache();
   const pageHtml = renderToString(
     <StyleProvider cache={cache} hashPriority="high">
-      <Page pageContext={pageContext} />
+      <AppRoot pageContext={pageContext} />
     </StyleProvider>,
   );
   // extractStyle(cache) отдаёт готовые <style>…</style> с data-атрибутами AntD (нужны клиенту

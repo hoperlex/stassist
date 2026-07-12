@@ -4,12 +4,12 @@ import { isVariantId, type VariantId } from './variants.js';
 const STORAGE_KEY = 'zx-home-variant';
 
 /**
- * Активный вариант оформления главной. SSR и первый клиентский рендер всегда «existing» —
- * так гидратация совпадает и SEO-версия остаётся исходной; сохранённый выбор применяется уже
- * после монтирования (useEffect), т.е. без гидратационного рассинхрона.
+ * Активный вариант оформления главной. SSR и первый клиентский рендер всегда «light» («Небесный
+ * свет» — тема сайта по умолчанию); так гидратация совпадает и SEO-версия — целевой дизайн.
+ * Сохранённый выбор применяется уже после монтирования (useEffect), без гидратационного рассинхрона.
  */
 export function useHomeVariant(): { variant: VariantId; choose: (v: VariantId) => void } {
-  const [variant, setVariant] = useState<VariantId>('existing');
+  const [variant, setVariant] = useState<VariantId>('light');
 
   useEffect(() => {
     try {

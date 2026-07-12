@@ -15,7 +15,7 @@ import almanacHtml from './generated/almanac.body.html?raw';
 import auroraCss from './generated/aurora.style.txt?raw';
 import auroraHtml from './generated/aurora.body.html?raw';
 
-export type VariantId = 'existing' | 'midnight' | 'artdeco' | 'light' | 'almanac' | 'aurora';
+export type VariantId = 'light' | 'midnight' | 'artdeco' | 'almanac' | 'aurora';
 
 export interface VariantMeta {
   id: VariantId;
@@ -26,10 +26,9 @@ export interface VariantMeta {
 }
 
 export const VARIANTS: VariantMeta[] = [
-  { id: 'existing', label: 'Текущий', fullLabel: 'Текущий (минимал)' },
+  { id: 'light', label: 'Небесный свет', fullLabel: 'Небесный свет (тема сайта)' },
   { id: 'midnight', label: 'Космос', fullLabel: 'Полночный космос' },
   { id: 'artdeco', label: 'Ар-деко', fullLabel: 'Мистический ар-деко' },
-  { id: 'light', label: 'Небесный свет', fullLabel: 'Небесный свет' },
   { id: 'almanac', label: 'Альманах', fullLabel: 'Ретро-альманах' },
   { id: 'aurora', label: 'Аврора', fullLabel: 'Аврора / неон-модерн' },
 ];
@@ -39,7 +38,7 @@ export interface VariantAsset {
   html: string;
 }
 
-export const VARIANT_ASSETS: Record<Exclude<VariantId, 'existing'>, VariantAsset> = {
+export const VARIANT_ASSETS: Record<VariantId, VariantAsset> = {
   midnight: { css: midnightCss, html: midnightHtml },
   artdeco: { css: artdecoCss, html: artdecoHtml },
   light: { css: lightCss, html: lightHtml },
