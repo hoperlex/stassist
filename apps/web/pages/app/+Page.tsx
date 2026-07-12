@@ -37,6 +37,9 @@ export function Page(): React.JSX.Element {
           <Space wrap>
             <Button href="/profiles">Мои профили рождения</Button>
             <Button href="/app/zakazat-pdf">Заказать PDF-отчёт</Button>
+            <Button href="/app/soobshchestvo">Сообщество</Button>
+            <Button href="/app/druzya">Друзья</Button>
+            <Button href="/app/moderaciya">Модерация</Button>
           </Space>
         </Space>
       </Card>

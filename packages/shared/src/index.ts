@@ -13,9 +13,14 @@ export * from './schemas/stone.js';
 export * from './schemas/order.js';
 export * from './schemas/notification.js';
 export * from './schemas/personal-cycles.js';
+export * from './schemas/planet.js';
+export * from './schemas/community.js';
+export * from './schemas/wiki.js';
+export * from './schemas/celebrity.js';
 
 export * from './crypto/pd-cipher.js';
 export * from './legal/doc-versions.js';
+export * from './legal/community-rules.js';
 
 export * from './ports/object-storage.js';
 export * from './ports/mailer.js';

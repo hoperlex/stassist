@@ -72,3 +72,7 @@ export * from './horoscope/build-prompt.js';
 export * from './horoscope/templates.js';
 export * from './horoscope/generate-batch.js';
 export * from './horoscope/personal.js';
+
+// --- Ф7: вики (генератор контента) + модерация коммьюнити --------------------------------------
+export * from './corpus/wiki-content.js';
+export * from './moderation/ugc-classifier.js';

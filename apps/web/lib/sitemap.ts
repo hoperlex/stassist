@@ -6,12 +6,14 @@
  */
 import {
   allCanonicalCompatPairs,
+  CLASSICAL_PLANETS,
   EASTERN_ANIMAL_RU_SLUGS,
   EASTERN_ANIMAL_SLUGS,
   HOROSCOPE_PERIOD_SLUGS_RU,
   HOROSCOPE_PROFESSION_SLUGS,
   HOROSCOPE_TOPIC_SLUGS_RU,
   LUNAR_DAY_NUMBERS,
+  WIKI_SECTIONS,
   ZODIAC_SIGNS,
   type HoroscopePeriod,
   type HoroscopeTopic,
@@ -124,6 +126,54 @@ export function stoneUrls(slugs: readonly string[]): SitemapUrl[] {
   return [{ path: '/kamni', changefreq: 'weekly' }, ...slugs.map((slug) => ({ path: `/kamni/${slug}`, changefreq: 'monthly' as const }))];
 }
 
+// -------------------------------------------------------------------------------------------
+// Ф7: вики (см. docs/architecture/23-seo-стратегия.md §2 «/wiki/{razdel}/{slug}, 200+ на старте»),
+// кластер «планета в знаке/доме» (240 URL, «/planety/{planeta}-v-{znak|dom}»), «/arkan/{n}» (23,
+// см. findings f7.md [страница-без-владельца] — закреплено за Ф7 как алиас на /wiki/arcana/*),
+// знаменитости («/karta/{celebrity}»). Правила URL см. apps/web/lib/planety-route.ts.
+// -------------------------------------------------------------------------------------------
+
+export function wikiHubUrls(): SitemapUrl[] {
+  return [
+    { path: '/wiki', changefreq: 'weekly' },
+    { path: '/pravila-soobshchestva', changefreq: 'monthly' },
+  ];
+}
+
+export function wikiSectionUrls(): SitemapUrl[] {
+  return WIKI_SECTIONS.map((section) => ({ path: `/wiki/${section}`, changefreq: 'weekly' as const }));
+}
+
+/** `articles` — реальные (раздел, слаг) из БД (динамический редакционный контент), см.
+ *  `stoneUrls()` выше для того же паттерна («web» не трогает БД напрямую, только REST). */
+export function wikiArticleUrls(articles: ReadonlyArray<{ section: string; slug: string }>): SitemapUrl[] {
+  return articles.map((a) => ({ path: `/wiki/${a.section}/${a.slug}`, changefreq: 'monthly' as const }));
+}
+
+export function planetyHubUrl(): SitemapUrl {
+  return { path: '/planety', changefreq: 'monthly' };
+}
+
+/** 10 планет × 12 знаков + 10 планет × 12 домов = 240 (см. doc 23 §2). ЧИСТАЯ функция —
+ *  планеты/знаки/дома фиксированы, вычисляется полностью без БД. */
+export function planetInSignAndHouseUrls(): SitemapUrl[] {
+  const urls: SitemapUrl[] = [];
+  for (const planet of CLASSICAL_PLANETS) {
+    for (const sign of ZODIAC_SIGNS) urls.push({ path: `/planety/${planet.ruSlug}-v-${sign.slugPrepositional}`, changefreq: 'monthly' });
+    for (let house = 1; house <= 12; house++) urls.push({ path: `/planety/${planet.ruSlug}-v-${house}-dome`, changefreq: 'monthly' });
+  }
+  return urls;
+}
+
+export function arkanUrls(): SitemapUrl[] {
+  return Array.from({ length: 22 }, (_, i) => ({ path: `/arkan/${i + 1}`, changefreq: 'monthly' as const }));
+}
+
+/** `slugs` — реальные слаги знаменитостей из БД. */
+export function celebrityUrls(slugs: readonly string[]): SitemapUrl[] {
+  return slugs.map((slug) => ({ path: `/karta/${slug}`, changefreq: 'monthly' as const }));
+}
+
 export function buildAllSitemapUrls(now: Date = new Date()): SitemapUrl[] {
   return [
     ...STATIC_CALCULATOR_URLS,
@@ -134,6 +184,11 @@ export function buildAllSitemapUrls(now: Date = new Date()): SitemapUrl[] {
     ...lunarDayUrls(),
     ...humorHoroscopeUrls(),
     ...kamniPoZnakuUrls(),
+    ...wikiHubUrls(),
+    ...wikiSectionUrls(),
+    ...planetInSignAndHouseUrls(),
+    planetyHubUrl(),
+    ...arkanUrls(),
   ];
 }
 

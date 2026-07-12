@@ -16,6 +16,10 @@ export interface ZodiacSignInfo {
   nameRu: string;
   /** Родительный падеж («дева» → «Девы») — для шаблонов заголовков «совместимость Овна и Девы». */
   nameRuGenitive: string;
+  /** Предложный падеж («в ком? в чём?»), слаг для URL Ф7 `/planety/{planeta}-v-{znak}`
+   *  (напр. `lve` → «Марс в Льве»). Явные грамматические формы (не алгоритмическое склонение —
+   *  см. заголовок packages/shared/src/schemas/planet.ts). */
+  slugPrepositional: string;
   /** Юникод-глиф знака (блок Miscellaneous Symbols U+2648–2653) — шрифто-независимый источник
    *  символов для ChartWheel (см. README пакета `packages/ui`, раздел «Источник глифов»). */
   glyph: string;
@@ -25,18 +29,18 @@ export interface ZodiacSignInfo {
 }
 
 export const ZODIAC_SIGNS: readonly ZodiacSignInfo[] = [
-  { signIndex: 0, slug: 'oven', nameRu: 'Овен', nameRuGenitive: 'Овна', glyph: '♈', element: 'fire', elementRu: 'огонь', quality: 'cardinal' },
-  { signIndex: 1, slug: 'telec', nameRu: 'Телец', nameRuGenitive: 'Тельца', glyph: '♉', element: 'earth', elementRu: 'земля', quality: 'fixed' },
-  { signIndex: 2, slug: 'bliznecy', nameRu: 'Близнецы', nameRuGenitive: 'Близнецов', glyph: '♊', element: 'air', elementRu: 'воздух', quality: 'mutable' },
-  { signIndex: 3, slug: 'rak', nameRu: 'Рак', nameRuGenitive: 'Рака', glyph: '♋', element: 'water', elementRu: 'вода', quality: 'cardinal' },
-  { signIndex: 4, slug: 'lev', nameRu: 'Лев', nameRuGenitive: 'Льва', glyph: '♌', element: 'fire', elementRu: 'огонь', quality: 'fixed' },
-  { signIndex: 5, slug: 'deva', nameRu: 'Дева', nameRuGenitive: 'Девы', glyph: '♍', element: 'earth', elementRu: 'земля', quality: 'mutable' },
-  { signIndex: 6, slug: 'vesy', nameRu: 'Весы', nameRuGenitive: 'Весов', glyph: '♎', element: 'air', elementRu: 'воздух', quality: 'cardinal' },
-  { signIndex: 7, slug: 'skorpion', nameRu: 'Скорпион', nameRuGenitive: 'Скорпиона', glyph: '♏', element: 'water', elementRu: 'вода', quality: 'fixed' },
-  { signIndex: 8, slug: 'strelec', nameRu: 'Стрелец', nameRuGenitive: 'Стрельца', glyph: '♐', element: 'fire', elementRu: 'огонь', quality: 'mutable' },
-  { signIndex: 9, slug: 'kozerog', nameRu: 'Козерог', nameRuGenitive: 'Козерога', glyph: '♑', element: 'earth', elementRu: 'земля', quality: 'cardinal' },
-  { signIndex: 10, slug: 'vodoley', nameRu: 'Водолей', nameRuGenitive: 'Водолея', glyph: '♒', element: 'air', elementRu: 'воздух', quality: 'fixed' },
-  { signIndex: 11, slug: 'ryby', nameRu: 'Рыбы', nameRuGenitive: 'Рыб', glyph: '♓', element: 'water', elementRu: 'вода', quality: 'mutable' },
+  { signIndex: 0, slug: 'oven', nameRu: 'Овен', nameRuGenitive: 'Овна', slugPrepositional: 'ovne', glyph: '♈', element: 'fire', elementRu: 'огонь', quality: 'cardinal' },
+  { signIndex: 1, slug: 'telec', nameRu: 'Телец', nameRuGenitive: 'Тельца', slugPrepositional: 'teltse', glyph: '♉', element: 'earth', elementRu: 'земля', quality: 'fixed' },
+  { signIndex: 2, slug: 'bliznecy', nameRu: 'Близнецы', nameRuGenitive: 'Близнецов', slugPrepositional: 'bliznetsah', glyph: '♊', element: 'air', elementRu: 'воздух', quality: 'mutable' },
+  { signIndex: 3, slug: 'rak', nameRu: 'Рак', nameRuGenitive: 'Рака', slugPrepositional: 'rake', glyph: '♋', element: 'water', elementRu: 'вода', quality: 'cardinal' },
+  { signIndex: 4, slug: 'lev', nameRu: 'Лев', nameRuGenitive: 'Льва', slugPrepositional: 'lve', glyph: '♌', element: 'fire', elementRu: 'огонь', quality: 'fixed' },
+  { signIndex: 5, slug: 'deva', nameRu: 'Дева', nameRuGenitive: 'Девы', slugPrepositional: 'deve', glyph: '♍', element: 'earth', elementRu: 'земля', quality: 'mutable' },
+  { signIndex: 6, slug: 'vesy', nameRu: 'Весы', nameRuGenitive: 'Весов', slugPrepositional: 'vesah', glyph: '♎', element: 'air', elementRu: 'воздух', quality: 'cardinal' },
+  { signIndex: 7, slug: 'skorpion', nameRu: 'Скорпион', nameRuGenitive: 'Скорпиона', slugPrepositional: 'skorpione', glyph: '♏', element: 'water', elementRu: 'вода', quality: 'fixed' },
+  { signIndex: 8, slug: 'strelec', nameRu: 'Стрелец', nameRuGenitive: 'Стрельца', slugPrepositional: 'streltse', glyph: '♐', element: 'fire', elementRu: 'огонь', quality: 'mutable' },
+  { signIndex: 9, slug: 'kozerog', nameRu: 'Козерог', nameRuGenitive: 'Козерога', slugPrepositional: 'kozeroge', glyph: '♑', element: 'earth', elementRu: 'земля', quality: 'cardinal' },
+  { signIndex: 10, slug: 'vodoley', nameRu: 'Водолей', nameRuGenitive: 'Водолея', slugPrepositional: 'vodolee', glyph: '♒', element: 'air', elementRu: 'воздух', quality: 'fixed' },
+  { signIndex: 11, slug: 'ryby', nameRu: 'Рыбы', nameRuGenitive: 'Рыб', slugPrepositional: 'rybah', glyph: '♓', element: 'water', elementRu: 'вода', quality: 'mutable' },
 ];
 
 export const zodiacSignSlugSchema = z.enum([
@@ -53,6 +57,12 @@ export function signBySlug(slug: string): ZodiacSignInfo | undefined {
 }
 export function signByIndex(index: number): ZodiacSignInfo | undefined {
   return SIGN_BY_INDEX.get(index);
+}
+
+const SIGN_BY_SLUG_PREPOSITIONAL = new Map(ZODIAC_SIGNS.map((s) => [s.slugPrepositional, s]));
+/** Ф7: разбор URL `/planety/{planeta}-v-{znak}` (см. apps/web/lib/planety-route.ts). */
+export function signBySlugPrepositional(slug: string): ZodiacSignInfo | undefined {
+  return SIGN_BY_SLUG_PREPOSITIONAL.get(slug);
 }
 
 // -------------------------------------------------------------------------------------------

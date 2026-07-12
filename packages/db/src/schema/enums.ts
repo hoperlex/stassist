@@ -186,3 +186,40 @@ export const notificationKindEnum = pgEnum('notification_kind', [
  *  draft публикуется на SSR с бейджем «требует редактуры» (§6 конвенций реализации, «правило
  *  непустоты»), reviewed — прошёл редакционную проверку минералогических фактов. */
 export const stoneStatusEnum = pgEnum('stone_status', ['draft', 'reviewed']);
+
+// -------------------------------------------------------------------------------------------
+// Ф7: коммьюнити (см. docs/architecture/22-модель-данных.md §7, docs/roadmap/prompts/
+// f7-вики-и-коммьюнити.md, packages/shared/src/schemas/community.ts — единый источник правды
+// по значениям, эти pgEnum — просто материализация тех же строк в БД).
+// -------------------------------------------------------------------------------------------
+
+/** См. `postKindSchema`. */
+export const postKindEnum = pgEnum('post_kind', ['chart_review_request', 'discussion', 'gallery']);
+
+/** См. `postStatusSchema` — общий для posts/comments (оба используют один жизненный цикл
+ *  видимости: published → hidden (модератор/жалоба) → deleted (автор/модератор)). */
+export const ugcStatusEnum = pgEnum('ugc_status', ['published', 'hidden', 'deleted']);
+
+/** См. `ugcModerationStatusSchema` — общий для posts/comments (премодерация новичка/классификатор). */
+export const ugcModerationStatusEnum = pgEnum('ugc_moderation_status', ['pending', 'approved', 'rejected']);
+
+/** См. `reactionEntitySchema`/`reactionKindSchema`. */
+export const reactionEntityEnum = pgEnum('reaction_entity', ['post', 'comment']);
+export const reactionKindEnum = pgEnum('reaction_kind', ['like', 'heart', 'insightful', 'support']);
+
+/** См. `friendshipStatusSchema`. */
+export const friendshipStatusEnum = pgEnum('friendship_status', ['pending', 'accepted']);
+
+/** См. `ugcViolationReasonSchema` — общий словарь для `reports_ugc.reason` И для причин,
+ *  которые проставляет автоклассификатор (packages/llm/src/moderation/ugc-classifier.ts). */
+export const ugcViolationReasonEnum = pgEnum('ugc_violation_reason', [
+  'death_or_illness_prediction',
+  'curse_or_love_spell',
+  'medical_directive',
+  'financial_directive',
+  'insult',
+  'other',
+]);
+
+/** См. `reportsUgcStatusSchema`. */
+export const reportsUgcStatusEnum = pgEnum('reports_ugc_status', ['pending', 'resolved', 'dismissed']);

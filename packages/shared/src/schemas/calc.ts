@@ -110,6 +110,36 @@ export const sharePositionsSchema = z.object({
 });
 export type SharePositions = z.infer<typeof sharePositionsSchema>;
 
+/**
+ * Ф7 (см. docs/roadmap/prompts/f7-вики-и-коммьюнити.md req.1 M8, docs/architecture/
+ * 22-модель-данных.md §7 «posts.chart_id ссылается на копию карты без ПД»): анонимизация полной
+ * `ChartData` для публикации поста в коммьюнити. Переиспользует ТОТ ЖЕ `sharePositionsSchema`,
+ * что и `chart_shares` (Ф3, OG-шеринг) — обе фичи требуют идентичного среза (позиции/дома/
+ * аспекты, БЕЗ input/даты/времени/места/имени). `.parse()` — активная защита (zod `z.object` по
+ * умолчанию отбрасывает нераспознанные ключи, «strip»), а не просто TS-типизация: даже если в
+ * будущем `ChartData` случайно обрастёт PD-полем, оно НЕ попадёт в результат, т.к. объект ниже
+ * собирается через явный whitelist полей, а не через spread.
+ *
+ * ПРОВЕРЕНО unit-тестом без БД (см. calc.test.ts): результат не содержит birthDate/birthTime/
+ * place/lat/lon/name/tzId — эти поля физически отсутствуют и в исходной `ChartData` (см. заголовок
+ * chart.ts — вход/выход разделены, `ChartData` никогда не хранит `ChartInput`), поэтому здесь
+ * достаточно доказать, что мы возвращаем СТРОГО whitelist полей.
+ */
+export function anonymizeChartData(data: z.infer<typeof chartDataSchema>): SharePositions {
+  return sharePositionsSchema.parse({
+    bodies: data.bodies,
+    points: data.points,
+    angles: data.angles,
+    houses: data.houses,
+    aspects: data.aspects,
+    meta: {
+      houseSystem: data.meta.houseSystem,
+      zodiac: data.meta.zodiac,
+      noHouses: data.meta.noHouses,
+    },
+  });
+}
+
 export const chartShareCreateRequestSchema = z.object({
   kind: shareKindSchema,
   positions: sharePositionsSchema,

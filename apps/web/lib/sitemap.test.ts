@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arkanUrls,
   buildAllSitemapUrls,
   buildSitemapXml,
+  celebrityUrls,
   compatPairUrls,
   humorHoroscopeUrls,
   kamniPoZnakuUrls,
   lunarCalendarMonthUrls,
   lunarDayUrls,
+  planetInSignAndHouseUrls,
+  planetyHubUrl,
   stoneUrls,
+  wikiArticleUrls,
+  wikiSectionUrls,
   yearlyGoroskopUrls,
   zodiacHoroscopeUrls,
 } from './sitemap.js';
@@ -108,5 +114,52 @@ describe('buildAllSitemapUrls', () => {
     expect(paths).toContain('/vostochnyj-goroskop/2026/krysa');
     expect(paths).toContain('/lunnyj-den/1');
     expect(paths).toContain('/shutochnyj-goroskop/oven');
+  });
+
+  it('включает Ф7: хаб вики + 10 разделов + 240 URL «планета в знаке/доме» + 22 аркана', () => {
+    const urls = buildAllSitemapUrls(new Date(Date.UTC(2026, 0, 1)));
+    const paths = urls.map((u) => u.path);
+    expect(paths).toContain('/wiki');
+    expect(paths).toContain('/wiki/planets');
+    expect(paths).toContain('/planety');
+    expect(paths).toContain('/arkan/1');
+    expect(paths).toContain('/arkan/22');
+  });
+});
+
+describe('planetInSignAndHouseUrls (Ф7, doc 23 §2 «10×24=240»)', () => {
+  it('ровно 240 URL без дублей: 10 планет × (12 знаков + 12 домов)', () => {
+    const urls = planetInSignAndHouseUrls();
+    expect(urls).toHaveLength(240);
+    expect(new Set(urls.map((u) => u.path)).size).toBe(240);
+    expect(urls.some((u) => u.path === '/planety/mars-v-lve')).toBe(true);
+    expect(urls.some((u) => u.path === '/planety/mars-v-7-dome')).toBe(true);
+  });
+});
+
+describe('wikiSectionUrls / wikiArticleUrls / planetyHubUrl / arkanUrls / celebrityUrls (Ф7)', () => {
+  it('10 разделов вики', () => {
+    expect(wikiSectionUrls()).toHaveLength(10);
+    expect(wikiSectionUrls().some((u) => u.path === '/wiki/glossary')).toBe(true);
+  });
+
+  it('wikiArticleUrls строит /wiki/{section}/{slug} по переданным записям', () => {
+    const urls = wikiArticleUrls([{ section: 'planets', slug: 'mars' }]);
+    expect(urls).toEqual([{ path: '/wiki/planets/mars', changefreq: 'monthly' }]);
+  });
+
+  it('planetyHubUrl — /planety', () => {
+    expect(planetyHubUrl().path).toBe('/planety');
+  });
+
+  it('arkanUrls — ровно 22 URL /arkan/{1..22}', () => {
+    const urls = arkanUrls();
+    expect(urls).toHaveLength(22);
+    expect(urls[0]!.path).toBe('/arkan/1');
+    expect(urls[21]!.path).toBe('/arkan/22');
+  });
+
+  it('celebrityUrls строит /karta/{slug} по переданным слагам', () => {
+    expect(celebrityUrls(['albert-eynshteyn'])).toEqual([{ path: '/karta/albert-eynshteyn', changefreq: 'monthly' }]);
   });
 });

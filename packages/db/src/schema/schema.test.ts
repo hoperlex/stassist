@@ -88,6 +88,45 @@ describe('таблицы Ф6', () => {
   });
 });
 
+describe('таблицы Ф7', () => {
+  it('posts содержит chart_id (анонимная копия, НЕ отдельная таблица — см. doc-комментарий posts.ts)', () => {
+    const cols = Object.keys(getTableColumns(schema.posts));
+    expect(cols).toEqual(
+      expect.arrayContaining(['authorId', 'kind', 'title', 'bodyMd', 'chartId', 'celebrityId', 'status', 'moderation', 'likesCount', 'commentsCount']),
+    );
+  });
+
+  it('comments поддерживает markedUsefulAt (репутация за полезный разбор, req.2 промта)', () => {
+    const cols = Object.keys(getTableColumns(schema.comments));
+    expect(cols).toEqual(expect.arrayContaining(['postId', 'authorId', 'parentId', 'bodyMd', 'markedUsefulAt']));
+  });
+
+  it('friendships хранит направленное согласие на шеринг карты (sharedByUser/sharedByFriend)', () => {
+    const cols = Object.keys(getTableColumns(schema.friendships));
+    expect(cols).toEqual(expect.arrayContaining(['userId', 'friendId', 'status', 'sharedByUser', 'sharedByFriend']));
+  });
+
+  it('reactions/reports_ugc используют полиморфную (entity,entityId) связь без FK', () => {
+    expect(Object.keys(getTableColumns(schema.reactions))).toEqual(expect.arrayContaining(['userId', 'entity', 'entityId', 'kind']));
+    expect(Object.keys(getTableColumns(schema.reportsUgc))).toEqual(expect.arrayContaining(['reporterId', 'entity', 'entityId', 'reason', 'status']));
+  });
+
+  it('wiki_article_revisions хранит журнал версий (article_id, version, editor_id)', () => {
+    const cols = Object.keys(getTableColumns(schema.wikiArticleRevisions));
+    expect(cols).toEqual(expect.arrayContaining(['articleId', 'version', 'title', 'bodyMd', 'editorId']));
+  });
+
+  it('имена таблиц Ф7 — snake_case', () => {
+    expect(getTableName(schema.posts)).toBe('posts');
+    expect(getTableName(schema.comments)).toBe('comments');
+    expect(getTableName(schema.reactions)).toBe('reactions');
+    expect(getTableName(schema.friendships)).toBe('friendships');
+    expect(getTableName(schema.reportsUgc)).toBe('reports_ugc');
+    expect(getTableName(schema.reputation)).toBe('reputation');
+    expect(getTableName(schema.wikiArticleRevisions)).toBe('wiki_article_revisions');
+  });
+});
+
 describe('createDb', () => {
   it('не подключается к сети при создании (ленивая обёртка)', () => {
     // Фиктивный "пул" — createDb не должен трогать его методы синхронно.

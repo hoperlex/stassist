@@ -31,3 +31,13 @@ export * from './horoscopes.js';
 export * from './stones.js';
 export * from './orders.js';
 export * from './notifications.js';
+
+// Ф7: вики-версии + коммьюнити (см. docs/architecture/22-модель-данных.md §7, docs/roadmap/
+// prompts/f7-вики-и-коммьюнити.md).
+export * from './wiki-article-revisions.js';
+export * from './posts.js';
+export * from './comments.js';
+export * from './reactions.js';
+export * from './friendships.js';
+export * from './reports-ugc.js';
+export * from './reputation.js';

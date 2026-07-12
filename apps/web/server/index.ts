@@ -15,8 +15,8 @@ import Fastify from 'fastify';
 import middie from '@fastify/middie';
 import fastifyStatic from '@fastify/static';
 import httpProxy from '@fastify/http-proxy';
-import { loadConfig, type StoneListResponse } from '@stassist/shared';
-import { buildAllSitemapUrls, buildSitemapXml, stoneUrls } from '../lib/sitemap.js';
+import { loadConfig, type CelebrityListResponse, type StoneListResponse, type WikiArticleListResponse } from '@stassist/shared';
+import { buildAllSitemapUrls, buildSitemapXml, celebrityUrls, stoneUrls, wikiArticleUrls } from '../lib/sitemap.js';
 import { serverApiGet } from '../lib/server-api.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -79,8 +79,24 @@ async function buildWebServer() {
     } catch {
       stoneSlugUrls = [];
     }
+    // Ф7: вики-статьи (реальные слаги из БД, редакционный контент) + знаменитости — тот же паттерн,
+    // что stoneUrls выше (web не трогает БД напрямую, только REST, см. apps/web/lib/sitemap.ts).
+    let wikiSlugUrls: ReturnType<typeof wikiArticleUrls> = [];
+    try {
+      const articles = await serverApiGet<WikiArticleListResponse>('/wiki-articles?limit=500');
+      wikiSlugUrls = wikiArticleUrls(articles.items.map((a) => ({ section: a.section, slug: a.slug })));
+    } catch {
+      wikiSlugUrls = [];
+    }
+    let celebritySlugUrls: ReturnType<typeof celebrityUrls> = [];
+    try {
+      const celebrities = await serverApiGet<CelebrityListResponse>('/celebrities?limit=500');
+      celebritySlugUrls = celebrityUrls(celebrities.items.map((c) => c.slug));
+    } catch {
+      celebritySlugUrls = [];
+    }
     reply.header('content-type', 'application/xml');
-    return reply.send(buildSitemapXml(config.appUrl, [...urls, ...stoneSlugUrls]));
+    return reply.send(buildSitemapXml(config.appUrl, [...urls, ...stoneSlugUrls, ...wikiSlugUrls, ...celebritySlugUrls]));
   });
   app.get('/robots.txt', async (_req, reply) => {
     reply.header('content-type', 'text/plain');

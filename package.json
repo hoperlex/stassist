@@ -28,6 +28,8 @@
     "data:seed-compat-pages": "pnpm --filter @stassist/shared build && node --experimental-strip-types tools/seed-compat-pages.ts",
     "data:corpus": "pnpm --filter @stassist/shared --filter @stassist/numerology-core --filter @stassist/llm build && node --experimental-strip-types tools/gen-corpus.ts",
     "data:stones": "pnpm --filter @stassist/shared build && node --experimental-strip-types tools/gen-stones.ts",
+    "data:wiki": "pnpm --filter @stassist/shared --filter @stassist/numerology-core --filter @stassist/llm build && node --experimental-strip-types tools/gen-wiki.ts",
+    "data:celebrities": "pnpm --filter @stassist/shared build && node --experimental-strip-types tools/gen-celebrities.ts",
     "data:horoscopes-backfill": "pnpm --filter @stassist/shared --filter @stassist/astro-core --filter @stassist/numerology-core --filter @stassist/db --filter @stassist/llm --filter @stassist/worker build && node --experimental-strip-types tools/data-horoscopes-backfill.ts"
   },
   "devDependencies": {

@@ -50,6 +50,13 @@
       "when": 1783847132639,
       "tag": "0006_f6_orders_stones_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783851423657,
+      "tag": "0007_f7_wiki_community",
+      "breakpoints": true
     }
   ]
 }

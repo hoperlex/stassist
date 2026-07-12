@@ -37,6 +37,14 @@ import { ordersRoutes } from './routes/orders.js';
 import { stonesRoutes } from './routes/stones.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { personalCyclesRoutes } from './routes/personal-cycles.js';
+import { wikiRoutes } from './routes/wiki.js';
+import { celebritiesRoutes } from './routes/celebrities.js';
+import { postsRoutes } from './routes/posts.js';
+import { reactionsRoutes } from './routes/reactions.js';
+import { friendshipsRoutes } from './routes/friendships.js';
+import { reportsUgcRoutes } from './routes/reports-ugc.js';
+import { moderationRoutes } from './routes/moderation.js';
+import { reputationRoutes } from './routes/reputation.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -126,6 +134,17 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(stonesRoutes, { config, prefix: `${apiV1}/stones` });
   await app.register(notificationsRoutes, { config, prefix: `${apiV1}/notifications` });
   await app.register(personalCyclesRoutes, { config, prefix: `${apiV1}/personal-cycles` });
+
+  // Ф7: вики (наполнение/поиск/правки) + коммьюнити — лента/комментарии/реакции/друзья/жалобы/
+  // модерация/репутация (см. docs/roadmap/prompts/f7-вики-и-коммьюнити.md).
+  await app.register(wikiRoutes, { config, prefix: `${apiV1}/wiki-articles` });
+  await app.register(celebritiesRoutes, { config, prefix: `${apiV1}/celebrities` });
+  await app.register(postsRoutes, { config, prefix: `${apiV1}/posts` });
+  await app.register(reactionsRoutes, { config, prefix: `${apiV1}/reactions` });
+  await app.register(friendshipsRoutes, { config, prefix: `${apiV1}/friendships` });
+  await app.register(reportsUgcRoutes, { config, prefix: `${apiV1}/reports-ugc` });
+  await app.register(moderationRoutes, { config, prefix: `${apiV1}/moderation` });
+  await app.register(reputationRoutes, { config, prefix: `${apiV1}/reputation` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');
