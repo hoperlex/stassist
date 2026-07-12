@@ -16,6 +16,7 @@ import middie from '@fastify/middie';
 import fastifyStatic from '@fastify/static';
 import httpProxy from '@fastify/http-proxy';
 import { loadConfig } from '@stassist/shared';
+import { buildAllSitemapUrls, buildSitemapXml } from '../lib/sitemap.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -61,6 +62,21 @@ async function buildWebServer() {
     });
     app.use(viteServer.middlewares);
   }
+
+  // SEO (см. docs/architecture/23-seo-стратегия.md §3): sitemap для калькуляторов + 78 пар
+  // совместимости + ближайшие месяцы лунного календаря; robots запрещает кабинет/API.
+  // Регистрируются ДО catch-all vike-роута ниже.
+  app.get('/sitemap.xml', async (_req, reply) => {
+    const urls = buildAllSitemapUrls();
+    reply.header('content-type', 'application/xml');
+    return reply.send(buildSitemapXml(config.appUrl, urls));
+  });
+  app.get('/robots.txt', async (_req, reply) => {
+    reply.header('content-type', 'text/plain');
+    return reply.send(
+      ['User-agent: *', 'Disallow: /app', 'Disallow: /api/', 'Disallow: /profiles', `Sitemap: ${config.appUrl}/sitemap.xml`].join('\n'),
+    );
+  });
 
   app.all('*', async (req, reply) => {
     const { renderPage } = await import('vike/server');

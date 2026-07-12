@@ -23,6 +23,11 @@ import { consentsRoutes } from './routes/consents.js';
 import { geocodeRoutes } from './routes/geocode.js';
 import { calcPresetsRoutes } from './routes/calc-presets.js';
 import { accountRoutes } from './routes/account.js';
+import { calcRoutes } from './routes/calc.js';
+import { lunarCalendarRoutes } from './routes/lunar-calendar.js';
+import { compatPagesRoutes } from './routes/compat-pages.js';
+import { shareRoutes } from './routes/share.js';
+import { publicGeocodeRoutes } from './routes/public-geocode.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -86,6 +91,15 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(geocodeRoutes, { config, prefix: `${apiV1}/geocode` });
   await app.register(calcPresetsRoutes, { config, prefix: `${apiV1}/calc-presets` });
   await app.register(accountRoutes, { config, prefix: `${apiV1}/account` });
+
+  // Ф3: анонимные калькуляторы + SSR-программатика (натал/синастрия/нумерология без сохранения
+  // ПД; лунный календарь/пары совместимости — публичное чтение предрасчитанных данных; шеринг
+  // карты — см. docs/roadmap/prompts/f3-калькуляторы-и-карта.md).
+  await app.register(calcRoutes, { prefix: `${apiV1}/calc` });
+  await app.register(lunarCalendarRoutes, { config, prefix: `${apiV1}/calc/lunar-calendar` });
+  await app.register(compatPagesRoutes, { config, prefix: `${apiV1}/calc/compat-pages` });
+  await app.register(publicGeocodeRoutes, { config, prefix: `${apiV1}/calc/geocode` });
+  await app.register(shareRoutes, { config, prefix: `${apiV1}/share` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

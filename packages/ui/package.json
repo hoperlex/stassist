@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./render": {
+      "types": "./dist/render.d.ts",
+      "default": "./dist/render.js"
     }
   },
   "scripts": {
@@ -17,8 +21,16 @@
     "build": "tsc -p tsconfig.build.json",
     "test:unit": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@stassist/numerology-core": "workspace:*",
+    "@stassist/shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  },
   "devDependencies": {
+    "@types/react": "^18.3.18",
+    "react": "^18.3.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   }

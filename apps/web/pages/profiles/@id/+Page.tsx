@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Card, Descriptions, Spin, Table, Typography } from 'antd';
+import { ChartWheel } from '@stassist/ui';
+import type { ChartData } from '@stassist/shared';
 import { api, ApiError, getAccessToken } from '../../../lib/api-client.js';
 
 const { Title, Paragraph } = Typography;
@@ -7,10 +9,7 @@ const { Title, Paragraph } = Typography;
 interface ChartDto {
   kind: string;
   coreVersion: string;
-  data: {
-    meta: { houseSystem: string; zodiac: string; noHouses: boolean; accuracyNotes: string[] };
-    bodies: Record<string, { signIndex: number; signDegree: number; houseNumber: number | null; isRetrograde: boolean }>;
-  };
+  data: ChartData;
 }
 
 const SIGN_NAMES_RU = [
@@ -24,9 +23,9 @@ const BODY_NAMES_RU: Record<string, string> = {
 };
 
 /**
- * Просмотр натальной карты профиля (только факты — планеты/знаки/дома). Полноценный SVG-рендер
- * колеса карты (`packages/ui/ChartWheel`) — задел Ф3 (док. 21 §6), здесь — минимальная таблица
- * «как считали», достаточная, чтобы подтвердить: карта реально посчитана и сохранена.
+ * Просмотр натальной карты профиля: SVG-колесо (`@stassist/ui` ChartWheel, тот же изоморфный
+ * компонент, что и на публичном калькуляторе `/natalnaya-karta`, см. docs/architecture/
+ * 21-техническая-архитектура.md §6) + таблица «как считали» (планеты/знаки/дома).
  */
 export function Page(): React.JSX.Element {
   const [chart, setChart] = useState<ChartDto | null>(null);
@@ -57,6 +56,20 @@ export function Page(): React.JSX.Element {
       {error && <Alert type="error" showIcon message={error} />}
       {chart && (
         <Card>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <ChartWheel
+              primary={{
+                bodies: chart.data.bodies,
+                points: chart.data.points,
+                angles: chart.data.angles,
+                houses: chart.data.houses,
+                aspects: chart.data.aspects,
+                noHouses: chart.data.meta.noHouses,
+              }}
+              title="Натальная карта профиля"
+              size={360}
+            />
+          </div>
           <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
             <Descriptions.Item label="Система домов">{chart.data.meta.houseSystem}</Descriptions.Item>
             <Descriptions.Item label="Зодиак">{chart.data.meta.zodiac === 'tropical' ? 'тропический' : 'сидерический'}</Descriptions.Item>

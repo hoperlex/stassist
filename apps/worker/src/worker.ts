@@ -7,13 +7,39 @@
 import { PgBoss } from 'pg-boss';
 import type { Logger } from 'pino';
 import pino from 'pino';
-import type { Config } from '@stassist/shared';
+import { Pool } from 'pg';
+import { createDb } from '@stassist/db';
+import { createPorts, type Config } from '@stassist/shared';
+import { buildAstroCalendarWindow } from './astro-calendar/build-window.js';
+import { upsertAstroCalendarWindow } from './astro-calendar/upsert-window.js';
+import { CALENDAR_REFERENCE_LOCATION } from './astro-calendar/reference-location.js';
+import { processPendingShares } from './share/process-pending-shares.js';
 
 export type WorkerStatus = 'stopped' | 'degraded' | 'running';
 
 /** Тестовая задача: раз в 5 минут пишет лог, чтобы подтвердить, что воркер жив. */
 export const PING_QUEUE = 'ping';
 export const PING_CRON = '*/5 * * * *';
+
+/**
+ * Предрасчёт лунного календаря на скользящее окно (см. docs/roadmap/prompts/
+ * f3-калькуляторы-и-карта.md требование 3: «18 месяцев вперёд, ежесуточное обновление»).
+ * Запускается раз в сутки в 00:10 MSK (21:10 UTC — тот же слот, что и ежедневная генерация
+ * гороскопов Ф5, см. docs/architecture/21-техническая-архитектура.md §9).
+ *
+ * УПРОЩЕНИЕ MVP: каждый прогон пересчитывает ВСЁ окно целиком (idempotent upsert по `date`), а
+ * не только новый день на краю окна — при ~550 днях это секунды CPU (root-finding void-of-course
+ * на каждый день), приемлемо для раз-в-сутки задачи; инкрементальный пересчёт — оптимизация
+ * следующих фаз, а не блокер MVP.
+ */
+export const ASTRO_CALENDAR_QUEUE = 'astro-calendar-precompute';
+export const ASTRO_CALENDAR_CRON = '10 21 * * *';
+export const ASTRO_CALENDAR_WINDOW_MONTHS = 18;
+const ASTRO_CALENDAR_WINDOW_DAYS = ASTRO_CALENDAR_WINDOW_MONTHS * 31;
+
+/** Асинхронная генерация OG PNG для «поделиться картой» (см. apps/worker/src/share). */
+export const SHARE_OG_QUEUE = 'chart-share-og-backfill';
+export const SHARE_OG_CRON = '*/1 * * * *';
 
 export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
   return pino({ level: config.isProduction ? 'info' : 'warn' });
@@ -22,6 +48,7 @@ export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
 export class Worker {
   status: WorkerStatus = 'stopped';
   private boss: PgBoss | undefined;
+  private pool: Pool | undefined;
 
   constructor(
     private readonly config: Config,
@@ -41,6 +68,11 @@ export class Worker {
     const boss = new PgBoss(this.config.db.url);
     boss.on('error', (err) => this.logger.error({ err }, 'pg-boss error'));
 
+    const pool = new Pool({ connectionString: this.config.db.url });
+    this.pool = pool;
+    const db = createDb(pool);
+    const ports = createPorts(this.config);
+
     await boss.start();
     await boss.createQueue(PING_QUEUE);
     await boss.work<{ startedAt: string }>(PING_QUEUE, async (jobs) => {
@@ -50,11 +82,31 @@ export class Worker {
     });
     await boss.schedule(PING_QUEUE, PING_CRON);
 
+    // Ф3: предрасчёт лунного календаря (astro_calendar, скользящее окно 18 мес., опорная
+    // локация — Москва, см. astro-calendar/reference-location.ts).
+    await boss.createQueue(ASTRO_CALENDAR_QUEUE);
+    await boss.work(ASTRO_CALENDAR_QUEUE, async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const window = buildAstroCalendarWindow(today, ASTRO_CALENDAR_WINDOW_DAYS, CALENDAR_REFERENCE_LOCATION);
+      await upsertAstroCalendarWindow(db, window);
+      this.logger.info({ days: window.length }, 'astro-calendar: окно предрасчитано и записано');
+    });
+    await boss.schedule(ASTRO_CALENDAR_QUEUE, ASTRO_CALENDAR_CRON);
+
+    // Ф3: асинхронная генерация OG PNG для «поделиться картой» (chart_shares, см.
+    // apps/worker/src/share/process-pending-shares.ts) — resvg, не в браузере/API.
+    await boss.createQueue(SHARE_OG_QUEUE);
+    await boss.work(SHARE_OG_QUEUE, async () => {
+      const processed = await processPendingShares(db, ports.storage, this.logger);
+      if (processed > 0) this.logger.info({ processed }, 'chart-share-og: PNG сгенерированы');
+    });
+    await boss.schedule(SHARE_OG_QUEUE, SHARE_OG_CRON);
+
     this.boss = boss;
     this.status = 'running';
     this.logger.info(
-      { queue: PING_QUEUE, cron: PING_CRON },
-      'worker: pg-boss запущен, очередь ping активна',
+      { queues: [PING_QUEUE, ASTRO_CALENDAR_QUEUE, SHARE_OG_QUEUE] },
+      'worker: pg-boss запущен, очереди активны',
     );
   }
 
@@ -62,6 +114,10 @@ export class Worker {
     if (this.boss) {
       await this.boss.stop();
       this.boss = undefined;
+    }
+    if (this.pool) {
+      await this.pool.end();
+      this.pool = undefined;
     }
     this.status = 'stopped';
   }

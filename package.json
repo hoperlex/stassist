@@ -24,11 +24,13 @@
     "db:seed": "tsx tools/db-seed.ts",
     "data:gen-vsop87": "tsx tools/gen-vsop87.ts",
     "data:gen-chiron": "tsx tools/gen-chiron.ts",
-    "data:seed-calc-presets": "pnpm --filter @stassist/shared --filter @stassist/astro-core --filter @stassist/db build && node --experimental-strip-types tools/seed-calc-presets.ts"
+    "data:seed-calc-presets": "pnpm --filter @stassist/shared --filter @stassist/astro-core --filter @stassist/db build && node --experimental-strip-types tools/seed-calc-presets.ts",
+    "data:seed-compat-pages": "pnpm --filter @stassist/shared build && node --experimental-strip-types tools/seed-compat-pages.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@stassist/db": "workspace:*",
+    "@stassist/shared": "workspace:*",
     "@types/node": "^22.10.5",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",

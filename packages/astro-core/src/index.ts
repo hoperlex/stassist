@@ -40,6 +40,7 @@ export {
   DEFAULT_ORB_BY_ASPECT,
   DEFAULT_ORB_BY_BODY,
 } from './aspects/presets.js';
+export { detectSynastryAspects, type SynastryAspectsConfig } from './aspects/synastry.js';
 
 // --- root-finding / прогностика ---
 export { brentRoot, scanForBracket } from './rootfinding/brent.js';

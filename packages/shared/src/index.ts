@@ -4,6 +4,8 @@ export * from './schemas/common.js';
 export * from './schemas/chart.js';
 export * from './schemas/auth.js';
 export * from './schemas/birth-profile.js';
+export * from './schemas/zodiac.js';
+export * from './schemas/calc.js';
 
 export * from './crypto/pd-cipher.js';
 export * from './legal/doc-versions.js';

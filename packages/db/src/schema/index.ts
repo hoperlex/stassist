@@ -12,3 +12,7 @@ export * from './calc-presets.js';
 export * from './charts.js';
 export * from './celebrities.js';
 export * from './geocode-cache.js';
+export * from './astro-calendar.js';
+export * from './compat-pages.js';
+export * from './page-cache.js';
+export * from './chart-shares.js';

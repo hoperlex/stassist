@@ -56,3 +56,6 @@ export const chartKindEnum = pgEnum('chart_kind', [
   'davison',
   'horary',
 ]);
+
+/** См. `shareKindSchema` в packages/shared/src/schemas/calc.ts (Ф3, `chart_shares`). */
+export const shareKindEnum = pgEnum('share_kind', ['natal', 'synastry']);
