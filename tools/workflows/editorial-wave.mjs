@@ -7,10 +7,34 @@ export const meta = {
   ],
 }
 
-// args = массив дескрипторов батчей с АБСОЛЮТНЫМИ путями:
-//   { batchId, domain, category, count, lengthBand:[min,max], manifestPathAbs, reviewedPathAbs }
+// args — одно из:
+//   • массив дескрипторов батчей { batchId, domain, category, count, lengthBand:[min,max],
+//     manifestPathAbs, reviewedPathAbs };
+//   • строка-путь к .json-файлу с таким массивом (script не имеет fs → грузим агентом-загрузчиком).
+const BATCH_ITEM = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    batchId: { type: 'string' },
+    domain: { type: 'string' },
+    category: { type: 'string' },
+    count: { type: 'number' },
+    lengthBand: { type: 'array', items: { type: 'number' } },
+    manifestPathAbs: { type: 'string' },
+    reviewedPathAbs: { type: 'string' },
+  },
+  required: ['batchId', 'domain', 'category', 'count', 'lengthBand', 'manifestPathAbs', 'reviewedPathAbs'],
+}
+
 let parsedArgs = args
-if (typeof parsedArgs === 'string') {
+if (typeof parsedArgs === 'string' && !parsedArgs.trim().startsWith('[')) {
+  const filePath = parsedArgs.trim()
+  const loaded = await agent(
+    `Прочитай JSON-файл инструментом Read: ${filePath}. Это массив дескрипторов батчей. Верни его СОДЕРЖИМОЕ как есть (все элементы, без изменений).`,
+    { label: 'load-batches', phase: 'Загрузка', agentType: 'general-purpose', schema: { type: 'object', additionalProperties: false, properties: { batches: { type: 'array', items: BATCH_ITEM } }, required: ['batches'] } },
+  )
+  parsedArgs = loaded && Array.isArray(loaded.batches) ? loaded.batches : []
+} else if (typeof parsedArgs === 'string') {
   try {
     parsedArgs = JSON.parse(parsedArgs)
   } catch {
@@ -22,6 +46,7 @@ if (!batches.length) {
   log('Пустой список батчей — нечего редактировать.')
   return { batches: 0, results: [] }
 }
+log(`Батчей к редактуре: ${batches.length}`)
 
 const RULES = `ПРАВИЛА КАЧЕСТВА (соблюдай ЖЁСТКО, это редакторский продовый уровень):
 1. Живой, богатый русский язык. Конкретика и образы вместо «воды» и общих слов. Без
