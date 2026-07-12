@@ -32,7 +32,11 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext: PageContextSe
       <Page pageContext={pageContext} />
     </StyleProvider>,
   );
-  const styleText = extractStyle(cache, true);
+  // extractStyle(cache) отдаёт готовые <style>…</style> с data-атрибутами AntD (нужны клиенту
+  // для дедупа при гидратации). Ранее было extractStyle(cache, true) — plain-режим возвращал
+  // «сырой» CSS без обёртки <style>, и парсер браузера выносил его текстом в <body> (ломало
+  // вёрстку: тысячи px CSS-текста над контентом). Прямая инъекция ниже требует именно тегов.
+  const styleText = extractStyle(cache);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seo: PageSeo | undefined = (pageContext.data as any)?.seo;
