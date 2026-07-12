@@ -163,3 +163,7 @@ playwright/.cache/
 # Исключение (Ф1): рукописный ambient-модуль для нетипизированного npm-пакета `ephemeris`
 # (кросс-валидация ядра, devDependency без своих @types) — это исходный код, не билд-артефакт.
 !packages/astro-core/src/cross-validation/ephemeris.d.ts
+
+# Редакторские манифесты — регенерируются `pnpm data:editorial-manifest` из корпуса
+# (источник правды — reviewed/*.json + канонические билдеры, а не эти скаффолд-файлы).
+_work/editorial/_manifest/

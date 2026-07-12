@@ -53,6 +53,7 @@ export * from './cache/cache-key.js';
 // --- Корпус: генератор seed-данных (data-step, см. tools/gen-corpus.ts) -----------------------
 export * from './corpus/types.js';
 export * from './corpus/build-corpus.js';
+export * from './corpus/manifest.js';
 
 // --- Отчёты: конвейер генерации --------------------------------------------------------------
 export * from './reports/report-kinds.js';
