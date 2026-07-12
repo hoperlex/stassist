@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint pages renderer server lib e2e playwright.config.ts",
     "build": "vite build",
+    "gen:icons": "tsx scripts/gen-pwa-icons.mts",
     "test:unit": "vitest run",
     "test:e2e": "node -e \"if(!process.env.RUN_E2E){console.log('test:e2e: RUN_E2E не задан — пропускаю (см. §1 конвенций реализации)');process.exit(0)}process.exit(1)\" || playwright test"
   },
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^5.2.0",

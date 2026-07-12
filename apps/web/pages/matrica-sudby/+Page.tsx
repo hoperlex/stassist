@@ -103,7 +103,7 @@ export function Page(): React.JSX.Element {
             <MatrixOctagram corePoints={result.corePoints} title="Матрица судьбы" size={380} />
           </div>
 
-          <Descriptions column={2} size="small" style={{ marginTop: 16 }}>
+          <Descriptions column={{ xs: 1, sm: 2 }} size="small" style={{ marginTop: 16 }}>
             <Descriptions.Item label="Линия отношений (F1+F3)">{result.derivedSections.relationshipLine}</Descriptions.Item>
             <Descriptions.Item label="Денежная линия (F2+F4)">{result.derivedSections.moneyLine}</Descriptions.Item>
           </Descriptions>

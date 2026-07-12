@@ -74,13 +74,14 @@ export function Page(): React.JSX.Element {
               size={360}
             />
           </div>
-          <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
+          <Descriptions column={{ xs: 1, sm: 2 }} size="small" style={{ marginBottom: 16 }}>
             <Descriptions.Item label="Система домов">{chart.data.meta.houseSystem}</Descriptions.Item>
             <Descriptions.Item label="Зодиак">{chart.data.meta.zodiac === 'tropical' ? 'тропический' : 'сидерический'}</Descriptions.Item>
             <Descriptions.Item label="Версия ядра">{chart.coreVersion}</Descriptions.Item>
             <Descriptions.Item label="Дома рассчитаны">{chart.data.meta.noHouses ? 'нет (время неизвестно)' : 'да'}</Descriptions.Item>
           </Descriptions>
           <Table
+            scroll={{ x: 'max-content' }}
             size="small"
             pagination={false}
             rowKey="key"

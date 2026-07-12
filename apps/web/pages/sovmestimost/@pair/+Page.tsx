@@ -107,6 +107,7 @@ export function Page({ pageContext }: { pageContext: { data: SovmestimostPairDat
           </div>
           {result.crossAspects.length > 0 && (
             <Table
+              scroll={{ x: 'max-content' }}
               style={{ marginTop: 16 }}
               size="small"
               pagination={{ pageSize: 10 }}

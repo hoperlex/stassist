@@ -5,23 +5,8 @@
  * lib/themes/generated/light.* ; CSS скоупится под .zx-site (классы zx-*), поэтому не конфликтует с
  * контентом страниц (antd) и опирается на переменные --zx-* из global-css.ts.
  */
-const NAV: Array<{ href: string; label: string }> = [
-  { href: '/natalnaya-karta', label: 'Натальная карта' },
-  { href: '/matrica-sudby', label: 'Матрица судьбы' },
-  { href: '/sovmestimost', label: 'Совместимость' },
-  { href: '/goroskop', label: 'Гороскоп' },
-  { href: '/lunnyj-kalendar', label: 'Лунный календарь' },
-  { href: '/wiki', label: 'База знаний' },
-];
-
-const FOOTER: Array<{ href: string; label: string }> = [
-  { href: '/o-nas', label: 'О проекте' },
-  { href: '/redakciya', label: 'Редакция' },
-  { href: '/methodology', label: 'Методология расчётов' },
-  { href: '/faq', label: 'Вопросы и ответы' },
-  { href: '/wiki', label: 'База знаний' },
-  { href: '/pravila-soobshchestva', label: 'Правила сообщества' },
-];
+import { MobileNav } from './MobileNav.js';
+import { NAV, FOOTER } from './nav-items.js';
 
 const SITE_CSS = `
 .zx-site{display:flex;flex-direction:column;min-height:100vh}
@@ -51,9 +36,16 @@ const SITE_CSS = `
 .zx-ft-links a{font-size:14px;font-weight:600;color:var(--zx-muted);text-decoration:none}
 .zx-ft-links a:hover{color:var(--zx-peri-deep)}
 .zx-disclaimer{font-size:13px;line-height:1.6;color:var(--zx-soft);max-width:760px;margin:0;font-weight:500}
-@media(max-width:880px){
-  .zx-hd-row{flex-wrap:wrap;justify-content:center}
-  .zx-nav{order:3;width:100%}
+@media(max-width:860px){
+  /* Мобильная шапка: прячем десктоп-меню/кнопки, показываем гамбургер (MobileNav);
+     шапка липкая и компактная. Свой фон обязателен — у body градиент с fixed-attachment,
+     иначе прокручиваемый контент просвечивает сквозь прозрачную шапку. */
+  .zx-nav--desk,.zx-auth--desk{display:none}
+  .zx-hd{position:sticky;top:0;z-index:50;padding:8px 0;
+    background:rgba(251,247,240,0.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--zx-line)}
+  .zx-hd-row{justify-content:space-between}
+  .zx-name{font-size:21px}
 }
 `;
 
@@ -85,14 +77,14 @@ export function SiteLayout({ children }: { children: React.ReactNode }): React.J
               Зодиаку<b>м</b>
             </span>
           </a>
-          <nav className="zx-nav">
+          <nav className="zx-nav zx-nav--desk">
             {NAV.map((item) => (
               <a key={item.href} href={item.href}>
                 {item.label}
               </a>
             ))}
           </nav>
-          <div className="zx-auth">
+          <div className="zx-auth zx-auth--desk">
             <a href="/login" className="zx-btn ghost">
               Войти
             </a>
@@ -100,6 +92,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }): React.J
               Регистрация
             </a>
           </div>
+          <MobileNav variant="header" />
         </div>
       </header>
 

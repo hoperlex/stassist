@@ -37,4 +37,23 @@ h1.ant-typography,h2.ant-typography,h3.ant-typography,h4.ant-typography,h5.ant-t
 .ant-typography h1,.ant-typography h2,.ant-typography h3,.ant-typography h4,.ant-typography h5{
   font-family:var(--zx-serif);
 }
+
+/* Плавные заголовки AntD на внутренних страницах — равная специфичность + позже в исходнике,
+   поэтому переопределяют дефолты AntD без !important (тот же приём, что у serif-правила выше). */
+h1.ant-typography{font-size:clamp(26px,4vw,38px)}
+h2.ant-typography{font-size:clamp(22px,3.2vw,30px)}
+h3.ant-typography{font-size:clamp(19px,2.6vw,24px)}
+
+/* Плавные SVG-диаграммы (натальная карта, матрица судьбы): CSS-width перебивает презентационный
+   атрибут width= у SVG, viewBox+height:auto держит пропорции. Рендер-функции не трогаем — их
+   width/height нужны resvg в PNG-воркере. */
+.stassist-chart-wheel,.stassist-matrix-octagram{max-width:100%}
+.stassist-chart-wheel svg{width:100%;height:auto;max-width:420px;display:block}
+.stassist-matrix-octagram svg{width:100%;height:auto;max-width:380px;display:block}
+
+/* Мобильный: поджать крупные верхние отступы у страничных <main> (инлайн-стили бьются !important).
+   Главная без SiteLayout не затрагивается. */
+@media(max-width:640px){
+  .zx-site > main{margin-top:24px !important;margin-bottom:32px !important}
+}
 `;

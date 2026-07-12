@@ -28,6 +28,7 @@ export function Page({ pageContext }: { pageContext: { data: LunnyjKalendarMonth
 
       {computed && days.length > 0 ? (
         <Table
+          scroll={{ x: 'max-content' }}
           size="small"
           pagination={false}
           rowKey="date"

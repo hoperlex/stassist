@@ -107,10 +107,14 @@ export function PublicBirthForm({
       )}
       <Form.Item label={`${label}: место рождения`} required>
         <AutoComplete
+          style={{ width: '100%' }}
           options={placeOptions}
           onSearch={onSearch}
           onSelect={onSelect}
-          placeholder="Начните вводить город (минимум 2 символа)"
+          // Короткий плейсхолдер: длинный текст задавал min-content шире телефона и распирал
+          // страницу (у AntD Select плейсхолдер участвует в intrinsic-ширине). Подсказка про
+          // «минимум 2 символа» реализована логикой onSearch (см. выше).
+          placeholder="Начните вводить город"
         />
         {place && (
           <Text type="secondary" style={{ fontSize: 12 }}>

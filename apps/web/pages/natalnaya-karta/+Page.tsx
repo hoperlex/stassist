@@ -136,7 +136,7 @@ export function Page(): React.JSX.Element {
         <>
           <Divider />
           <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            <div style={{ flex: '0 0 auto' }}>
+            <div style={{ flex: '0 0 auto', maxWidth: '100%' }}>
               <ChartWheel
                 primary={{
                   bodies: chart.bodies,
@@ -152,6 +152,7 @@ export function Page(): React.JSX.Element {
             </div>
             <div style={{ flex: '1 1 320px', minWidth: 280 }}>
               <Table
+                scroll={{ x: 'max-content' }}
                 size="small"
                 pagination={false}
                 rowKey="key"
@@ -182,6 +183,7 @@ export function Page(): React.JSX.Element {
                 Аспекты
               </Title>
               <Table
+                scroll={{ x: 'max-content' }}
                 size="small"
                 pagination={{ pageSize: 10 }}
                 rowKey={(a) => `${a.bodyA}-${a.bodyB}-${a.angleName}`}

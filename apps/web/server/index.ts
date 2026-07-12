@@ -62,6 +62,38 @@ async function buildWebServer() {
       prefix: '/assets/',
       decorateReply: false,
     });
+
+    // PWA-файлы лежат в КОРНЕ dist/client (Vite копирует public/*), а не под /assets/. Раздаём их
+    // адресно: второй @fastify/static с serve:false НЕ регистрирует wildcard-роут (иначе конфликт с
+    // catch-all app.all('*') → FST_ERR_DUPLICATED_ROUTE), но даёт reply.sendFile. cacheControl:false —
+    // заголовки ставим сами (для sw.js критичен no-cache, иначе bump VERSION не подхватится). В dev
+    // этот код не нужен: Vite middleware сам раздаёт public/* с корректными content-type.
+    await app.register(fastifyStatic, {
+      root: path.join(root, 'dist/client'),
+      serve: false,
+      cacheControl: false,
+      decorateReply: true,
+    });
+
+    const PWA_ROOT_FILES: Record<string, { type: string; cache: string }> = {
+      'sw.js': { type: 'application/javascript; charset=utf-8', cache: 'no-cache' },
+      'manifest.webmanifest': { type: 'application/manifest+json; charset=utf-8', cache: 'public, max-age=3600' },
+      'offline.html': { type: 'text/html; charset=utf-8', cache: 'public, max-age=3600' },
+      'favicon.svg': { type: 'image/svg+xml', cache: 'public, max-age=604800' },
+      'favicon.ico': { type: 'image/x-icon', cache: 'public, max-age=604800' },
+      'icon-192.png': { type: 'image/png', cache: 'public, max-age=604800' },
+      'icon-512.png': { type: 'image/png', cache: 'public, max-age=604800' },
+      'icon-maskable-512.png': { type: 'image/png', cache: 'public, max-age=604800' },
+      'apple-touch-icon.png': { type: 'image/png', cache: 'public, max-age=604800' },
+    };
+
+    for (const [name, meta] of Object.entries(PWA_ROOT_FILES)) {
+      app.get(`/${name}`, async (_req, reply) => {
+        reply.header('content-type', meta.type);
+        reply.header('cache-control', meta.cache);
+        return reply.sendFile(name); // относительно root = dist/client
+      });
+    }
   } else {
     const vite = await import('vite');
     const viteServer = await vite.createServer({

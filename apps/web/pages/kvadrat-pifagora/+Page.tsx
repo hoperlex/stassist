@@ -126,7 +126,7 @@ export function Page(): React.JSX.Element {
               </tbody>
             </table>
           </div>
-          <Descriptions column={2} size="small">
+          <Descriptions column={{ xs: 1, sm: 2 }} size="small">
             <Descriptions.Item label="Число (1)">{result.number1}</Descriptions.Item>
             <Descriptions.Item label="Число (2)">{result.number2}</Descriptions.Item>
             <Descriptions.Item label="Число (3)">{result.number3}</Descriptions.Item>

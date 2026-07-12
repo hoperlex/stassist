@@ -53,6 +53,7 @@ export function Page({ pageContext }: { pageContext: { data: SovmestimostIndexDa
         Все 78 пар
       </Title>
       <Table
+        scroll={{ x: 'max-content' }}
         size="small"
         pagination={{ pageSize: 20 }}
         rowKey="slug"
