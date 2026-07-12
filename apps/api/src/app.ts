@@ -33,6 +33,10 @@ import { interpretationRoutes } from './routes/interpretation.js';
 import { horoscopesRoutes } from './routes/horoscopes.js';
 import { astroWeatherRoutes } from './routes/astro-weather.js';
 import { personalHoroscopeRoutes } from './routes/personal-horoscope.js';
+import { ordersRoutes } from './routes/orders.js';
+import { stonesRoutes } from './routes/stones.js';
+import { notificationsRoutes } from './routes/notifications.js';
+import { personalCyclesRoutes } from './routes/personal-cycles.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -115,6 +119,13 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(horoscopesRoutes, { config, prefix: `${apiV1}/horoscopes` });
   await app.register(astroWeatherRoutes, { config, prefix: `${apiV1}/calc/astro-weather` });
   await app.register(personalHoroscopeRoutes, { config, prefix: `${apiV1}/personal-horoscope` });
+
+  // Ф6: PDF-заказы, каталог камней, уведомления, персональные циклы (см. docs/roadmap/prompts/
+  // f6-нумерология-и-камни.md).
+  await app.register(ordersRoutes, { config, prefix: `${apiV1}/orders` });
+  await app.register(stonesRoutes, { config, prefix: `${apiV1}/stones` });
+  await app.register(notificationsRoutes, { config, prefix: `${apiV1}/notifications` });
+  await app.register(personalCyclesRoutes, { config, prefix: `${apiV1}/personal-cycles` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

@@ -145,3 +145,44 @@ export const horoscopeTopicEnum = pgEnum('horoscope_topic', ['general', 'love', 
 /** См. `horoscopeStatusSchema` — жизненный цикл: draft (генерация в процессе/ещё не прошла
  *  автомодерацию) → moderation (флагнуто фильтром, ждёт ручной проверки) | published. */
 export const horoscopeStatusEnum = pgEnum('horoscope_status', ['draft', 'moderation', 'published']);
+
+// -------------------------------------------------------------------------------------------
+// Ф6: заказы PDF-отчётов, камни, уведомления (см. docs/architecture/22-модель-данных.md §3, §6, §7б).
+// -------------------------------------------------------------------------------------------
+
+/** См. `orderKindSchema` в packages/shared/src/schemas/order.ts. Задел маркетплейса
+ *  (expert-поля) — не используется в Ф6, зарезервировано моделью данных (док. 22 §3). */
+export const orderKindEnum = pgEnum('order_kind', ['pdf_report', 'custom_forecast', 'subscription_gift']);
+
+/** См. `orderStatusSchema`. Демо-режим Ф6 (см. §2 конвенций реализации, `FakePaymentProvider`)
+ *  проходит create→paid→ai_done→delivered синхронно/почти синхронно; остальные значения —
+ *  задел маркетплейса экспертов (Ф8+). */
+export const orderStatusEnum = pgEnum('order_status', [
+  'created',
+  'paid',
+  'ai_done',
+  'assigned_expert',
+  'expert_accepted',
+  'expert_done',
+  'delivered',
+  'cancelled',
+  'refunded',
+]);
+
+/** См. `notificationKindSchema`. `order_ready` — Ф6 (см. docs/roadmap/prompts/
+ *  f6-нумерология-и-камни.md, находку [verification-gap] в _work/build/findings/f6.md); остальные
+ *  значения — задел коммьюнити (Ф7+)/модерации, таблица создаётся здесь, т.к. Ф6 первой её
+ *  использует (см. §5 конвенций реализации: `notifications` — skeleton создаётся первой фазой-
+ *  потребителем, здесь совпадает с полноценным использованием). */
+export const notificationKindEnum = pgEnum('notification_kind', [
+  'comment_reply',
+  'friend_request',
+  'order_ready',
+  'moderation',
+  'system',
+]);
+
+/** См. `stoneStatusSchema` — тот же паттерн, что `interpretationQualityEnum`/`wikiArticleStatusEnum`:
+ *  draft публикуется на SSR с бейджем «требует редактуры» (§6 конвенций реализации, «правило
+ *  непустоты»), reviewed — прошёл редакционную проверку минералогических фактов. */
+export const stoneStatusEnum = pgEnum('stone_status', ['draft', 'reviewed']);

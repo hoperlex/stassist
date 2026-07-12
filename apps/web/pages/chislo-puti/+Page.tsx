@@ -93,6 +93,11 @@ export function Page(): React.JSX.Element {
           ) : (
             <ContentPendingNotice what="Краткое текстовое значение числа жизненного пути" />
           )}
+          <div style={{ marginTop: 16 }}>
+            <Button type="primary" href="/app/zakazat-pdf?productType=numerology_profile_pdf">
+              Заказать нумерологический профиль (PDF, 10–15 стр.)
+            </Button>
+          </div>
         </Card>
       )}
     </main>

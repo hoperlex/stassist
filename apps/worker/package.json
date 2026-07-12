@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -20,15 +22,18 @@
     "@stassist/astro-core": "workspace:*",
     "@stassist/db": "workspace:*",
     "@stassist/llm": "workspace:*",
+    "@stassist/numerology-core": "workspace:*",
     "@stassist/shared": "workspace:*",
     "@stassist/ui": "workspace:*",
     "astronomy-engine": "^2.1.19",
     "drizzle-orm": "^0.45.2",
+    "pdfkit": "0.17.2",
     "pg": "^8.22.0",
     "pg-boss": "^12.26.0",
     "pino": "^9.6.0"
   },
   "devDependencies": {
+    "@types/pdfkit": "0.17.6",
     "@types/pg": "^8.11.10",
     "tsx": "^4.19.2",
     "vite-tsconfig-paths": "^5.1.4",

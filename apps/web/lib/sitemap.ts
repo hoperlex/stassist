@@ -105,6 +105,25 @@ export function humorHoroscopeUrls(): SitemapUrl[] {
   return urls;
 }
 
+// -------------------------------------------------------------------------------------------
+// Ф6: кластер камней (см. docs/architecture/23-seo-стратегия.md §2 «/kamni/{kamen} + /kamni-po-
+// znaku/{znak}, 60–80 на старте»). `/kamni-po-znaku/{znak}` — 12 фиксированных URL (ЧИСТАЯ
+// функция, как остальной модуль). `/kamni/{slug}` — по РЕАЛЬНЫМ слагам из БД (динамический
+// контент редакции, не вычисляется формулой) — см. `stoneUrls()`, вызывается ОТДЕЛЬНО
+// (apps/web/server/index.ts запрашивает список слагов через `/api/v1/stones`, т.к. `web` не
+// трогает БД напрямую, только REST, см. docs/architecture/21-техническая-архитектура.md §2).
+// -------------------------------------------------------------------------------------------
+
+export function kamniPoZnakuUrls(): SitemapUrl[] {
+  return ZODIAC_SIGNS.map((sign) => ({ path: `/kamni-po-znaku/${sign.slug}`, changefreq: 'monthly' }));
+}
+
+/** `slugs` — реальные слаги камней из БД (см. заголовок раздела); ЧИСТАЯ функция — сеть/БД не
+ *  трогает сама, только форматирует URL. */
+export function stoneUrls(slugs: readonly string[]): SitemapUrl[] {
+  return [{ path: '/kamni', changefreq: 'weekly' }, ...slugs.map((slug) => ({ path: `/kamni/${slug}`, changefreq: 'monthly' as const }))];
+}
+
 export function buildAllSitemapUrls(now: Date = new Date()): SitemapUrl[] {
   return [
     ...STATIC_CALCULATOR_URLS,
@@ -114,6 +133,7 @@ export function buildAllSitemapUrls(now: Date = new Date()): SitemapUrl[] {
     ...yearlyGoroskopUrls(now),
     ...lunarDayUrls(),
     ...humorHoroscopeUrls(),
+    ...kamniPoZnakuUrls(),
   ];
 }
 

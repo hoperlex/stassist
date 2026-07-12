@@ -7,6 +7,7 @@ import { InfoDisclaimer } from '../../lib/InfoDisclaimer.js';
 import { ContentPendingNotice } from '../../lib/ContentPendingNotice.js';
 import { fetchInterpretationText, type InterpretationText } from '../../lib/interpretation.js';
 import { InterpretationBlock } from '../../lib/InterpretationBlock.js';
+import { StonesForArcanumWidget } from '../../lib/StonesForArcanumWidget.js';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -135,9 +136,11 @@ export function Page(): React.JSX.Element {
             <ContentPendingNotice what="Текстовые трактовки арканов (1–22) для каждой позиции матрицы" />
           )}
 
+          <StonesForArcanumWidget arcanum={result.corePoints.day} />
+
           <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <Button disabled title="PDF-отчёт матрицы судьбы — в разработке (Ф6)">
-              Скачать PDF (скоро)
+            <Button type="primary" href="/app/zakazat-pdf?productType=matrix_full_pdf">
+              Заказать полный PDF-отчёт (25–35 стр.)
             </Button>
           </div>
         </Card>

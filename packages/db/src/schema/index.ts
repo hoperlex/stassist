@@ -26,3 +26,8 @@ export * from './report-feedback.js';
 
 // Ф5: гороскопы и программатика (см. docs/architecture/22-модель-данных.md §5).
 export * from './horoscopes.js';
+
+// Ф6: PDF-заказы, камни, уведомления (см. docs/architecture/22-модель-данных.md §3, §6, §7б).
+export * from './stones.js';
+export * from './orders.js';
+export * from './notifications.js';

@@ -15,8 +15,9 @@ import Fastify from 'fastify';
 import middie from '@fastify/middie';
 import fastifyStatic from '@fastify/static';
 import httpProxy from '@fastify/http-proxy';
-import { loadConfig } from '@stassist/shared';
-import { buildAllSitemapUrls, buildSitemapXml } from '../lib/sitemap.js';
+import { loadConfig, type StoneListResponse } from '@stassist/shared';
+import { buildAllSitemapUrls, buildSitemapXml, stoneUrls } from '../lib/sitemap.js';
+import { serverApiGet } from '../lib/server-api.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -68,8 +69,18 @@ async function buildWebServer() {
   // Регистрируются ДО catch-all vike-роута ниже.
   app.get('/sitemap.xml', async (_req, reply) => {
     const urls = buildAllSitemapUrls();
+    // Ф6: кластер камней — слаги реальны (БД, не вычисляются формулой), поэтому запрашиваются
+    // через REST (web не трогает БД напрямую, см. заголовок apps/web/lib/sitemap.ts). Деградирует
+    // до пустого списка без API/БД — честный (неполный, но не падающий) sitemap.
+    let stoneSlugUrls: ReturnType<typeof stoneUrls> = [];
+    try {
+      const stones = await serverApiGet<StoneListResponse>('/stones');
+      stoneSlugUrls = stoneUrls(stones.items.map((s) => s.slug));
+    } catch {
+      stoneSlugUrls = [];
+    }
     reply.header('content-type', 'application/xml');
-    return reply.send(buildSitemapXml(config.appUrl, urls));
+    return reply.send(buildSitemapXml(config.appUrl, [...urls, ...stoneSlugUrls]));
   });
   app.get('/robots.txt', async (_req, reply) => {
     reply.header('content-type', 'text/plain');

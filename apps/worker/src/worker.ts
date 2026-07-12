@@ -18,6 +18,8 @@ import { processPendingShares } from './share/process-pending-shares.js';
 import { DrizzleChunkRepository } from './llm/drizzle-chunk-repository.js';
 import { processQueuedAiReports } from './llm/generate-report-job.js';
 import { checkDailyHoroscopeReadiness, runHoroscopePipeline } from './horoscope/jobs.js';
+import { processPaidOrders } from './pdf/generate-pdf-order-job.js';
+import { getPdKeyring } from './pdf/pd-keyring.js';
 
 export type WorkerStatus = 'stopped' | 'degraded' | 'running';
 
@@ -67,6 +69,14 @@ export const HOROSCOPE_CRON = '20 21 * * *';
 /** Алерт «дневной комплект не готов к 01:00 МСК» (requirement 7 промта Ф5) — 22:00 UTC = 01:00 МСК. */
 export const HOROSCOPE_READINESS_QUEUE = 'horoscope-readiness-check';
 export const HOROSCOPE_READINESS_CRON = '0 22 * * *';
+
+/**
+ * Ф6: асинхронная генерация PDF-заказов (`orders.status='paid'` → PDF в ObjectStorage → письмо +
+ * уведомление, см. apps/worker/src/pdf/generate-pdf-order-job.ts) — тот же poll-по-статусу
+ * паттерн, что AI_REPORT_QUEUE/SHARE_OG_QUEUE.
+ */
+export const ORDER_PDF_QUEUE = 'order-pdf-generate';
+export const ORDER_PDF_CRON = '*/1 * * * *';
 
 export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
   return pino({ level: config.isProduction ? 'info' : 'warn' });
@@ -158,6 +168,24 @@ export class Worker {
     });
     await boss.schedule(HOROSCOPE_READINESS_QUEUE, HOROSCOPE_READINESS_CRON);
 
+    // Ф6: PDF-заказы («Матрица судьбы»/«Психоматрица»/«Нумерологический профиль»), см.
+    // apps/worker/src/pdf/generate-pdf-order-job.ts.
+    await boss.createQueue(ORDER_PDF_QUEUE);
+    await boss.work(ORDER_PDF_QUEUE, async () => {
+      const processed = await processPaidOrders({
+        db,
+        llm: llmProvider,
+        chunkRepository,
+        storage: ports.storage,
+        mailer: ports.mailer,
+        keyring: getPdKeyring(this.config),
+        appUrl: this.config.appUrl,
+        logger: this.logger,
+      });
+      if (processed > 0) this.logger.info({ processed }, 'order-pdf-generate: заказы обработаны');
+    });
+    await boss.schedule(ORDER_PDF_QUEUE, ORDER_PDF_CRON);
+
     this.boss = boss;
     this.status = 'running';
     this.logger.info(
@@ -169,6 +197,7 @@ export class Worker {
           AI_REPORT_QUEUE,
           HOROSCOPE_QUEUE,
           HOROSCOPE_READINESS_QUEUE,
+          ORDER_PDF_QUEUE,
         ],
       },
       'worker: pg-boss запущен, очереди активны',

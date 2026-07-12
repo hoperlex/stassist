@@ -49,6 +49,45 @@ describe('таблицы Ф2', () => {
   });
 });
 
+describe('таблицы Ф6', () => {
+  it('stones содержит purposes (находка [data-model] в f6.md) и полный набор соответствий', () => {
+    const cols = Object.keys(getTableColumns(schema.stones));
+    expect(cols).toEqual(
+      expect.arrayContaining([
+        'slug',
+        'name',
+        'propertiesMd',
+        'colors',
+        'zodiacSigns',
+        'planets',
+        'decades',
+        'arcana',
+        'chakras',
+        'purposes',
+        'status',
+      ]),
+    );
+  });
+
+  it('orders содержит статусную модель и ссылку на report_id (doc 22 §3)', () => {
+    const cols = Object.keys(getTableColumns(schema.orders));
+    expect(cols).toEqual(
+      expect.arrayContaining(['userId', 'kind', 'subject', 'status', 'priceKop', 'reportId']),
+    );
+  });
+
+  it('notifications содержит payload и readAt (doc 22 §7б)', () => {
+    const cols = Object.keys(getTableColumns(schema.notifications));
+    expect(cols).toEqual(expect.arrayContaining(['userId', 'kind', 'payload', 'text', 'readAt']));
+  });
+
+  it('имена таблиц Ф6 — snake_case', () => {
+    expect(getTableName(schema.stones)).toBe('stones');
+    expect(getTableName(schema.orders)).toBe('orders');
+    expect(getTableName(schema.notifications)).toBe('notifications');
+  });
+});
+
 describe('createDb', () => {
   it('не подключается к сети при создании (ленивая обёртка)', () => {
     // Фиктивный "пул" — createDb не должен трогать его методы синхронно.

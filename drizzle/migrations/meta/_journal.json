@@ -43,6 +43,13 @@
       "when": 1783841718916,
       "tag": "0005_horoscopes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783847132639,
+      "tag": "0006_f6_orders_stones_notifications",
+      "breakpoints": true
     }
   ]
 }

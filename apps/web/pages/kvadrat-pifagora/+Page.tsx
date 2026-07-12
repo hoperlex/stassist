@@ -142,6 +142,11 @@ export function Page(): React.JSX.Element {
           ) : (
             <ContentPendingNotice what="Текстовые значения ячеек психоматрицы (характер/энергия/интерес и т.п.)" />
           )}
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <Button type="primary" href="/app/zakazat-pdf?productType=psychomatrix_pdf">
+              Заказать полный PDF-отчёт (10–15 стр.)
+            </Button>
+          </div>
         </Card>
       )}
     </main>

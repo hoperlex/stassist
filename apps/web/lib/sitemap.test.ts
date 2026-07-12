@@ -4,8 +4,10 @@ import {
   buildSitemapXml,
   compatPairUrls,
   humorHoroscopeUrls,
+  kamniPoZnakuUrls,
   lunarCalendarMonthUrls,
   lunarDayUrls,
+  stoneUrls,
   yearlyGoroskopUrls,
   zodiacHoroscopeUrls,
 } from './sitemap.js';
@@ -76,6 +78,20 @@ describe('lunarDayUrls / humorHoroscopeUrls (Ф5)', () => {
     const urls = humorHoroscopeUrls();
     expect(urls.some((u) => u.path === '/shutochnyj-goroskop/oven')).toBe(true);
     expect(urls.some((u) => u.path === '/shutochnyj-goroskop/professiya/razrabotchik')).toBe(true);
+  });
+});
+
+describe('kamniPoZnakuUrls / stoneUrls (Ф6)', () => {
+  it('12 URL /kamni-po-znaku/{znak}, без дублей', () => {
+    const urls = kamniPoZnakuUrls();
+    expect(urls).toHaveLength(12);
+    expect(new Set(urls.map((u) => u.path)).size).toBe(12);
+    expect(urls.some((u) => u.path === '/kamni-po-znaku/oven')).toBe(true);
+  });
+
+  it('stoneUrls строит /kamni + /kamni/{slug} по переданным слагам', () => {
+    const urls = stoneUrls(['ametist', 'rubin']);
+    expect(urls.map((u) => u.path)).toEqual(['/kamni', '/kamni/ametist', '/kamni/rubin']);
   });
 });
 

@@ -70,6 +70,9 @@ export const ZODIAC_SIGN_EN_SLUGS = [
 ] as const;
 export type ZodiacSignEnSlug = (typeof ZODIAC_SIGN_EN_SLUGS)[number];
 
+/** zod-схема EN-слага знака — используется контрактами Ф6 (`stones.zodiac_signs`, decades). */
+export const zodiacSignEnSlugSchema = z.enum(ZODIAC_SIGN_EN_SLUGS);
+
 export function zodiacEnSlugByIndex(signIndex: number): ZodiacSignEnSlug {
   const slug = ZODIAC_SIGN_EN_SLUGS[signIndex];
   if (!slug) throw new Error(`zodiacEnSlugByIndex: некорректный signIndex ${signIndex}`);
