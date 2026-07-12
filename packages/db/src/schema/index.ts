@@ -16,3 +16,10 @@ export * from './astro-calendar.js';
 export * from './compat-pages.js';
 export * from './page-cache.js';
 export * from './chart-shares.js';
+
+// Ф4: ИИ-конвейер, RAG-корпус, вики-skeleton (см. docs/architecture/22-модель-данных.md §3, §6).
+export * from './wiki-articles.js';
+export * from './interpretation-chunks.js';
+export * from './ai-reports.js';
+export * from './chat.js';
+export * from './report-feedback.js';

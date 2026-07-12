@@ -9,11 +9,14 @@ import type { Logger } from 'pino';
 import pino from 'pino';
 import { Pool } from 'pg';
 import { createDb } from '@stassist/db';
-import { createPorts, type Config } from '@stassist/shared';
+import { createPorts, type Config, type LlmProvider } from '@stassist/shared';
+import { createLlmProviderChain } from '@stassist/llm';
 import { buildAstroCalendarWindow } from './astro-calendar/build-window.js';
 import { upsertAstroCalendarWindow } from './astro-calendar/upsert-window.js';
 import { CALENDAR_REFERENCE_LOCATION } from './astro-calendar/reference-location.js';
 import { processPendingShares } from './share/process-pending-shares.js';
+import { DrizzleChunkRepository } from './llm/drizzle-chunk-repository.js';
+import { processQueuedAiReports } from './llm/generate-report-job.js';
 
 export type WorkerStatus = 'stopped' | 'degraded' | 'running';
 
@@ -40,6 +43,15 @@ const ASTRO_CALENDAR_WINDOW_DAYS = ASTRO_CALENDAR_WINDOW_MONTHS * 31;
 /** Асинхронная генерация OG PNG для «поделиться картой» (см. apps/worker/src/share). */
 export const SHARE_OG_QUEUE = 'chart-share-og-backfill';
 export const SHARE_OG_CRON = '*/1 * * * *';
+
+/**
+ * Ф4: асинхронная генерация ИИ-разборов (см. apps/worker/src/llm/generate-report-job.ts,
+ * находка [внутренняя-полнота-модель-исполнения] в _work/build/findings/f4.md) — тот же
+ * poll-по-статусу паттерн, что SHARE_OG_QUEUE (API пишет status='queued' напрямую в БД, без
+ * прямого enqueue в pg-boss — см. заголовок process-pending-shares.ts).
+ */
+export const AI_REPORT_QUEUE = 'ai-report-generate';
+export const AI_REPORT_CRON = '*/1 * * * *';
 
 export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
   return pino({ level: config.isProduction ? 'info' : 'warn' });
@@ -72,6 +84,11 @@ export class Worker {
     this.pool = pool;
     const db = createDb(pool);
     const ports = createPorts(this.config);
+    // Ф4: createPorts() всегда даёт StubLlmProvider (см. doc-комментарий в packages/shared/src/
+    // ports/factory.ts) — реальный адаптер накладываем здесь, если LLM_PROVIDER настроен (тот же
+    // паттерн, что CachedGeocoder в apps/api/src/route-context.ts).
+    const llmProvider: LlmProvider = this.config.llm.driver === 'stub' ? ports.llm : createLlmProviderChain(this.config);
+    const chunkRepository = new DrizzleChunkRepository(db);
 
     await boss.start();
     await boss.createQueue(PING_QUEUE);
@@ -102,10 +119,18 @@ export class Worker {
     });
     await boss.schedule(SHARE_OG_QUEUE, SHARE_OG_CRON);
 
+    // Ф4: генерация ИИ-разборов (ai_reports.status='queued' → 'generating' → 'done'/'failed'/'flagged').
+    await boss.createQueue(AI_REPORT_QUEUE);
+    await boss.work(AI_REPORT_QUEUE, async () => {
+      const processed = await processQueuedAiReports(db, llmProvider, chunkRepository, this.logger);
+      if (processed > 0) this.logger.info({ processed }, 'ai-report-generate: разборы обработаны');
+    });
+    await boss.schedule(AI_REPORT_QUEUE, AI_REPORT_CRON);
+
     this.boss = boss;
     this.status = 'running';
     this.logger.info(
-      { queues: [PING_QUEUE, ASTRO_CALENDAR_QUEUE, SHARE_OG_QUEUE] },
+      { queues: [PING_QUEUE, ASTRO_CALENDAR_QUEUE, SHARE_OG_QUEUE, AI_REPORT_QUEUE] },
       'worker: pg-boss запущен, очереди активны',
     );
   }

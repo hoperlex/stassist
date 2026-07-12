@@ -17,7 +17,11 @@
     "build": "tsc -p tsconfig.build.json",
     "test:unit": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@stassist/numerology-core": "workspace:*",
+    "@stassist/shared": "workspace:*",
+    "zod": "^3.23.8"
+  },
   "devDependencies": {
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"

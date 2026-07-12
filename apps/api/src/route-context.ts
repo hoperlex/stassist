@@ -5,6 +5,7 @@
  */
 import type { FastifyReply } from 'fastify';
 import { createPorts, type Config, type Ports } from '@stassist/shared';
+import { createLlmProviderChain, createEmbeddingProvider } from '@stassist/llm';
 import type { Db } from '@stassist/db';
 import { getDb } from './db.js';
 import { CachedGeocoder } from './geocoding/cached-geocoder.js';
@@ -18,6 +19,15 @@ export function getPorts(config: Config, db: Db | undefined): Ports {
   const ports = createPorts(config);
   if (db) {
     ports.geocoder = new CachedGeocoder(db, ports.geocoder, config.geocoder.driver);
+  }
+  // Ф4: createPorts() всегда даёт стабы для llm/embeddings (см. doc-комментарий в
+  // packages/shared/src/ports/factory.ts) — реальные адаптеры (@stassist/llm) накладываем здесь,
+  // если соответствующий провайдер настроен через env (тот же паттерн, что CachedGeocoder выше).
+  if (config.llm.driver !== 'stub') {
+    ports.llm = createLlmProviderChain(config);
+  }
+  if (config.embeddings.driver !== 'stub') {
+    ports.embeddings = createEmbeddingProvider(config);
   }
   cachedPorts = ports;
   cachedPortsFor = config;

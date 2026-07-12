@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Descriptions, Form, Input, Tag, Typography } from 'antd';
 import { MatrixOctagram } from '@stassist/ui';
 import type { MatrixOfDestinyResult } from '@stassist/numerology-core';
 import { api, ApiError } from '../../lib/api-client.js';
 import { InfoDisclaimer } from '../../lib/InfoDisclaimer.js';
 import { ContentPendingNotice } from '../../lib/ContentPendingNotice.js';
+import { fetchInterpretationText, type InterpretationText } from '../../lib/interpretation.js';
+import { InterpretationBlock } from '../../lib/InterpretationBlock.js';
 
 const { Title, Paragraph, Text } = Typography;
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Слаг позиции (см. packages/llm/src/facts/matrix-positions.ts MATRIX_CORE_POINTS) + подпись. */
+const CORE_POINT_LABELS: Array<{ field: keyof MatrixOfDestinyResult['corePoints']; slug: string; label: string }> = [
+  { field: 'day', slug: 'point_day', label: 'День — личные качества' },
+  { field: 'month', slug: 'point_month', label: 'Месяц — родовая задача (по маме)' },
+  { field: 'yearSum', slug: 'point_year', label: 'Год — родовая задача (по папе)' },
+  { field: 'tasks', slug: 'point_tasks', label: 'Задачи — главная жизненная задача' },
+  { field: 'center', slug: 'point_center', label: 'Центр — зона комфорта' },
+  { field: 'f1', slug: 'point_f1', label: 'Ф1' },
+  { field: 'f2', slug: 'point_f2', label: 'Ф2' },
+  { field: 'f3', slug: 'point_f3', label: 'Ф3' },
+  { field: 'f4', slug: 'point_f4', label: 'Ф4' },
+];
 
 /** `/matrica-sudby` — калькулятор матрицы судьбы (октаграмма), см. docs/roadmap/prompts/
  *  f3-калькуляторы-и-карта.md требование 2. 9 базовых точек — верифицированная часть метода
@@ -20,6 +35,26 @@ export function Page(): React.JSX.Element {
   const [result, setResult] = useState<MatrixOfDestinyResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [texts, setTexts] = useState<Record<string, InterpretationText>>({});
+
+  useEffect(() => {
+    if (!result) {
+      setTexts({});
+      return;
+    }
+    const keys = [
+      ...CORE_POINT_LABELS.map(({ field, slug }) => `arcanum:${result.corePoints[field]}:${slug}`),
+      `arcanum:${result.derivedSections.relationshipLine}:relationship_line`,
+      `arcanum:${result.derivedSections.moneyLine}:money_line`,
+    ];
+    let cancelled = false;
+    void fetchInterpretationText(keys).then((map) => {
+      if (!cancelled) setTexts(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [result]);
 
   async function onCalculate(): Promise<void> {
     const match = DATE_RE.exec(date);
@@ -77,7 +112,28 @@ export function Page(): React.JSX.Element {
             схем метода — единого стандарта между сервисами нет, методика требует сверки редакцией.
           </Text>
 
-          <ContentPendingNotice what="Текстовые трактовки арканов (1–22) для каждой позиции матрицы" />
+          {Object.keys(texts).length > 0 ? (
+            <div style={{ marginTop: 16 }}>
+              {CORE_POINT_LABELS.map(({ field, slug, label }) => {
+                const entry = texts[`arcanum:${result.corePoints[field]}:${slug}`];
+                return entry ? <InterpretationBlock key={slug} title={`${label} — Аркан ${result.corePoints[field]}`} entry={entry} /> : null;
+              })}
+              {texts[`arcanum:${result.derivedSections.relationshipLine}:relationship_line`] && (
+                <InterpretationBlock
+                  title={`Линия отношений — Аркан ${result.derivedSections.relationshipLine}`}
+                  entry={texts[`arcanum:${result.derivedSections.relationshipLine}:relationship_line`]!}
+                />
+              )}
+              {texts[`arcanum:${result.derivedSections.moneyLine}:money_line`] && (
+                <InterpretationBlock
+                  title={`Денежная линия — Аркан ${result.derivedSections.moneyLine}`}
+                  entry={texts[`arcanum:${result.derivedSections.moneyLine}:money_line`]!}
+                />
+              )}
+            </div>
+          ) : (
+            <ContentPendingNotice what="Текстовые трактовки арканов (1–22) для каждой позиции матрицы" />
+          )}
 
           <div style={{ marginTop: 16, textAlign: 'center' }}>
             <Button disabled title="PDF-отчёт матрицы судьбы — в разработке (Ф6)">

@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Descriptions, Form, Input, Typography } from 'antd';
 import { api, ApiError } from '../../lib/api-client.js';
 import { InfoDisclaimer } from '../../lib/InfoDisclaimer.js';
 import { ContentPendingNotice } from '../../lib/ContentPendingNotice.js';
+import { fetchInterpretationText, type InterpretationText } from '../../lib/interpretation.js';
+import { InterpretationBlock } from '../../lib/InterpretationBlock.js';
 
 const { Title, Paragraph } = Typography;
+
+/** digit(1-9) → слаг ячейки (см. packages/llm/src/facts/numerology-positions.ts
+ *  PSYCHOMATRIX_CELL_SLUGS_BY_DIGIT — та же классическая раскладка квадрата Пифагора). */
+const CELL_SLUG_BY_DIGIT: Record<number, { slug: string; label: string }> = {
+  1: { slug: 'character', label: 'Характер' },
+  2: { slug: 'energy', label: 'Энергия' },
+  3: { slug: 'interest', label: 'Интерес' },
+  4: { slug: 'health', label: 'Здоровье' },
+  5: { slug: 'logic', label: 'Логика' },
+  6: { slug: 'labor', label: 'Труд' },
+  7: { slug: 'luck', label: 'Удача' },
+  8: { slug: 'duty', label: 'Долг' },
+  9: { slug: 'memory', label: 'Память' },
+};
 
 interface PsychoMatrixResultDto {
   number1: number;
@@ -36,6 +52,22 @@ export function Page(): React.JSX.Element {
   const [result, setResult] = useState<PsychoMatrixResultDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [texts, setTexts] = useState<Record<string, InterpretationText>>({});
+
+  useEffect(() => {
+    if (!result) {
+      setTexts({});
+      return;
+    }
+    const keys = Object.values(CELL_SLUG_BY_DIGIT).map(({ slug }) => `numerology:matrix_cell:${slug}`);
+    let cancelled = false;
+    void fetchInterpretationText(keys).then((map) => {
+      if (!cancelled) setTexts(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [result]);
 
   async function onCalculate(): Promise<void> {
     const match = DATE_RE.exec(date);
@@ -100,7 +132,16 @@ export function Page(): React.JSX.Element {
             <Descriptions.Item label="Число (3)">{result.number3}</Descriptions.Item>
             <Descriptions.Item label="Число (4)">{result.number4}</Descriptions.Item>
           </Descriptions>
-          <ContentPendingNotice what="Текстовые значения ячеек психоматрицы (характер/энергия/интерес и т.п.)" />
+          {Object.keys(texts).length > 0 ? (
+            <div style={{ marginTop: 16 }}>
+              {Object.entries(CELL_SLUG_BY_DIGIT).map(([digit, { slug, label }]) => {
+                const entry = texts[`numerology:matrix_cell:${slug}`];
+                return entry ? <InterpretationBlock key={digit} title={label} entry={entry} /> : null;
+              })}
+            </div>
+          ) : (
+            <ContentPendingNotice what="Текстовые значения ячеек психоматрицы (характер/энергия/интерес и т.п.)" />
+          )}
         </Card>
       )}
     </main>

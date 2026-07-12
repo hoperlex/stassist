@@ -14,6 +14,9 @@ importers:
       '@stassist/db':
         specifier: workspace:*
         version: link:packages/db
+      '@stassist/llm':
+        specifier: workspace:*
+        version: link:packages/llm
       '@stassist/shared':
         specifier: workspace:*
         version: link:packages/shared
@@ -95,6 +98,9 @@ importers:
       '@stassist/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@stassist/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
       '@stassist/numerology-core':
         specifier: workspace:*
         version: link:../../packages/numerology-core
@@ -214,6 +220,9 @@ importers:
       '@stassist/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@stassist/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
       '@stassist/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -300,6 +309,16 @@ importers:
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.0)
 
   packages/llm:
+    dependencies:
+      '@stassist/numerology-core':
+        specifier: workspace:*
+        version: link:../numerology-core
+      '@stassist/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       vite-tsconfig-paths:
         specifier: ^5.1.4

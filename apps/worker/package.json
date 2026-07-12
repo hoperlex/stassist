@@ -19,6 +19,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@stassist/astro-core": "workspace:*",
     "@stassist/db": "workspace:*",
+    "@stassist/llm": "workspace:*",
     "@stassist/shared": "workspace:*",
     "@stassist/ui": "workspace:*",
     "astronomy-engine": "^2.1.19",

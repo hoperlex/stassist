@@ -97,8 +97,17 @@ export const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional(),
   YANDEXGPT_API_KEY: z.string().optional(),
   GIGACHAT_API_KEY: z.string().optional(),
+  /** Ф4: цепочка fallback-провайдеров generate() (см. @stassist/llm createLlmProviderChain),
+   *  CSV в порядке приоритета, напр. "anthropic,openrouter,yandexgpt". Пусто = без fallback
+   *  (только LLM_PROVIDER). Не влияет на fail-fast/degraded — это доп. отказоустойчивость поверх
+   *  уже сконфигурированного основного провайдера. */
+  LLM_FALLBACK_CHAIN: z.string().default(''),
 
-  EMBED_PROVIDER: z.enum(['stub', 'anthropic', 'openrouter']).default('stub'),
+  /** Ф4: 'cohere' — единственный embed-провайдер, выдающий ровно 1024-dim (embed-multilingual-v3.0,
+   *  поддерживает русский), совпадает с interpretation_chunks.embedding vector(1024) — см. находку
+   *  [контракт-эмбеддингов] в _work/build/findings/f4.md (у Anthropic нет embeddings API). */
+  EMBED_PROVIDER: z.enum(['stub', 'anthropic', 'openrouter', 'cohere']).default('stub'),
+  COHERE_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -126,8 +135,21 @@ export interface Config {
   };
   geocoder: SubsystemStatus & { nominatimUrl?: string; nominatimUserAgent?: string };
   payments: SubsystemStatus;
-  llm: SubsystemStatus;
-  embeddings: SubsystemStatus;
+  /** Ф4: `@stassist/llm` строит реальные адаптеры поверх этих полей (см. createLlmProviderChain) —
+   *  сам `packages/shared` реальных LLM-адаптеров не содержит (см. ports/factory.ts). */
+  llm: SubsystemStatus & {
+    anthropicApiKey?: string;
+    openrouterApiKey?: string;
+    yandexgptApiKey?: string;
+    gigachatApiKey?: string;
+    /** См. env LLM_FALLBACK_CHAIN — уже разобран в список (csvToArray). */
+    fallbackChain: string[];
+  };
+  embeddings: SubsystemStatus & {
+    openrouterApiKey?: string;
+    /** Ф4: см. env COHERE_API_KEY выше. */
+    cohereApiKey?: string;
+  };
   /** Список подсистем, не готовых к боевой работе (degraded) — для лога при старте. */
   degraded: string[];
   /** Auth: подпись access JWT (EdDSA) — см. apps/api/src/auth/jwt.ts. */
@@ -262,6 +284,7 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
   const embedKeyByProvider: Record<string, string> = {
     anthropic: 'ANTHROPIC_API_KEY',
     openrouter: 'OPENROUTER_API_KEY',
+    cohere: 'COHERE_API_KEY',
   };
   if (env.EMBED_PROVIDER !== 'stub') {
     const key = embedKeyByProvider[env.EMBED_PROVIDER];
@@ -305,8 +328,21 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
       nominatimUserAgent: env.NOMINATIM_USER_AGENT,
     },
     payments: { configured: env.PAYMENTS === 'yookassa', driver: env.PAYMENTS },
-    llm: { configured: env.LLM_PROVIDER !== 'stub', driver: env.LLM_PROVIDER },
-    embeddings: { configured: env.EMBED_PROVIDER !== 'stub', driver: env.EMBED_PROVIDER },
+    llm: {
+      configured: env.LLM_PROVIDER !== 'stub',
+      driver: env.LLM_PROVIDER,
+      anthropicApiKey: env.ANTHROPIC_API_KEY,
+      openrouterApiKey: env.OPENROUTER_API_KEY,
+      yandexgptApiKey: env.YANDEXGPT_API_KEY,
+      gigachatApiKey: env.GIGACHAT_API_KEY,
+      fallbackChain: csvToArray(env.LLM_FALLBACK_CHAIN),
+    },
+    embeddings: {
+      configured: env.EMBED_PROVIDER !== 'stub',
+      driver: env.EMBED_PROVIDER,
+      openrouterApiKey: env.OPENROUTER_API_KEY,
+      cohereApiKey: env.COHERE_API_KEY,
+    },
     degraded,
     auth: {
       jwtPrivateKeyPem: normalizePem(env.JWT_PRIVATE_KEY),

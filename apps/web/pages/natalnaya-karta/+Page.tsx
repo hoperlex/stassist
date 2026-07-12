@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Divider, Table, Typography } from 'antd';
 import { ChartWheel, BODY_NAMES_RU, SIGN_NAMES_RU } from '@stassist/ui';
+// Импорт напрямую из модуля со знаками (а НЕ `from '@stassist/shared'`) — баррель-индекс тянет
+// серверные порты/node:crypto в клиентский бандл (см. тот же приём в pages/privacy-policy/+Page.tsx).
+import { zodiacEnSlugByIndex } from '@stassist/shared/schemas/zodiac.js';
 import type { ChartData } from '@stassist/shared';
 import { api, ApiError } from '../../lib/api-client.js';
 import { InfoDisclaimer } from '../../lib/InfoDisclaimer.js';
 import { ContentPendingNotice } from '../../lib/ContentPendingNotice.js';
 import { PublicBirthForm, type PublicBirthValue } from '../../lib/PublicBirthForm.js';
 import { ShareButton } from '../../lib/ShareButton.js';
+import { fetchInterpretationText, type InterpretationText } from '../../lib/interpretation.js';
+import { InterpretationBlock } from '../../lib/InterpretationBlock.js';
 
 const { Title, Paragraph } = Typography;
 
@@ -15,6 +20,51 @@ const ASPECT_NAMES_RU: Record<string, string> = {
   sextile: 'секстиль', quincunx: 'квинконс', semisextile: 'полусекстиль', semisquare: 'полуквадрат',
   sesquiquadrate: 'полутораквадрат', quintile: 'квинтиль', biquintile: 'биквинтиль',
 };
+
+const CLASSICAL_PLANETS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'] as const;
+
+/** ChartData хранит точки под camelCase-ключами (см. packages/shared/src/schemas/chart.ts
+ *  pointKeySchema) — здесь та же нормализация в канонический слаг корпуса, что
+ *  `normalizePointSlug` в packages/llm/src/facts/keys.ts (единственный источник формата). */
+function normalizePointSlug(chartDataKey: string): string {
+  if (chartDataKey === 'meanNode' || chartDataKey === 'trueNode') return 'north_node';
+  if (chartDataKey === 'meanLilith' || chartDataKey === 'trueLilith') return 'lilith';
+  return chartDataKey;
+}
+
+interface InterpretationEntryMeta {
+  key: string;
+  label: string;
+}
+
+/** Строит ключи `planet_in_sign:*`/`point_in_sign:*`/`asc_in_sign:*` для найденных в карте
+ *  объектов (см. packages/llm/src/facts/serializer.ts — тот же набор фактов) + человекочитаемые
+ *  подписи для блоков. */
+function buildInterpretationEntries(chart: ChartData): InterpretationEntryMeta[] {
+  const entries: InterpretationEntryMeta[] = [];
+  const seen = new Set<string>();
+  const push = (key: string, label: string): void => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    entries.push({ key, label });
+  };
+  for (const planet of CLASSICAL_PLANETS) {
+    const pos = chart.bodies[planet];
+    if (pos) push(`planet_in_sign:${planet}:${zodiacEnSlugByIndex(pos.signIndex)}`, `${BODY_NAMES_RU[planet] ?? planet} в ${SIGN_NAMES_RU[pos.signIndex]}`);
+  }
+  if (chart.bodies.chiron) {
+    const pos = chart.bodies.chiron;
+    push(`point_in_sign:chiron:${zodiacEnSlugByIndex(pos.signIndex)}`, `Хирон в ${SIGN_NAMES_RU[pos.signIndex]}`);
+  }
+  for (const [pointKey, pos] of Object.entries(chart.points)) {
+    if (pos) push(`point_in_sign:${normalizePointSlug(pointKey)}:${zodiacEnSlugByIndex(pos.signIndex)}`, `${BODY_NAMES_RU[pointKey] ?? pointKey} в ${SIGN_NAMES_RU[pos.signIndex]}`);
+  }
+  if (!chart.meta.noHouses) {
+    const ascSignIndex = Math.floor((((chart.angles.ascDeg % 360) + 360) % 360) / 30);
+    push(`asc_in_sign:${zodiacEnSlugByIndex(ascSignIndex)}`, `Асцендент в ${SIGN_NAMES_RU[ascSignIndex]}`);
+  }
+  return entries;
+}
 
 /**
  * `/natalnaya-karta` — публичный калькулятор натальной карты (см. docs/roadmap/prompts/
@@ -27,6 +77,21 @@ export function Page(): React.JSX.Element {
   const [chart, setChart] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [texts, setTexts] = useState<Record<string, InterpretationText>>({});
+
+  useEffect(() => {
+    if (!chart) {
+      setTexts({});
+      return;
+    }
+    let cancelled = false;
+    void fetchInterpretationText(buildInterpretationEntries(chart).map((e) => e.key)).then((map) => {
+      if (!cancelled) setTexts(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [chart]);
 
   async function onCalculate(): Promise<void> {
     if (!birth) return;
@@ -131,7 +196,17 @@ export function Page(): React.JSX.Element {
             </>
           )}
 
-          <ContentPendingNotice what="Текстовые трактовки положений планет по знакам и домам" />
+          {Object.keys(texts).length > 0 ? (
+            <div style={{ marginTop: 16 }}>
+              <Title level={4}>Трактовки положений</Title>
+              {buildInterpretationEntries(chart).map(({ key, label }) => {
+                const entry = texts[key];
+                return entry ? <InterpretationBlock key={key} title={label} entry={entry} /> : null;
+              })}
+            </div>
+          ) : (
+            <ContentPendingNotice what="Текстовые трактовки положений планет по знакам и домам" />
+          )}
 
           <div style={{ marginTop: 16, textAlign: 'center' }}>
             <ShareButton kind="natal" positions={chart} label="Поделиться картой" />

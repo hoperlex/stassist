@@ -22,6 +22,7 @@
     "@fastify/rate-limit": "^11.1.0",
     "@stassist/astro-core": "workspace:*",
     "@stassist/db": "workspace:*",
+    "@stassist/llm": "workspace:*",
     "@stassist/numerology-core": "workspace:*",
     "@stassist/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",

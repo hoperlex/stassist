@@ -29,6 +29,13 @@
       "when": 1783832643387,
       "tag": "0003_calc_content_programmatika",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783837493237,
+      "tag": "0004_llm_pipeline",
+      "breakpoints": true
     }
   ]
 }

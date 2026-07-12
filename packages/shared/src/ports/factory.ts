@@ -1,8 +1,14 @@
 /**
  * Единая точка сборки адаптеров портов по конфигурации. Ф2 подключает реальные адаптеры
- * `Mailer`(smtp)/`Geocoder`(nominatim) — остальные подсистемы (storage/payments/llm/embeddings)
- * по-прежнему появятся в поздних фазах и намеренно бросают понятную ошибку при попытке выбрать
- * их не-stub драйвер раньше срока.
+ * `Mailer`(smtp)/`Geocoder`(nominatim) — `storage`/`payments` по-прежнему появятся в поздних
+ * фазах и намеренно бросают понятную ошибку при попытке выбрать их не-stub драйвер раньше срока.
+ *
+ * `llm`/`embeddings`: этот пакет (`@stassist/shared`) НЕ содержит реальных LLM-адаптеров (нет
+ * SDK-зависимостей здесь специально, см. §2 конвенций реализации) — `createPorts` всегда
+ * возвращает стабы для них. Реальные адаптеры (Anthropic/OpenRouter/YandexGPT/GigaChat) живут в
+ * `@stassist/llm` (Ф4); вызывающий код (apps/api, apps/worker) НАКЛАДЫВАЕТ их поверх базовых
+ * портов ПОСЛЕ `createPorts`, когда `config.llm.driver`/`config.embeddings.driver !== 'stub'` —
+ * тот же паттерн, что `CachedGeocoder` поверх `ports.geocoder` в apps/api/src/route-context.ts.
  */
 import type { Config } from '../config.js';
 import { type ObjectStorage, MemoryObjectStorage } from './object-storage.js';
@@ -60,17 +66,9 @@ export function createPorts(config: Config): Ports {
       `PAYMENTS=${config.payments.driver}: реальный адаптер появится в поздней фазе, сейчас доступен только stub`,
     );
   }
-  if (config.llm.driver !== 'stub') {
-    throw new Error(
-      `LLM_PROVIDER=${config.llm.driver}: реальный адаптер появится в Ф4, сейчас доступен только stub`,
-    );
-  }
-  if (config.embeddings.driver !== 'stub') {
-    throw new Error(
-      `EMBED_PROVIDER=${config.embeddings.driver}: реальный адаптер появится в Ф4, сейчас доступен только stub`,
-    );
-  }
 
+  // llm/embeddings: базовые порты — ВСЕГДА стабы (см. doc-комментарий выше). Реальные адаптеры
+  // подключает вызывающий код через @stassist/llm, а не эта функция.
   return {
     storage: new MemoryObjectStorage(),
     mailer: buildMailer(config),

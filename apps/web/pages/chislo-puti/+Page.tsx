@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Card, Form, Input, Statistic, Typography } from 'antd';
 import { api, ApiError } from '../../lib/api-client.js';
 import { InfoDisclaimer } from '../../lib/InfoDisclaimer.js';
 import { ContentPendingNotice } from '../../lib/ContentPendingNotice.js';
+import { fetchInterpretationText, type InterpretationText } from '../../lib/interpretation.js';
+import { InterpretationBlock } from '../../lib/InterpretationBlock.js';
 
 const { Title, Paragraph } = Typography;
 
@@ -22,6 +24,21 @@ export function Page(): React.JSX.Element {
   const [result, setResult] = useState<LifePathResultDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [interpretation, setInterpretation] = useState<InterpretationText | null>(null);
+
+  useEffect(() => {
+    if (!result) {
+      setInterpretation(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchInterpretationText([`numerology:life_path:${result.lifePathNumber}`]).then((map) => {
+      if (!cancelled) setInterpretation(map[`numerology:life_path:${result.lifePathNumber}`] ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [result]);
 
   async function onCalculate(): Promise<void> {
     const match = DATE_RE.exec(date);
@@ -69,7 +86,13 @@ export function Page(): React.JSX.Element {
           <Paragraph type="secondary" style={{ marginTop: 8 }}>
             Сумма всех цифр даты: {result.digitSum}
           </Paragraph>
-          <ContentPendingNotice what="Краткое текстовое значение числа жизненного пути" />
+          {interpretation ? (
+            <div style={{ textAlign: 'left', marginTop: 16 }}>
+              <InterpretationBlock entry={interpretation} />
+            </div>
+          ) : (
+            <ContentPendingNotice what="Краткое текстовое значение числа жизненного пути" />
+          )}
         </Card>
       )}
     </main>

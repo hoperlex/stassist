@@ -28,6 +28,8 @@ import { lunarCalendarRoutes } from './routes/lunar-calendar.js';
 import { compatPagesRoutes } from './routes/compat-pages.js';
 import { shareRoutes } from './routes/share.js';
 import { publicGeocodeRoutes } from './routes/public-geocode.js';
+import { aiReportsRoutes } from './routes/ai-reports.js';
+import { interpretationRoutes } from './routes/interpretation.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -99,7 +101,12 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(lunarCalendarRoutes, { config, prefix: `${apiV1}/calc/lunar-calendar` });
   await app.register(compatPagesRoutes, { config, prefix: `${apiV1}/calc/compat-pages` });
   await app.register(publicGeocodeRoutes, { config, prefix: `${apiV1}/calc/geocode` });
+  // Ф4: публичное чтение корпуса интерпретаций для калькуляторов Ф3 (см. routes/interpretation.ts).
+  await app.register(interpretationRoutes, { config, prefix: `${apiV1}/calc/interpretation` });
   await app.register(shareRoutes, { config, prefix: `${apiV1}/share` });
+
+  // Ф4: ИИ-разборы кабинета (см. docs/roadmap/prompts/f4-llm-конвейер.md).
+  await app.register(aiReportsRoutes, { config, prefix: `${apiV1}/ai-reports` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

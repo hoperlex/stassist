@@ -56,6 +56,27 @@ export function signByIndex(index: number): ZodiacSignInfo | undefined {
 }
 
 // -------------------------------------------------------------------------------------------
+// Английские слаги знаков — единый источник правды для ключей корпуса интерпретаций Ф4
+// (`interpretation_chunks.key`, напр. `sign:aries:overview`, `planet_in_sign:mars:leo`), см.
+// docs/roadmap/31-конвенции-реализации.md §6. Русские слаги выше (`slug`) — только для URL/
+// `compat_pages`; в коде до Ф4 не было ни одного места, использующего английские названия
+// знаков, поэтому массив ниже — новый единственный источник правды (индекс = `signIndex`,
+// см. packages/llm/src/facts/keys.ts).
+// -------------------------------------------------------------------------------------------
+
+export const ZODIAC_SIGN_EN_SLUGS = [
+  'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
+  'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
+] as const;
+export type ZodiacSignEnSlug = (typeof ZODIAC_SIGN_EN_SLUGS)[number];
+
+export function zodiacEnSlugByIndex(signIndex: number): ZodiacSignEnSlug {
+  const slug = ZODIAC_SIGN_EN_SLUGS[signIndex];
+  if (!slug) throw new Error(`zodiacEnSlugByIndex: некорректный signIndex ${signIndex}`);
+  return slug;
+}
+
+// -------------------------------------------------------------------------------------------
 // Пары совместимости (78 = 12 одинаковых + 66 различных, C(12,2)+12) — `compat_pages` (Ф3
 // создаёт таблицу, Ф4 заливает `body_md`, см. §5/§6 конвенций реализации).
 // -------------------------------------------------------------------------------------------
