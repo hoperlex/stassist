@@ -17,8 +17,11 @@
     "build": "tsc -p tsconfig.build.json",
     "test:unit": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
   "devDependencies": {
+    "fast-check": "^4.9.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   }

@@ -193,7 +193,23 @@ importers:
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.0)
 
   packages/astro-core:
+    dependencies:
+      '@stassist/shared':
+        specifier: workspace:*
+        version: link:../shared
+      astronomy-engine:
+        specifier: ^2.1.19
+        version: 2.1.19
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
+      ephemeris:
+        specifier: ^2.2.0
+        version: 2.2.0
+      fast-check:
+        specifier: ^4.9.0
+        version: 4.9.0
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.7.3)(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.0))
@@ -211,7 +227,14 @@ importers:
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.0)
 
   packages/numerology-core:
+    dependencies:
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
+      fast-check:
+        specifier: ^4.9.0
+        version: 4.9.0
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.7.3)(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.0))
@@ -1456,6 +1479,9 @@ packages:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
 
+  astronomy-engine@2.1.19:
+    resolution: {integrity: sha512-8yWKNf7UeNbH458h3sAJ6ZgAjE5jTXp/mNNRFoC20j2SHwZIjAQeEsBB2Q3uCFRaTCCJRv33K2XhkhZQMXoX6w==}
+
   async-function@1.0.0:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
@@ -1736,6 +1762,9 @@ packages:
   electron-to-chromium@1.5.389:
     resolution: {integrity: sha512-cEto7aeOqBfU1D+c5py5pE+ooscKE75JifxLBdFUZsqAxRS6y7kebtxAZvICszSl05gPjYHDTjY+lXpyGvpJbg==}
 
+  ephemeris@2.2.0:
+    resolution: {integrity: sha512-D5jEPCYYVxJlZJ4C81w56rvo7Qw/nVs8/mZc4lYOLaRtNtW2aEnIB0N/5mCajUa5X23MKwSGb++TPLUwkS/bmg==}
+
   es-abstract-get@1.0.0:
     resolution: {integrity: sha512-6PMWXpdhshVvFp+FoWYs1EvG1Nj0tvk0dZM+XcK0xMEM1czRVcP6ohqPWHy6qPagSpC8j4+p89WXlT+xXJs/fg==}
     engines: {node: '>= 0.4'}
@@ -1871,6 +1900,10 @@ packages:
   expect-type@1.4.0:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
+
+  fast-check@4.9.0:
+    resolution: {integrity: sha512-7ms6T7SybUev/PQITciI0yLM2pOSFy5zpG8Ty7tQofcVaQUvrMXp6CBwqF6fThLCLOrfBtuHAtwq6Yu4XPCllg==}
+    engines: {node: '>=12.17.0'}
 
   fast-decode-uri-component@1.0.1:
     resolution: {integrity: sha512-WKgKWg5eUxvRZGwW8FvfbaH7AXSh2cL+3j5fMGzUMCxWBJ3dV3a7Wz8y2f/uQ0e3B6WmodD3oS54jTQ9HVTIIg==}
@@ -2523,6 +2556,9 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  pure-rand@8.4.2:
+    resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
 
   quick-format-unescaped@4.0.4:
     resolution: {integrity: sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg==}
@@ -4456,6 +4492,8 @@ snapshots:
 
   assertion-error@2.0.1: {}
 
+  astronomy-engine@2.1.19: {}
+
   async-function@1.0.0: {}
 
   atomic-sleep@1.0.0: {}
@@ -4641,6 +4679,8 @@ snapshots:
       gopd: 1.2.0
 
   electron-to-chromium@1.5.389: {}
+
+  ephemeris@2.2.0: {}
 
   es-abstract-get@1.0.0:
     dependencies:
@@ -4947,6 +4987,10 @@ snapshots:
   esutils@2.0.3: {}
 
   expect-type@1.4.0: {}
+
+  fast-check@4.9.0:
+    dependencies:
+      pure-rand: 8.4.2
 
   fast-decode-uri-component@1.0.1: {}
 
@@ -5618,6 +5662,8 @@ snapshots:
       react-is: 16.13.1
 
   punycode@2.3.1: {}
+
+  pure-rand@8.4.2: {}
 
   quick-format-unescaped@4.0.4: {}
 

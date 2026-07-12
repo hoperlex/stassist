@@ -156,3 +156,6 @@ playwright/.cache/
 # см. _report/build/f0-отчёт.md; не должно возникать, но на всякий случай не коммитим)
 **/src/**/*.d.ts
 **/src/**/*.d.ts.map
+# Исключение (Ф1): рукописный ambient-модуль для нетипизированного npm-пакета `ephemeris`
+# (кросс-валидация ядра, devDependency без своих @types) — это исходный код, не билд-артефакт.
+!packages/astro-core/src/cross-validation/ephemeris.d.ts

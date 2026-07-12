@@ -1,0 +1,76 @@
+{
+  "description": "1990-06-15 14:30 (местное, летнее время Европа/Москва, UTC+4) — исторический часовой пояс (советское летнее время), проверяет конвертацию IANA tz.",
+  "input": {
+    "dateTime": {
+      "year": 1990,
+      "month": 6,
+      "day": 15,
+      "hour": 14,
+      "minute": 30,
+      "second": 0
+    },
+    "timeUnknown": false,
+    "tzId": "Europe/Moscow",
+    "place": {
+      "lat": 55.7558,
+      "lon": 37.6173,
+      "elevationM": 0
+    },
+    "preset": {
+      "zodiac": "tropical",
+      "houseSystem": "placidus",
+      "bodies": {
+        "trueNode": false,
+        "trueLilith": false,
+        "selena": true,
+        "chiron": true
+      },
+      "orbs": {
+        "byAspect": {},
+        "byBody": {}
+      },
+      "aspectSet": "major_minor"
+    }
+  },
+  "expected": {
+    "longitudes": {
+      "sun": 84.0698484,
+      "moon": 344.5236154,
+      "mercury": 65.5835318,
+      "venus": 48.7040873,
+      "mars": 10.99636,
+      "jupiter": 105.8759376,
+      "saturn": 294.0355932,
+      "uranus": 278.1676294,
+      "neptune": 283.7186279,
+      "pluto": 225.4027456
+    },
+    "angles": {
+      "ascDeg": 185.70323972155177,
+      "mcDeg": 97.8693647184198,
+      "dscDeg": 5.703239721551768,
+      "icDeg": 277.8693647184198
+    },
+    "houses": [
+      185.70323972155177,
+      209.31780168458928,
+      239.89374473277155,
+      277.8693647184198,
+      314.66209003345705,
+      343.63827606096567,
+      5.703239721551768,
+      29.317801684589313,
+      59.89374473277155,
+      97.8693647184198,
+      134.66209003345702,
+      163.63827606096567
+    ]
+  },
+  "tolerances": {
+    "planetsArcmin": 1,
+    "cuspsArcmin": 2
+  },
+  "source": "longitudes: JPL Horizons API (ssd.jpl.nasa.gov/api/horizons.api), EPHEM_TYPE=OBSERVER, QUANTITIES=31, CENTER='500@399', момент 1990-06-15T10:30:00Z подтверждён независимо через Intl.DateTimeFormat (Node ICU tzdb) как соответствующий 14:30 местного времени Europe/Moscow (историческое советское летнее время, смещение GMT+04:00) — см. отчёт Ф1. angles/houses: внутренняя перекрёстная проверка (не независимый третий источник) — см. houses/houses.test.ts.",
+  "source_date": "2026-07-12",
+  "verified_by": "f1-build-agent (сверка долгот планет — реальный запрос JPL Horizons; сверка часового пояса — Node.js Intl/ICU; сверка домов/углов — внутренняя перекрёстная проверка формул)"
+}

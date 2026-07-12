@@ -1,6 +1,7 @@
 export * from './config.js';
 export * from './constants.js';
 export * from './schemas/common.js';
+export * from './schemas/chart.js';
 
 export * from './ports/object-storage.js';
 export * from './ports/mailer.js';

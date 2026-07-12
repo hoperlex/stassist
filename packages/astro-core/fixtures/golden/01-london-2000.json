@@ -1,0 +1,45 @@
+{
+  "description": "2000-01-01 12:00 UTC, Лондон — эпоха J2000, UTC (без конвертации часового пояса).",
+  "input": {
+    "dateTime": { "year": 2000, "month": 1, "day": 1, "hour": 12, "minute": 0, "second": 0 },
+    "timeUnknown": false,
+    "tzId": "UTC",
+    "place": { "lat": 51.5074, "lon": -0.1278, "elevationM": 0 },
+    "preset": {
+      "zodiac": "tropical",
+      "houseSystem": "placidus",
+      "bodies": { "trueNode": false, "trueLilith": false, "selena": true, "chiron": true },
+      "orbs": { "byAspect": {}, "byBody": {} },
+      "aspectSet": "major_minor"
+    }
+  },
+  "expected": {
+    "longitudes": {
+      "sun": 280.3689092,
+      "moon": 223.323786,
+      "mercury": 271.8892699,
+      "venus": 241.5657794,
+      "mars": 327.9632921,
+      "jupiter": 25.2530685,
+      "saturn": 40.3956366,
+      "uranus": 314.809168,
+      "neptune": 303.1930007,
+      "pluto": 251.4547644
+    },
+    "angles": {
+      "ascDeg": 24.014524836677758,
+      "mcDeg": 279.49319557983097,
+      "dscDeg": 204.01452483667777,
+      "icDeg": 99.49319557983097
+    },
+    "houses": [
+      24.014524836677758, 61.012936888103766, 81.91139305294426, 99.49319557983097,
+      118.91349874403346, 147.48543477795056, 204.01452483667777, 241.01293688810375,
+      261.9113930529443, 279.49319557983097, 298.91349874403346, 327.48543477795056
+    ]
+  },
+  "tolerances": { "planetsArcmin": 1, "cuspsArcmin": 2 },
+  "source": "longitudes: JPL Horizons API (ssd.jpl.nasa.gov/api/horizons.api), EPHEM_TYPE=OBSERVER, QUANTITIES=31 (апарентная геоцентрическая эклиптическая долгота/широта эпохи даты, с учётом светового времени/аберрации/гравитационного отклонения), CENTER='500@399', реальный сетевой запрос выполнен агентом при реализации Ф1, см. отчёт. angles/houses: НЕ независимый третий источник — расчёт этим же ядром astro-core (Placidus, formulas в houses/ascendant-mc.ts и houses/placidus.ts), которые независимо перепроверены построением через матрицы поворота astronomy-engine (Rotation_ECT_EQD/Rotation_EQD_HOR/HorizonFromVector, без рефракции) — см. houses/houses.test.ts. Это регрессионная, а не внешняя проверка домов/углов.",
+  "source_date": "2026-07-12",
+  "verified_by": "f1-build-agent (сверка долгот планет — реальный запрос JPL Horizons; сверка домов/углов — внутренняя перекрёстная проверка формул через независимое построение матриц поворота)"
+}

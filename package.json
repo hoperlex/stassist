@@ -20,7 +20,9 @@
     "format:check": "prettier --check .",
     "gate": "pnpm -r typecheck && pnpm -r lint && pnpm -r test:unit && pnpm -r build",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx tools/db-migrate.ts"
+    "db:migrate": "tsx tools/db-migrate.ts",
+    "data:gen-vsop87": "tsx tools/gen-vsop87.ts",
+    "data:gen-chiron": "tsx tools/gen-chiron.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
