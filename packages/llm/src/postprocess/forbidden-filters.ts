@@ -28,10 +28,47 @@ const FORBIDDEN_PATTERNS: Array<{ category: ForbiddenCategory; re: RegExp }> = [
   { category: 'guarantee', re: /гарантир\w*|точно\s+ли|обязательно\s+ли\s+(сбуд|случ)/iu },
 ];
 
+// Категории, для которых ОТРИЦАНИЕ/оговорка непосредственно перед триггером снимает срабатывание.
+// Мотив: добросовестный текст-дисклеймер («я НЕ ставлю диагнозы», «астрология ничего НЕ гарантирует»,
+// «портал НЕ занимается порчей») — это ПРАВИЛЬНОЕ поведение, а не запрещённый контент; наивный
+// regex.test() ложно резал такие формулировки в редакторском корпусе и в мягких отказах (см. промт
+// text-корпус-редактура.md, блок C: «учесть отрицание, не рубить добросовестный текст»). Для «death»
+// это не нужно — паттерн уже сужен до вопросительно-предсказательного контекста.
+const NEGATABLE: ReadonlySet<ForbiddenCategory> = new Set(['medical', 'curse', 'guarantee']);
+
+// Отрицание/замена как отдельное слово в клаузе перед триггером: «не», «ни», «без», «вместо».
+// (JS `\b` — ASCII-only даже с флагом `u`, поэтому границу слова задаём явно через разделители и
+// пробел после слова, а не `\b`.)
+const NEGATION_IN_CLAUSE = /(?:^|[\s(«„"'—-])(?:не|ни|без|вместо)\s/iu;
+// Границы клаузы — конец предложения/точка с запятой/перенос строки (запятую НЕ считаем границей:
+// «не занимается темами порчи и сглаза» — одна клауза, отрицание «не» покрывает оба триггера).
+const CLAUSE_BOUNDARY = /[.!?;\n]/g;
+
+/**
+ * true, если у паттерна есть хотя бы одно вхождение, НЕ находящееся в клаузе с отрицанием (для
+ * NEGATABLE-категорий). Клауза вхождения = отрезок от предыдущей границы предложения до вхождения;
+ * если в нём есть «не/ни/без/вместо» — это добросовестная оговорка, а не запрос/утверждение.
+ */
+function hasNonNegatedMatch(text: string, re: RegExp): boolean {
+  const global = new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`);
+  let m: RegExpExecArray | null;
+  while ((m = global.exec(text)) !== null) {
+    let clauseStart = 0;
+    let bm: RegExpExecArray | null;
+    CLAUSE_BOUNDARY.lastIndex = 0;
+    while ((bm = CLAUSE_BOUNDARY.exec(text)) !== null && bm.index < m.index) clauseStart = bm.index + 1;
+    const clause = text.slice(clauseStart, m.index);
+    if (!NEGATION_IN_CLAUSE.test(clause)) return true;
+    if (m.index === global.lastIndex) global.lastIndex++; // защита от вхождений нулевой длины
+  }
+  return false;
+}
+
 export function detectForbidden(text: string): ForbiddenMatch[] {
   const matches: ForbiddenMatch[] = [];
   for (const { category, re } of FORBIDDEN_PATTERNS) {
-    if (re.test(text)) matches.push({ category });
+    const hit = NEGATABLE.has(category) ? hasNonNegatedMatch(text, re) : re.test(text);
+    if (hit) matches.push({ category });
   }
   return matches;
 }
