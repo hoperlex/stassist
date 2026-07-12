@@ -40,7 +40,7 @@ export function Page(): React.JSX.Element {
             <Button href="/app/zakazat-prognoz">Индивидуальный прогноз</Button>
             <Button href="/app/podpiska">Подписка</Button>
             <Button href="/app/kviz">Квиз о себе</Button>
-            <Button href="/app/soobshchestvo">Сообщество</Button>
+            <Button href="/soobshchestvo">Сообщество</Button>
             <Button href="/app/druzya">Друзья</Button>
             <Button href="/app/moderaciya">Модерация</Button>
           </Space>

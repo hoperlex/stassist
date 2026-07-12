@@ -26,7 +26,7 @@ describe('pages/podelitsya/@slug', () => {
   it('рендерит ChartWheel и честную заметку, пока PNG не готов', () => {
     const fixture: PodelitsyaData = {
       seo: { title: 't', description: 'd', canonicalPath: '/podelitsya/abc' },
-      share: { slug: 'abc', kind: 'natal', positions, positionsB: null, theme: 'light', ogImageReady: false },
+      share: { slug: 'abc', kind: 'natal', positions, positionsB: null, caption: null, theme: 'light', ogImageReady: false },
     };
     const html = renderToStaticMarkup(<Page pageContext={{ data: fixture }} />);
     expect(html).toContain('Натальная карта');

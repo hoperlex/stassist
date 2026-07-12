@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Alert, Button, Input, Space } from 'antd';
-import type { ChartData, ChartShareResponse } from '@stassist/shared';
+import type { ChartData, ChartShareResponse, ShareKind, SharePositions } from '@stassist/shared';
 import { api, ApiError } from './api-client.js';
 
-function toSharePositions(chart: ChartData) {
+/** Принимает и полную `ChartData`, и уже обезличенный `SharePositions` (Ф9: транзитный снапшот
+ *  дня приходит с API сразу в форме SharePositions) — маппинг одинаковый: явный whitelist полей. */
+export type ShareablePositions = ChartData | SharePositions;
+
+function toSharePositions(chart: ShareablePositions) {
   return {
     bodies: chart.bodies,
     points: chart.points,
@@ -18,16 +22,22 @@ function toSharePositions(chart: ChartData) {
  * Кнопка «поделиться» — создаёт обезличенный снапшот `chart_shares` (без ПД: только позиции, см.
  * packages/shared/src/schemas/calc.ts `SharePositions`) и показывает постоянную ссылку
  * `/podelitsya/{slug}` с og:image (генерируется асинхронно воркером, см. apps/worker/src/share).
+ *
+ * Ф9: kind='transit_day' — карточка отклика «Небо дня»: `positions` — натал пользователя,
+ * `positionsB` — транзитный снапшот дня, `caption` — подпись отклика (валидируется и
+ * модерируется на бэке, см. routes/share.ts).
  */
 export function ShareButton({
   kind,
   positions,
   positionsB,
+  caption,
   label = 'Поделиться',
 }: {
-  kind: 'natal' | 'synastry';
-  positions: ChartData;
-  positionsB?: ChartData;
+  kind: ShareKind;
+  positions: ShareablePositions;
+  positionsB?: ShareablePositions;
+  caption?: string;
   label?: string;
 }): React.JSX.Element {
   const [loading, setLoading] = useState(false);
@@ -42,6 +52,7 @@ export function ShareButton({
         kind,
         positions: toSharePositions(positions),
         positionsB: positionsB ? toSharePositions(positionsB) : undefined,
+        caption,
         theme: 'light',
       });
       setShareUrl(res.shareUrl);

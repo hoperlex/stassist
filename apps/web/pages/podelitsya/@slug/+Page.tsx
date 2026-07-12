@@ -8,9 +8,13 @@ const { Title, Paragraph } = Typography;
 export function Page({ pageContext }: { pageContext: { data: PodelitsyaData } }): React.JSX.Element {
   const { share } = pageContext.data;
 
+  const title =
+    share.kind === 'synastry' ? 'Карта совместимости' : share.kind === 'transit_day' ? 'Небо дня' : 'Натальная карта';
+
   return (
     <main style={{ maxWidth: 640, margin: '48px auto', padding: '0 24px', textAlign: 'center' }}>
-      <Title level={1}>{share.kind === 'synastry' ? 'Карта совместимости' : 'Натальная карта'}</Title>
+      <Title level={1}>{title}</Title>
+      {share.kind === 'transit_day' && share.caption && <Paragraph strong>{share.caption}</Paragraph>}
       <Paragraph>Результат расчёта на портале Зодиакум. Данные рождения не публикуются — только позиции карты.</Paragraph>
       <InfoDisclaimer />
 
@@ -19,7 +23,7 @@ export function Page({ pageContext }: { pageContext: { data: PodelitsyaData } })
           primary={{ ...share.positions, noHouses: share.positions.meta.noHouses }}
           secondary={share.positionsB ? { ...share.positionsB, noHouses: share.positionsB.meta.noHouses } : undefined}
           theme={share.theme}
-          title={share.kind === 'synastry' ? 'Карта совместимости' : 'Натальная карта'}
+          title={title}
           size={420}
         />
       </div>
@@ -35,7 +39,11 @@ export function Page({ pageContext }: { pageContext: { data: PodelitsyaData } })
       )}
 
       <Paragraph style={{ marginTop: 24 }}>
-        <a href="/natalnaya-karta">Рассчитать свою карту →</a>
+        {share.kind === 'transit_day' ? (
+          <a href="/nebo-dnya">А как это небо у тебя? Узнать →</a>
+        ) : (
+          <a href="/natalnaya-karta">Рассчитать свою карту →</a>
+        )}
       </Paragraph>
     </main>
   );

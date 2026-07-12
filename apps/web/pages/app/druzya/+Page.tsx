@@ -62,7 +62,7 @@ export function Page(): React.JSX.Element {
   return (
     <main style={{ maxWidth: 720, margin: '48px auto', padding: '0 24px' }}>
       <Paragraph>
-        <a href="/app">← В кабинет</a> · <a href="/app/soobshchestvo">Лента</a>
+        <a href="/app">← В кабинет</a> · <a href="/soobshchestvo">Лента</a>
       </Paragraph>
       <Title level={2}>Друзья и синастрия</Title>
       <Paragraph type="secondary">

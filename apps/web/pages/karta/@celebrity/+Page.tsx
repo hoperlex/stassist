@@ -56,7 +56,7 @@ export function Page({ pageContext }: { pageContext: { data: CelebrityPageData }
             dataSource={posts}
             renderItem={(p) => (
               <List.Item>
-                <a href={`/app/soobshchestvo/${p.id}`}>{p.title}</a>
+                <a href={`/soobshchestvo/${p.id}`}>{p.title}</a>
                 <Tag style={{ marginLeft: 8 }}>{p.commentsCount} коммент.</Tag>
               </List.Item>
             )}

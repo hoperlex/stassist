@@ -29,8 +29,16 @@ export async function data(pageContext: PageContextServer): Promise<PodelitsyaDa
   }
 
   const appUrl = loadConfig().appUrl;
-  const title = share.kind === 'synastry' ? 'Карта совместимости — Зодиакум' : 'Натальная карта — Зодиакум';
-  const description = 'Расчёт карты на портале Зодиакум — гороскопы, нумерология, матрица судьбы.';
+  const title =
+    share.kind === 'synastry'
+      ? 'Карта совместимости — Зодиакум'
+      : share.kind === 'transit_day'
+        ? 'Небо дня — Зодиакум'
+        : 'Натальная карта — Зодиакум';
+  const description =
+    share.kind === 'transit_day' && share.caption
+      ? `${share.caption}. А как это небо у тебя? Узнай на Зодиакуме.`
+      : 'Расчёт карты на портале Зодиакум — гороскопы, нумерология, матрица судьбы.';
 
   return {
     seo: {

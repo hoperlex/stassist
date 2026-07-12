@@ -44,4 +44,17 @@ describe('computeShareSlug', () => {
     const slug = computeShareSlug({ kind: 'natal', positions, positionsB: undefined });
     expect(slug).toMatch(/^[0-9a-f]{16}$/);
   });
+
+  it('Ф9: caption — часть содержимого карточки: другая подпись → другой слаг, та же → тот же', () => {
+    const base = { kind: 'transit_day' as const, positions, positionsB: positions };
+    const a = computeShareSlug({ ...base, caption: 'В точку · Марс □ Солнце' });
+    const b = computeShareSlug({ ...base, caption: 'Мимо · Марс □ Солнце' });
+    const c = computeShareSlug({ ...base, caption: 'В точку · Марс □ Солнце' });
+    expect(a).not.toBe(b);
+    expect(a).toBe(c);
+    // отсутствие caption эквивалентно null (обратная совместимость со старыми записями)
+    expect(computeShareSlug({ kind: 'natal', positions, positionsB: undefined })).toBe(
+      computeShareSlug({ kind: 'natal', positions, positionsB: undefined, caption: undefined }),
+    );
+  });
 });

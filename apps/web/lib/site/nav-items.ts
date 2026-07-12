@@ -10,6 +10,7 @@ export interface NavItem {
 
 /** Основные разделы (шапка + мобильный Drawer). */
 export const NAV: NavItem[] = [
+  { href: '/nebo-dnya', label: 'Небо дня' },
   { href: '/natalnaya-karta', label: 'Натальная карта' },
   { href: '/matrica-sudby', label: 'Матрица судьбы' },
   { href: '/sovmestimost', label: 'Совместимость' },
@@ -20,6 +21,7 @@ export const NAV: NavItem[] = [
 
 /** Ссылки подвала (и нижний блок мобильного Drawer). */
 export const FOOTER: NavItem[] = [
+  { href: '/soobshchestvo', label: 'Сообщество' },
   { href: '/o-nas', label: 'О проекте' },
   { href: '/redakciya', label: 'Редакция' },
   { href: '/methodology', label: 'Методология расчётов' },
