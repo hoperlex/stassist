@@ -81,6 +81,7 @@ async function buildWebServer() {
       'offline.html': { type: 'text/html; charset=utf-8', cache: 'public, max-age=3600' },
       'favicon.svg': { type: 'image/svg+xml', cache: 'public, max-age=604800' },
       'favicon.ico': { type: 'image/x-icon', cache: 'public, max-age=604800' },
+      'favicon-32.png': { type: 'image/png', cache: 'public, max-age=604800' },
       'icon-192.png': { type: 'image/png', cache: 'public, max-age=604800' },
       'icon-512.png': { type: 'image/png', cache: 'public, max-age=604800' },
       'icon-maskable-512.png': { type: 'image/png', cache: 'public, max-age=604800' },
