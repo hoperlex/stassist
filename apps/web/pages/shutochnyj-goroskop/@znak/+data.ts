@@ -21,7 +21,7 @@ export async function data(pageContext: PageContextServer): Promise<ShutochnyjZn
   const signEn = zodiacEnSlugByIndex(sign.signIndex);
   const appUrl = loadConfig().appUrl;
   const result = await fetchHumorZodiacHoroscope(signEn);
-  const title = `Антигороскоп для ${sign.nameRuGenitive} — шуточный гороскоп | Stassist`;
+  const title = `Антигороскоп для ${sign.nameRuGenitive} — шуточный гороскоп | Зодиакум`;
   const description = `Шуточный (ироничный) гороскоп для ${sign.nameRuGenitive} на сегодня — не воспринимайте всерьёз.`;
   const path = `/shutochnyj-goroskop/${znakRuSlug}`;
   const computed = result?.computed ?? false;

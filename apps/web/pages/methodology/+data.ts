@@ -13,9 +13,9 @@ export async function data(): Promise<MethodologyData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Методология расчётов — Stassist',
+      title: 'Методология расчётов — Зодиакум',
       description:
-        'Как Stassist считает натальные карты, матрицу судьбы и элективные окна: источники алгоритмов, версия расчётного ядра, известные допущения и точность.',
+        'Как Зодиакум считает натальные карты, матрицу судьбы и элективные окна: источники алгоритмов, версия расчётного ядра, известные допущения и точность.',
       canonicalPath: '/methodology',
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'Методология', path: '/methodology' }])],
     },

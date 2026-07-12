@@ -9,9 +9,9 @@ export async function data(): Promise<FaqData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Вопросы и ответы — Stassist',
+      title: 'Вопросы и ответы — Зодиакум',
       description:
-        'Частые вопросы о Stassist: точность расчётов, подписка и оплата, персональные данные, отмена подписки, PDF-отчёты и индивидуальные прогнозы.',
+        'Частые вопросы о Зодиакум: точность расчётов, подписка и оплата, персональные данные, отмена подписки, PDF-отчёты и индивидуальные прогнозы.',
       canonicalPath: '/faq',
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'Вопросы и ответы', path: '/faq' }])],
     },

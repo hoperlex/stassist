@@ -115,7 +115,7 @@ export const ordersRoutes: FastifyPluginAsyncZod<OrdersRoutesOptions> = async (a
         // apps/worker/src/forecast/generate-custom-forecast-job.ts (тот же poll-по-статусу
         // паттерн, что PDF-заказы Ф6).
         priceKop = customForecastPriceKop(req.body.subject.type, req.body.subject.depth);
-        description = `Индивидуальный прогноз — Stassist`;
+        description = `Индивидуальный прогноз — Зодиакум`;
       }
 
       let order = await insertOrder(db, { userId, kind: req.body.kind, subject: req.body.subject, priceKop });

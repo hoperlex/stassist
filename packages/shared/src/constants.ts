@@ -1,4 +1,4 @@
-export const APP_NAME = 'Stassist';
+export const APP_NAME = 'Зодиакум';
 export const DEFAULT_LOCALE = 'ru' as const;
 
 /** Заголовок, который прокидывается как correlation id (request-id) через все процессы. */

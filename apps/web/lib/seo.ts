@@ -51,4 +51,4 @@ export function articleJsonLd(appUrl: string, opts: { headline: string; descript
   };
 }
 
-const APP_TITLE_RU = 'Stassist';
+const APP_TITLE_RU = 'Зодиакум';

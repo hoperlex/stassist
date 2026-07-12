@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('главная «/» рендерится сервером (контент виден без ожидания JS)', async ({ page }) => {
   await page.goto('/', { waitUntil: 'commit' });
-  await expect(page.getByText('Stassist', { exact: true })).toBeVisible();
+  await expect(page.getByText('Зодиакум', { exact: true })).toBeVisible();
 });
 
 test('«/app» гидрируется: клик по кнопке меняет счётчик на клиенте', async ({ page }) => {

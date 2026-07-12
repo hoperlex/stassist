@@ -20,7 +20,7 @@ export async function data(pageContext: PageContextServer): Promise<ShutochnyjPr
   const nameRu = HOROSCOPE_PROFESSION_NAME_RU[slug];
   const appUrl = loadConfig().appUrl;
   const result = await fetchHumorProfessionHoroscope(slug);
-  const title = `Гороскоп ${nameRu} — шуточный | Stassist`;
+  const title = `Гороскоп ${nameRu} — шуточный | Зодиакум`;
   const description = `Шуточный гороскоп ${nameRu} на сегодня — ирония про рабочие будни, не реальный прогноз.`;
   const path = `/shutochnyj-goroskop/professiya/${slug}`;
   const computed = result?.computed ?? false;

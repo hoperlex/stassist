@@ -30,7 +30,7 @@ export async function data(pageContext: PageContextServer): Promise<ArkanPageDat
   }
 
   const canonicalPath = `/wiki/arcana/arkan-${n}`;
-  const title = article ? `${article.title} | Stassist` : `Аркан ${n} | Stassist`;
+  const title = article ? `${article.title} | Зодиакум` : `Аркан ${n} | Зодиакум`;
   const description = article?.bodyMd ? article.bodyMd.replace(/[#*`]/g, '').slice(0, 155) : `Аркан ${n} Матрицы судьбы.`;
 
   return {

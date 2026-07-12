@@ -36,7 +36,7 @@ export async function buildGoroskopPageData(
   const result = await fetchZodiacHoroscope(signEn, period, topic, year);
   const path = year ? `/goroskop/${year}/${znakRuSlug}` : zodiacHoroscopePath(znakRuSlug, period, topic);
   const yearSuffix = year ? ` ${year}` : '';
-  const title = year ? `Гороскоп для ${sign.nameRuGenitive} на ${year} год | Stassist` : zodiacHoroscopeTitle(sign, period, topic);
+  const title = year ? `Гороскоп для ${sign.nameRuGenitive} на ${year} год | Зодиакум` : zodiacHoroscopeTitle(sign, period, topic);
   const h1 = year ? `Гороскоп для ${sign.nameRuGenitive} на ${year} год` : zodiacHoroscopeH1(sign, period, topic);
   const description = `${zodiacHoroscopeDescription(sign, period, topic)}${yearSuffix}`;
   const computed = result?.computed ?? false;

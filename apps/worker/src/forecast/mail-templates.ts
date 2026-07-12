@@ -8,7 +8,7 @@ import type { MailMessage } from '@stassist/shared';
 export function buildCustomForecastReadyMail(params: { to: string; titleRu: string; pdfUrl: string; cabinetUrl: string }): MailMessage {
   return {
     to: params.to,
-    subject: `Ваш индивидуальный прогноз готов — Stassist`,
+    subject: `Ваш индивидуальный прогноз готов — Зодиакум`,
     text:
       `Здравствуйте!\n\n` +
       `Ваш прогноз «${params.titleRu}» готов. Скачать PDF можно по ссылке:\n${params.pdfUrl}\n\n` +

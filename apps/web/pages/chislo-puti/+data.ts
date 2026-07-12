@@ -9,7 +9,7 @@ export async function data(): Promise<ChisloPutiData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Число жизненного пути — рассчитать по дате рождения онлайн | Stassist',
+      title: 'Число жизненного пути — рассчитать по дате рождения онлайн | Зодиакум',
       description:
         'Бесплатный калькулятор числа жизненного пути (ЧЖП) по нумерологии: сквозная сумма цифр даты рождения, мастер-числа 11 и 22.',
       canonicalPath: '/chislo-puti',

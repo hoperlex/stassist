@@ -13,7 +13,7 @@ export function Page({ pageContext }: { pageContext: { data: MethodologyData } }
     <main style={{ maxWidth: 760, margin: '48px auto', padding: '0 24px 64px' }}>
       <Title>Методология расчётов</Title>
       <Paragraph>
-        Расчётное ядро Stassist (версия <Text code>{coreVersion}</Text>) — набор детерминированных
+        Расчётное ядро Зодиакум (версия <Text code>{coreVersion}</Text>) — набор детерминированных
         функций без искусственного интеллекта: одни и те же входные данные всегда дают один и тот
         же результат, воспроизводимый и проверяемый.
       </Paragraph>

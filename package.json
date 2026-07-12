@@ -2,7 +2,7 @@
   "name": "stassist",
   "private": true,
   "version": "0.0.0",
-  "description": "Stassist — русскоязычный астрологический портал (монорепозиторий)",
+  "description": "Зодиакум — русскоязычный астрологический портал (монорепозиторий)",
   "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=22"

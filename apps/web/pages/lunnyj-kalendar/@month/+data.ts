@@ -45,7 +45,7 @@ export async function data(pageContext: PageContextServer): Promise<LunnyjKalend
 
   return {
     seo: {
-      title: `Лунный календарь на ${monthName} ${y} — лунные дни по месяцу | Stassist`,
+      title: `Лунный календарь на ${monthName} ${y} — лунные дни по месяцу | Зодиакум`,
       description: `Лунный календарь на ${monthName} ${y}: лунные дни, знак и фаза Луны на каждый день месяца.`,
       canonicalPath: `/lunnyj-kalendar/${yyyyMm}`,
       jsonLd: [

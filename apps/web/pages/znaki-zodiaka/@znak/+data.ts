@@ -51,7 +51,7 @@ export async function data(pageContext: PageContextServer): Promise<ZnakiZodiaka
   }
 
   const path = `/znaki-zodiaka/${znakSlug}`;
-  const title = `Знак зодиака ${sign.nameRu} — характеристика | Stassist`;
+  const title = `Знак зодиака ${sign.nameRu} — характеристика | Зодиакум`;
   const description = text
     ? text.text.slice(0, 155)
     : `${sign.nameRu} — стихия ${sign.elementRu}, характеристика знака зодиака.`;

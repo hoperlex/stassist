@@ -12,7 +12,7 @@ export async function data(): Promise<WikiHubData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'База знаний по астрологии и нумерологии | Stassist',
+      title: 'База знаний по астрологии и нумерологии | Зодиакум',
       description: 'Планеты, знаки зодиака, дома, аспекты, школы астрологии, арканы Матрицы судьбы, лунные дни, камни и глоссарий — статьи с внутренним поиском.',
       canonicalPath: '/wiki',
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'База знаний', path: '/wiki' }])],

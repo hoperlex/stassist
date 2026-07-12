@@ -26,8 +26,8 @@ export async function data(pageContext: PageContextServer): Promise<WikiSearchDa
 
   return {
     seo: {
-      title: q ? `Поиск «${q}» — база знаний | Stassist` : 'Поиск по базе знаний | Stassist',
-      description: 'Внутренний поиск по статьям базы знаний портала Stassist.',
+      title: q ? `Поиск «${q}» — база знаний | Зодиакум` : 'Поиск по базе знаний | Зодиакум',
+      description: 'Внутренний поиск по статьям базы знаний портала Зодиакум.',
       canonicalPath: '/wiki/poisk',
       noindex: true, // страница результатов поиска — не индексируем (стандартная SEO-практика)
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'База знаний', path: '/wiki' }, { name: 'Поиск', path: '/wiki/poisk' }])],

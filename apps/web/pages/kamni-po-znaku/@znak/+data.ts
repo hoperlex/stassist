@@ -20,7 +20,7 @@ export async function data(pageContext: PageContextServer): Promise<KamniPoZnaku
 
   if (!sign) {
     return {
-      seo: { title: 'Знак зодиака не найден | Stassist', description: '', canonicalPath: `/kamni-po-znaku/${znakSlug}`, noindex: true },
+      seo: { title: 'Знак зодиака не найден | Зодиакум', description: '', canonicalPath: `/kamni-po-znaku/${znakSlug}`, noindex: true },
       znakSlug,
       znakName: null,
       stones: [],
@@ -38,7 +38,7 @@ export async function data(pageContext: PageContextServer): Promise<KamniPoZnaku
 
   return {
     seo: {
-      title: `Камни для знака ${sign.nameRuGenitive} | Stassist`,
+      title: `Камни для знака ${sign.nameRuGenitive} | Зодиакум`,
       description: `Какие камни подходят ${sign.nameRuGenitive.toLowerCase()} по традиции: свойства и назначение — на деньги, любовь, здоровье, защиту.`,
       canonicalPath: `/kamni-po-znaku/${znakSlug}`,
       jsonLd: [

@@ -45,7 +45,7 @@ export function renderPdfReport(
       bufferPages: true,
       info: {
         Title: content.titleRu,
-        Author: 'Stassist',
+        Author: 'Зодиакум',
         Subject: content.subtitleRu ?? '',
       },
     });
@@ -157,7 +157,7 @@ export function renderPdfReport(
         .font(REPORT_FONT_REGULAR)
         .fontSize(8)
         .fillColor('#999999')
-        .text(`Stassist · стр. ${i - range.start + 1} из ${range.count}`, PAGE_MARGIN, doc.page.height - PAGE_MARGIN + 22, {
+        .text(`Зодиакум · стр. ${i - range.start + 1} из ${range.count}`, PAGE_MARGIN, doc.page.height - PAGE_MARGIN + 22, {
           width: CONTENT_WIDTH_A4,
           align: 'center',
         });

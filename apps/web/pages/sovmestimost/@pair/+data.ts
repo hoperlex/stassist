@@ -44,7 +44,7 @@ export async function data(pageContext: PageContextServer): Promise<Sovmestimost
 
   return {
     seo: {
-      title: `Совместимость ${nameA} и ${nameB} — гороскоп пары | Stassist`,
+      title: `Совместимость ${nameA} и ${nameB} — гороскоп пары | Зодиакум`,
       description: `Совместимость знаков ${nameA} и ${nameB}: разбор пары и расчёт синастрии по датам рождения обоих партнёров.`,
       canonicalPath: `/sovmestimost/${canon.slug}`,
       jsonLd: [

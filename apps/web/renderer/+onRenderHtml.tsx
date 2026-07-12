@@ -15,7 +15,7 @@ import type { OnRenderHtmlAsync, PageContextServer } from 'vike/types';
 import { loadConfig } from '@stassist/shared';
 import type { PageSeo } from '../lib/seo.js';
 
-const DEFAULT_TITLE = 'Stassist — русскоязычный астрологический портал';
+const DEFAULT_TITLE = 'Зодиакум — русскоязычный астрологический портал';
 const DEFAULT_DESCRIPTION =
   'Гороскопы, ИИ-астропомощник, нумерология и матрица судьбы, база знаний. Скоро запуск.';
 
@@ -52,14 +52,14 @@ export const onRenderHtml: OnRenderHtmlAsync = async (pageContext: PageContextSe
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Stassist',
+    name: 'Зодиакум',
     url: appUrl,
     logo: `${appUrl}/favicon.svg`,
   };
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Stassist',
+    name: 'Зодиакум',
     url: appUrl,
     potentialAction: {
       '@type': 'SearchAction',

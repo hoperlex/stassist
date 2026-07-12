@@ -24,7 +24,7 @@ export async function data(pageContext: PageContextServer): Promise<VostochnyjGo
   const appUrl = loadConfig().appUrl;
   const result = await fetchEasternHoroscope(yyyy, animal);
   const path = `/vostochnyj-goroskop/${yyyy}/${zhivotnoe}`;
-  const title = `${yyyy}: гороскоп для ${nameRu} по восточному календарю | Stassist`;
+  const title = `${yyyy}: гороскоп для ${nameRu} по восточному календарю | Зодиакум`;
   const description = `Восточный гороскоп на ${yyyy} год для знака «${nameRu}»: чего ожидать в год под управлением текущего животного и стихии.`;
   const computed = result?.computed ?? false;
 

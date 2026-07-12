@@ -9,8 +9,8 @@ export async function data(): Promise<PravilaData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Правила сообщества | Stassist',
-      description: 'Этический кодекс сообщества Stassist: что можно и что запрещено при публикации разборов, комментариев и обсуждений.',
+      title: 'Правила сообщества | Зодиакум',
+      description: 'Этический кодекс сообщества Зодиакум: что можно и что запрещено при публикации разборов, комментариев и обсуждений.',
       canonicalPath: '/pravila-soobshchestva',
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'Правила сообщества', path: '/pravila-soobshchestva' }])],
     },

@@ -83,7 +83,7 @@ export function buildPaywallContent(variant: PaywallVariant, sphere: QuizSphere 
   return {
     variant,
     headlineRu: `Откройте полный потенциал вашей карты ${focus}`,
-    subheadlineRu: 'Премиум-подписка Stassist: персональная лента прогнозов, безлимитный ИИ-чат и полные разборы карты.',
+    subheadlineRu: 'Премиум-подписка Зодиакум: персональная лента прогнозов, безлимитный ИИ-чат и полные разборы карты.',
     bullets: [...plan.features],
     ctaLabelRu: `Начать — ${plan.trialDays} дней бесплатно`,
     badgeRu: null,

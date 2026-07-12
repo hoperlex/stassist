@@ -35,7 +35,7 @@ export async function data(): Promise<LunnyjKalendarData> {
 
   return {
     seo: {
-      title: 'Лунный календарь сегодня — лунный день, фаза, void of course | Stassist',
+      title: 'Лунный календарь сегодня — лунный день, фаза, void of course | Зодиакум',
       description:
         'Лунный календарь: лунный день, знак и фаза Луны, периоды void of course по московскому времени.',
       canonicalPath: '/lunnyj-kalendar',

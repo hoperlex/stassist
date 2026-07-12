@@ -20,7 +20,7 @@ export function Page({ pageContext }: ErrorPageProps): React.JSX.Element {
       <Title>{is404 ? '404 — страница не найдена' : 'Ошибка сервера'}</Title>
       <Paragraph>
         {is404
-          ? 'Такой страницы на портале Stassist нет.'
+          ? 'Такой страницы на портале Зодиакум нет.'
           : 'Что-то пошло не так. Мы уже знаем об этом.'}
       </Paragraph>
     </main>

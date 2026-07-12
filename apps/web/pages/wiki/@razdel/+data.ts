@@ -29,8 +29,8 @@ export async function data(pageContext: PageContextServer): Promise<WikiSectionD
   const sectionNameRu = WIKI_SECTION_NAME_RU[section];
   return {
     seo: {
-      title: `${sectionNameRu} — база знаний | Stassist`,
-      description: `${sectionNameRu}: статьи базы знаний портала Stassist.`,
+      title: `${sectionNameRu} — база знаний | Зодиакум`,
+      description: `${sectionNameRu}: статьи базы знаний портала Зодиакум.`,
       canonicalPath: `/wiki/${section}`,
       noindex: articles.length === 0,
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'База знаний', path: '/wiki' }, { name: sectionNameRu, path: `/wiki/${section}` }])],

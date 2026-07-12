@@ -52,7 +52,7 @@ export async function runSubscriptionRenewalSweep(deps: SubscriptionRenewalJobDe
     try {
       const result = await payments.createPayment({
         amountKop: plan.priceKop,
-        description: `Продление подписки «${plan.titleRu}» — Stassist`,
+        description: `Продление подписки «${plan.titleRu}» — Зодиакум`,
         idempotencyKey,
         paymentMethodId: sub.providerSubId,
       });

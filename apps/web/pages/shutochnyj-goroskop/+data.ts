@@ -13,7 +13,7 @@ export async function data(): Promise<ShutochnyjHubData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Шуточные гороскопы — антигороскоп и гороскопы по профессиям | Stassist',
+      title: 'Шуточные гороскопы — антигороскоп и гороскопы по профессиям | Зодиакум',
       description: 'Шуточные гороскопы для знаков зодиака (антигороскоп) и по профессиям — с юмором, не всерьёз.',
       canonicalPath: '/shutochnyj-goroskop',
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'Шуточные гороскопы', path: '/shutochnyj-goroskop' }])],

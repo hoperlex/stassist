@@ -142,7 +142,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-# Stassist: turborepo, playwright, служебные рантайм-артефакты стабов (см. §2 конвенций
+# Зодиакум: turborepo, playwright, служебные рантайм-артефакты стабов (см. §2 конвенций
 # реализации — MemoryObjectStorage/ConsoleMailer пишут копии в _work/tmp для ручного просмотра
 # при разработке; сам _work/tmp — не источник правды, в git не нужен).
 # Без ведущего слэша — стаб-порты пишут в `_work/tmp` ОТНОСИТЕЛЬНО cwd процесса (см.

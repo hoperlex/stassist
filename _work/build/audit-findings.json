@@ -13,7 +13,7 @@
       "location": "apps/api/src/repositories/charts-repository.ts:43-55 (insertChart) + apps/api/src/charts/natal-chart-service.ts:24-33 + packages/db/src/schema/charts.ts:30 (data jsonb)",
       "detail": "computeAndStoreNatalChart сохраняет полный ChartData через insertChart. ChartData (packages/shared/src/schemas/chart.ts:261-271) содержит поле input = chartInputSchema с dateTime {year,month,day,hour,minute,second}, place {lat,lon} и tzId — точные дата, время и место рождения. Колонка charts.data — обычный jsonb без шифрования. То есть ПД, которую birth-profiles-repository аккуратно шифрует (birthDateEnc/latEnc/lonEnc), лежит рядом в charts.data.input открытым текстом. Любой, кто получит доступ на чтение БД (бэкап, логическая реплика, украденный дамп, SQL-инъекция в другом месте), извлекает исходные ПД без ключа. Это подрывает контроль шифрования ПД по 152-ФЗ (мера защиты фактически не защищает).",
       "fix": "Не хранить input внутри charts.data: либо сохранять в charts.data только обезличенный срез (bodies/points/angles/houses/aspects/meta — как SharePositions), а вход не персистить; либо шифровать весь blob data тем же keyring (encryptPd(JSON.stringify(data))) с расшифровкой в репозитории. Минимум — вырезать data.input перед insertChart для kind='natal'.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД.",
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД.",
       "verdict": {
         "real": true,
         "confidence": "high",
@@ -26,7 +26,7 @@
       "location": "apps/api/src/app.ts:72-78 (Fastify(...) без trustProxy) + app.ts:102-105 (register rateLimit) + caddy/Caddyfile:36-38",
       "detail": "Весь внешний трафик приходит через caddy (reverse_proxy api:3001). Без trustProxy req.ip = адрес контейнера caddy для ВСЕХ клиентов. Дефолтный keyGenerator @fastify/rate-limit использует req.ip → одна общая корзина. Следствия: (1) брутфорс логина не throttle-ится по конкретному атакующему — 10/мин это общесайтовый лимит; (2) один клиент/скрипт исчерпывает 100/мин или 10/мин и вызывает отказ в обслуживании всем остальным. Anti-enumeration (единый ответ, dummy-hash timing) на login сделан корректно, но rate-limit при этом фактически нерабочий.",
       "fix": "Включить доверие к прокси: Fastify({ trustProxy: true, ... }) (или trustProxy: 1 — один хоп до Caddy), чтобы req.ip брался из X-Forwarded-For (Caddy проставляет его по умолчанию). Проверить, что Caddy передаёт X-Forwarded-For (reverse_proxy делает это автоматически). Опционально задать keyGenerator по req.ip явно.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД.",
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД.",
       "verdict": {
         "real": true,
         "confidence": "high",
@@ -39,7 +39,7 @@
       "location": "apps/web/pages/planety/@slug/+data.ts:46 (вызов fetchInterpretationText в SSR-функции data) → apps/web/lib/interpretation.ts:8 → apps/web/lib/api-client.ts:16 (API_BASE='/api/v1', fetch по относительному URL)",
       "detail": "planety/@slug — ЕДИНСТВЕННЫЙ SSR +data.ts, который для получения чанка использует клиентский api.get() из api-client.ts (fetch('/api/v1/...') — относительный путь). На сервере (vike выполняет data() при SSR/prerender) Node-fetch с относительным URL бросает TypeError 'Failed to parse URL'. fetchInterpretationText ловит это в catch и возвращает {}, поэтому text=null → страница отдаётся с noindex:true (стр. 58), пустым описанием-фолбэком и без текста интерпретации. Так ведут себя ВСЕ 10×12+10×12=240 страниц именно на пути серверного рендера/краулинга. Все остальные SSR-хуки (wiki/@razdel, lunnyj-kalendar/@month, arkan, goroskop) корректно ходят через serverApiGet (абсолютный config.apiUrl). Контент в БД есть (120+120 чанков засеяны), но потребитель до него не доходит.",
       "fix": "В planety/@slug/+data.ts заменить fetchInterpretationText на серверный вызов: serverApiGet('/calc/interpretation?keys='+encodeURIComponent(key)) (как в lunnyj-kalendar/@month/+data.ts и wiki/@razdel/+data.ts) и смапить items[0] → {text, quality}. Не использовать apps/web/lib/api-client.ts в +data.ts.",
-      "area": "Полнота контента портала Stassist (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)",
+      "area": "Полнота контента портала Зодиакум (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)",
       "verdict": {
         "real": true,
         "confidence": "high",
@@ -67,7 +67,7 @@
       "location": "apps/api/src/repositories/charts-repository.ts:43-55 (insertChart) + apps/api/src/charts/natal-chart-service.ts:24-33 + packages/db/src/schema/charts.ts:30 (data jsonb)",
       "detail": "computeAndStoreNatalChart сохраняет полный ChartData через insertChart. ChartData (packages/shared/src/schemas/chart.ts:261-271) содержит поле input = chartInputSchema с dateTime {year,month,day,hour,minute,second}, place {lat,lon} и tzId — точные дата, время и место рождения. Колонка charts.data — обычный jsonb без шифрования. То есть ПД, которую birth-profiles-repository аккуратно шифрует (birthDateEnc/latEnc/lonEnc), лежит рядом в charts.data.input открытым текстом. Любой, кто получит доступ на чтение БД (бэкап, логическая реплика, украденный дамп, SQL-инъекция в другом месте), извлекает исходные ПД без ключа. Это подрывает контроль шифрования ПД по 152-ФЗ (мера защиты фактически не защищает).",
       "fix": "Не хранить input внутри charts.data: либо сохранять в charts.data только обезличенный срез (bodies/points/angles/houses/aspects/meta — как SharePositions), а вход не персистить; либо шифровать весь blob data тем же keyring (encryptPd(JSON.stringify(data))) с расшифровкой в репозитории. Минимум — вырезать data.input перед insertChart для kind='natal'.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "high",
@@ -75,7 +75,7 @@
       "location": "apps/api/src/app.ts:72-78 (Fastify(...) без trustProxy) + app.ts:102-105 (register rateLimit) + caddy/Caddyfile:36-38",
       "detail": "Весь внешний трафик приходит через caddy (reverse_proxy api:3001). Без trustProxy req.ip = адрес контейнера caddy для ВСЕХ клиентов. Дефолтный keyGenerator @fastify/rate-limit использует req.ip → одна общая корзина. Следствия: (1) брутфорс логина не throttle-ится по конкретному атакующему — 10/мин это общесайтовый лимит; (2) один клиент/скрипт исчерпывает 100/мин или 10/мин и вызывает отказ в обслуживании всем остальным. Anti-enumeration (единый ответ, dummy-hash timing) на login сделан корректно, но rate-limit при этом фактически нерабочий.",
       "fix": "Включить доверие к прокси: Fastify({ trustProxy: true, ... }) (или trustProxy: 1 — один хоп до Caddy), чтобы req.ip брался из X-Forwarded-For (Caddy проставляет его по умолчанию). Проверить, что Caddy передаёт X-Forwarded-For (reverse_proxy делает это автоматически). Опционально задать keyGenerator по req.ip явно.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "medium",
@@ -83,7 +83,7 @@
       "location": "packages/shared/src/config.ts:38 (default) и 222-231 (проверка только JWT/PD, COOKIE_SECRET не проверяется) + apps/api/src/auth/csrf.ts:17-33",
       "detail": "parseConfig в production падает, если JWT_PRIVATE_KEY/PD_ENCRYPTION_KEY равны dev-дефолтам, но COOKIE_SECRET такой проверки не имеет. Дефолт 'dev-insecure-cookie-secret-change-me-please-32' публичен в репозитории и .env.example. generateCsrfToken/verifyCsrfToken строят HMAC на COOKIE_SECRET; зная секрет, атакующий формирует валидный csrf_token и проходит double-submit-проверку. Остаточную защиту даёт только SameSite=lax на cookie, то есть контроль CSRF деградирует до одного механизма.",
       "fix": "Добавить в parseConfig ту же production-проверку, что для крипто-ключей: если isProduction && COOKIE_SECRET === дефолт → fail('cookie-secret'). Вынести дефолт в общий список и запретить его в проде.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "medium",
@@ -91,7 +91,7 @@
       "location": "apps/api/src/routes/ai-reports.ts:58-70 (нет config.rateLimit) и 128-149 (синхронный generateReport)",
       "detail": "Роут наследует только глобальный лимит 100/мин (который к тому же общий на весь сайт из-за отсутствия trustProxy). cacheKey включает question (buildCacheKey), поэтому меняя question каждый раз, пользователь минует кэш и каждый запрос доходит до ports.llm.generate — это прямые затраты на провайдера и вектор DoS/раздувания счёта. ТЗ прямо требует rate-limit на LLM.",
       "fix": "Навесить жёсткий per-user rate-limit на POST /ai-reports (config: { rateLimit: { max: N, timeWindow: '1 minute', keyGenerator: req => req.authUser?.id ?? req.ip } }); значение согласовать со стоимостью разбора. Аналогично защитить прочие LLM-вызовы.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "medium",
@@ -99,7 +99,7 @@
       "location": "apps/api/src/routes/webhooks.ts:69-93 + packages/shared/src/config.ts:95 (YOOKASSA_WEBHOOK_SECRET optional, нет fail-fast даже при PAYMENTS=yookassa)",
       "detail": "Если config.payments.webhookSecret не задан, блок проверки подписи пропускается и recordAndApplyYookassaWebhook применяет эффект синхронно. Заявленная защита — IP-allowlist ЮKassa — нигде в приложении не форсится (только упомянута в launch-checklist), то есть на уровне кода защиты нет. Атакующий, знающий URL, может форжить успешные платежи.",
       "fix": "В production при PAYMENTS=yookassa требовать YOOKASSA_WEBHOOK_SECRET (fail-fast в parseConfig) и/или реализовать в приложении проверку source-IP по allowlist ЮKassa. Не полагаться на инфраструктурный ACL как единственную меру.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "low",
@@ -107,7 +107,7 @@
       "location": "packages/db/src/schema/birth-profiles.ts:38-39 + apps/api/src/repositories/birth-profiles-repository.ts:51-52,101-102",
       "detail": "Все чувствительные поля (дата/время/место/координаты) шифруются, но notes (произвольный пользовательский текст) и gender пишутся в БД как есть. notes легко наполняется ПД («ФИО, диагнозы, заметки о человеке»), что при дампе БД раскрывается в открытом виде — несогласованно с остальной моделью защиты ПД.",
       "fix": "Шифровать notes тем же keyring (notesEnc) как остальные 🔒-поля; для gender оценить чувствительность и либо шифровать, либо ограничить enum. Как минимум задокументировать и валидировать, что notes не должен содержать ПД.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "low",
@@ -115,7 +115,7 @@
       "location": "apps/api/src/logging.ts:12-32 (REDACT_PATHS) + packages/shared/src/schemas/calc.ts:20-23 (synastry a/b: chartInputSchema)",
       "detail": "synastryCalcRequestSchema принимает a и b = chartInputSchema с dateTime {year,month,day,...} и place {lat,lon}. Эти пути (req.body.a.place.lat и т.д.) не входят в REDACT_PATHS. Сейчас buildLoggerOptions.serializers.req логирует только method/url/headers (тело не пишется), поэтому утечки в штатном режиме нет — это защита-в-глубину с пробелом. Также req.body.notes не редактируется.",
       "fix": "Либо явно зафиксировать инвариант «тело запроса не логируется» (и покрыть тестом), либо добавить пути req.body.a.dateTime/req.body.a.place.*, req.body.b.*, req.body.notes в REDACT_PATHS для полноты.",
-      "area": "Безопасность и 152-ФЗ портала Stassist (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
+      "area": "Безопасность и 152-ФЗ портала Зодиакум (apps/api/src, packages/shared, packages/db, drizzle). Проверены: шифрование ПД birth_*, pino-redaction, секреты, auth (argon2id/JWT/refresh-ротация/CSRF/rate-limit/анти-enumeration), SQL-инъекции, CORS, анонимизация карт постов/шеринга, согласия 152-ФЗ, экспорт/удаление ПД."
     },
     {
       "severity": "high",
@@ -123,7 +123,7 @@
       "location": "apps/web/pages/planety/@slug/+data.ts:46 (вызов fetchInterpretationText в SSR-функции data) → apps/web/lib/interpretation.ts:8 → apps/web/lib/api-client.ts:16 (API_BASE='/api/v1', fetch по относительному URL)",
       "detail": "planety/@slug — ЕДИНСТВЕННЫЙ SSR +data.ts, который для получения чанка использует клиентский api.get() из api-client.ts (fetch('/api/v1/...') — относительный путь). На сервере (vike выполняет data() при SSR/prerender) Node-fetch с относительным URL бросает TypeError 'Failed to parse URL'. fetchInterpretationText ловит это в catch и возвращает {}, поэтому text=null → страница отдаётся с noindex:true (стр. 58), пустым описанием-фолбэком и без текста интерпретации. Так ведут себя ВСЕ 10×12+10×12=240 страниц именно на пути серверного рендера/краулинга. Все остальные SSR-хуки (wiki/@razdel, lunnyj-kalendar/@month, arkan, goroskop) корректно ходят через serverApiGet (абсолютный config.apiUrl). Контент в БД есть (120+120 чанков засеяны), но потребитель до него не доходит.",
       "fix": "В planety/@slug/+data.ts заменить fetchInterpretationText на серверный вызов: serverApiGet('/calc/interpretation?keys='+encodeURIComponent(key)) (как в lunnyj-kalendar/@month/+data.ts и wiki/@razdel/+data.ts) и смапить items[0] → {text, quality}. Не использовать apps/web/lib/api-client.ts в +data.ts.",
-      "area": "Полнота контента портала Stassist (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
+      "area": "Полнота контента портала Зодиакум (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
     },
     {
       "severity": "medium",
@@ -131,7 +131,7 @@
       "location": "apps/worker/src/worker.ts:162-168 (ASTRO_CALENDAR_QUEUE только boss.schedule, без немедленного boss.send при старте); ASTRO_CALENDAR_CRON='10 21 * * *'; потребитель apps/api/src/routes/lunar-calendar.ts (computed=rows.length>0)",
       "detail": "В worker.start() все очереди только планируются через boss.schedule(...), немедленного прогона (boss.send) нет. Для astro_calendar нет ни seed-файла, ни ленивой генерации в роуте (в отличие от гороскопов, где ensureZodiacHoroscope генерирует на лету). Значит после чистого деплоя до первого срабатывания cron (21:10 UTC, до суток ожидания) роут отдаёт computed:false, days:[] и страница /lunnyj-kalendar/* показывает пустой empty-state 'наполняется'. Дневные факты гороскопов при этом деградируют на FALLBACK_DAY_FACT (текст всё равно есть за счёт lazy-gen), а вот сам лунный календарь остаётся пустым.",
       "fix": "В worker.start() после boss.schedule(ASTRO_CALENDAR_QUEUE, ...) добавить немедленный boss.send(ASTRO_CALENDAR_QUEUE, {}) (одноразовый прогон окна при старте), либо реализовать ленивую генерацию месяца в lunar-calendar.ts по аналогии с horoscope/lazy-generate.ts.",
-      "area": "Полнота контента портала Stassist (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
+      "area": "Полнота контента портала Зодиакум (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
     },
     {
       "severity": "medium",
@@ -139,7 +139,7 @@
       "location": "apps/worker/src/worker.ts:163-164 (start = new Date() → сегодня) + apps/worker/src/astro-calendar/build-window.ts:35-55 (окно [today, today+18мес), только вперёд); навигация prevYyyyMm в apps/web/pages/lunnyj-kalendar/@month/+data.ts",
       "detail": "Окно строится от today на 18 месяцев ВПЕРЁД. Поэтому: (1) дни текущего месяца ДО даты первого прогона (напр. 1–11 июля при первом прогоне 12 июля) в astro_calendar не попадают; (2) любой прошлый месяц (/lunnyj-kalendar/2026-06 и ранее) вообще не покрыт → computed:false, пустая страница. Страница @month рендерит ссылки prev/next, то есть пользователь штатно проваливается в пустые прошлые месяцы. Это постоянный, а не только стартовый разрыв полноты.",
       "fix": "Расширить окно в прошлое (например start = today - 1..2 месяца) в вызове buildAstroCalendarWindow, либо лениво досчитывать запрошенный прошлый месяц в роуте lunar-calendar.ts.",
-      "area": "Полнота контента портала Stassist (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
+      "area": "Полнота контента портала Зодиакум (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
     },
     {
       "severity": "low",
@@ -147,7 +147,7 @@
       "location": "drizzle/seed/0004_compat_pages_texts.sql (78 UPDATE, единый скелет 'X привносит в пару качества, которые проявляются через …; совместимость знаков — это общий ориентир…'); drizzle/seed/0003_interpretation_chunks.sql (sign:*:overview и др.)",
       "detail": "Все 78 пар совместимости и 12 обзоров знаков собраны из одной и той же синтаксической рамки с подстановкой характеристик знака/стихии — тексты почти идентичны по структуре и лексике. Это не 'пусто' и не 'выдумка', но контент тонкий и высокодублируемый; для индексируемых страниц /sovmestimost/* и обзоров знаков это создаёт SEO-риск (near-duplicate) и читается как сгенерированный. Все записи имеют quality='draft'/status='draft' — по конвенции ждут редактуры, но до неё индексируются.",
       "fix": "До открытия индексации провести редакторскую вычитку (перевод в quality='reviewed') с реальной дифференциацией текстов, либо временно ставить noindex на страницы с quality='draft', а не только на отсутствующий контент.",
-      "area": "Полнота контента портала Stassist (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
+      "area": "Полнота контента портала Зодиакум (seed drizzle/seed/*.sql ↔ потребители apps/web/pages + apps/api/src + apps/worker)"
     },
     {
       "severity": "blocker",

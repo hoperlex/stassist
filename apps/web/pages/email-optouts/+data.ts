@@ -8,8 +8,8 @@ export interface EmailOptoutsData {
 export async function data(): Promise<EmailOptoutsData> {
   return {
     seo: {
-      title: 'Отписка от рассылки | Stassist',
-      description: 'Отписка от e-mail-рассылок Stassist.',
+      title: 'Отписка от рассылки | Зодиакум',
+      description: 'Отписка от e-mail-рассылок Зодиакум.',
       canonicalPath: '/email-optouts',
       noindex: true,
     },

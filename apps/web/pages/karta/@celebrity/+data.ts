@@ -37,14 +37,14 @@ export async function data(pageContext: PageContextServer): Promise<CelebrityPag
 
   if (!celebrity) {
     return {
-      seo: { title: 'Знаменитость не найдена | Stassist', description: 'Такой карточки нет в галерее.', canonicalPath: `/karta/${slug}`, noindex: true },
+      seo: { title: 'Знаменитость не найдена | Зодиакум', description: 'Такой карточки нет в галерее.', canonicalPath: `/karta/${slug}`, noindex: true },
       celebrity: null,
       posts: [],
     };
   }
 
   const path = `/karta/${celebrity.slug}`;
-  const title = `Натальная карта ${celebrity.name} | Stassist`;
+  const title = `Натальная карта ${celebrity.name} | Зодиакум`;
   const description = `Дата рождения, знак зодиака и обсуждение натальной карты: ${celebrity.name}.`;
 
   return {

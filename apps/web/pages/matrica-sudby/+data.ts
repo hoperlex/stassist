@@ -9,7 +9,7 @@ export async function data(): Promise<MatricaSudbyData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Матрица судьбы — рассчитать октаграмму по дате рождения | Stassist',
+      title: 'Матрица судьбы — рассчитать октаграмму по дате рождения | Зодиакум',
       description:
         'Бесплатный калькулятор матрицы судьбы (октаграмма Ладини): 9 базовых точек по дате рождения, арканы Таро 1–22.',
       canonicalPath: '/matrica-sudby',

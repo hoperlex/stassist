@@ -31,7 +31,7 @@ export async function data(pageContext: PageContextServer): Promise<WikiArticleP
 
   if (!article) {
     return {
-      seo: { title: 'Статья не найдена | Stassist', description: 'Такой статьи нет в базе знаний.', canonicalPath: `/wiki/${section}/${slug}`, noindex: true },
+      seo: { title: 'Статья не найдена | Зодиакум', description: 'Такой статьи нет в базе знаний.', canonicalPath: `/wiki/${section}/${slug}`, noindex: true },
       article: null,
       section,
       slug,
@@ -42,7 +42,7 @@ export async function data(pageContext: PageContextServer): Promise<WikiArticleP
   const description = (article.bodyMd ?? '').replace(/[#*`]/g, '').slice(0, 155);
   return {
     seo: {
-      title: `${article.title} | Stassist`,
+      title: `${article.title} | Зодиакум`,
       description: description || article.title,
       canonicalPath: path,
       jsonLd: [

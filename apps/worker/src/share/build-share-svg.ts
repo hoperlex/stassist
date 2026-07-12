@@ -31,6 +31,6 @@ export function buildShareChartWheelInput(source: ShareSvgSource): ChartWheelInp
     theme: source.theme,
     primary: toWheelPositions(source.positions),
     secondary,
-    title: source.kind === 'synastry' ? 'Совместимость — Stassist' : 'Натальная карта — Stassist',
+    title: source.kind === 'synastry' ? 'Совместимость — Зодиакум' : 'Натальная карта — Зодиакум',
   };
 }

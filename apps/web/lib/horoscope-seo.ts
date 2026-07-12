@@ -14,7 +14,7 @@ export { zodiacHoroscopePath };
 export function zodiacHoroscopeTitle(sign: ZodiacSignInfo, period: HoroscopePeriod, topic: HoroscopeTopic): string {
   const periodWord = HOROSCOPE_PERIOD_NAME_RU[period];
   const topicWord = HOROSCOPE_TOPIC_NAME_RU[topic];
-  return `Гороскоп для ${sign.nameRuGenitive} ${periodWord} — ${topicWord} гороскоп | Stassist`;
+  return `Гороскоп для ${sign.nameRuGenitive} ${periodWord} — ${topicWord} гороскоп | Зодиакум`;
 }
 
 export function zodiacHoroscopeH1(sign: ZodiacSignInfo, period: HoroscopePeriod, topic: HoroscopeTopic): string {

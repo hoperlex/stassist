@@ -29,8 +29,8 @@ export async function data(pageContext: PageContextServer): Promise<PodelitsyaDa
   }
 
   const appUrl = loadConfig().appUrl;
-  const title = share.kind === 'synastry' ? 'Карта совместимости — Stassist' : 'Натальная карта — Stassist';
-  const description = 'Расчёт карты на портале Stassist — гороскопы, нумерология, матрица судьбы.';
+  const title = share.kind === 'synastry' ? 'Карта совместимости — Зодиакум' : 'Натальная карта — Зодиакум';
+  const description = 'Расчёт карты на портале Зодиакум — гороскопы, нумерология, матрица судьбы.';
 
   return {
     seo: {

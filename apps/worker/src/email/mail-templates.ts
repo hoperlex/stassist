@@ -19,12 +19,12 @@ export function buildAbandonedCalcMail(params: { to: string; appUrl: string; pro
     to: params.to,
     subject: 'Ваша натальная карта уже посчитана — загляните в разбор',
     text:
-      `Здравствуйте!\n\nВы недавно рассчитали натальную карту профиля «${params.profileLabel}» на Stassist, ` +
+      `Здравствуйте!\n\nВы недавно рассчитали натальную карту профиля «${params.profileLabel}» на Зодиакум, ` +
       `но ещё не заглянули в подробный разбор. Полная картина — планеты, дома, аспекты и что они значат — ` +
       `уже ждёт вас в личном кабинете: ${params.appUrl}/app` +
       footer.text,
     html:
-      `<p>Здравствуйте!</p><p>Вы недавно рассчитали натальную карту профиля «${params.profileLabel}» на Stassist, ` +
+      `<p>Здравствуйте!</p><p>Вы недавно рассчитали натальную карту профиля «${params.profileLabel}» на Зодиакум, ` +
       `но ещё не заглянули в подробный разбор. Полная картина — планеты, дома, аспекты и что они значат — ` +
       `уже ждёт вас в <a href="${params.appUrl}/app">личном кабинете</a>.</p>` +
       footer.html,
@@ -53,7 +53,7 @@ export function buildWeeklyDigestMail(params: { to: string; appUrl: string }): M
   const footer = optoutFooter(params.appUrl, params.to, 'digest');
   return {
     to: params.to,
-    subject: 'Ваша астронеделя — дайджест Stassist',
+    subject: 'Ваша астронеделя — дайджест Зодиакум',
     text:
       `Здравствуйте!\n\nВаш персональный прогноз на неделю и главные транзиты уже готовы — загляните в личный ` +
       `кабинет: ${params.appUrl}/app` +

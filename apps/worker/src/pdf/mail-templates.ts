@@ -12,7 +12,7 @@ export function buildOrderReadyMail(params: { to: string; productType: PdfProduc
   const title = PDF_PRODUCT_CATALOG[params.productType].titleRu;
   return {
     to: params.to,
-    subject: `Ваш PDF-отчёт «${title}» готов — Stassist`,
+    subject: `Ваш PDF-отчёт «${title}» готов — Зодиакум`,
     text:
       `Здравствуйте!\n\n` +
       `Ваш PDF-отчёт «${title}» готов. Скачать его можно по ссылке:\n${params.pdfUrl}\n\n` +

@@ -14,7 +14,7 @@ export async function data(): Promise<PlanetyHubData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Планеты в знаках и домах натальной карты | Stassist',
+      title: 'Планеты в знаках и домах натальной карты | Зодиакум',
       description: 'Значения планет в каждом знаке зодиака и в каждом доме натальной карты — 240 страниц с разбором.',
       canonicalPath: '/planety',
       jsonLd: [breadcrumbJsonLd(appUrl, [{ name: 'Главная', path: '/' }, { name: 'Планеты', path: '/planety' }])],

@@ -11,7 +11,7 @@ export async function data(): Promise<NatalnayaKartaData> {
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: 'Натальная карта онлайн бесплатно с расшифровкой — Stassist',
+      title: 'Натальная карта онлайн бесплатно с расшифровкой — Зодиакум',
       description:
         'Рассчитайте натальную карту по дате, времени и месту рождения: планеты, дома, аспекты, наглядное SVG-колесо. Бесплатный калькулятор, работает и без точного времени рождения.',
       canonicalPath: '/natalnaya-karta',

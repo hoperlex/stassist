@@ -16,7 +16,7 @@ export async function data(): Promise<SovmestimostIndexData> {
   }));
   return {
     seo: {
-      title: 'Совместимость знаков зодиака — все 78 пар | Stassist',
+      title: 'Совместимость знаков зодиака — все 78 пар | Зодиакум',
       description:
         'Совместимость знаков зодиака: выберите два знака или посмотрите готовую таблицу всех 78 пар — плюс расчёт синастрии по датам рождения.',
       canonicalPath: '/sovmestimost',

@@ -11,7 +11,7 @@ export function Page({ pageContext }: { pageContext: { data: PodelitsyaData } })
   return (
     <main style={{ maxWidth: 640, margin: '48px auto', padding: '0 24px', textAlign: 'center' }}>
       <Title level={1}>{share.kind === 'synastry' ? 'Карта совместимости' : 'Натальная карта'}</Title>
-      <Paragraph>Результат расчёта на портале Stassist. Данные рождения не публикуются — только позиции карты.</Paragraph>
+      <Paragraph>Результат расчёта на портале Зодиакум. Данные рождения не публикуются — только позиции карты.</Paragraph>
       <InfoDisclaimer />
 
       <div style={{ display: 'flex', justifyContent: 'center' }}>

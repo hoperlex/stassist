@@ -10,17 +10,17 @@ import type { MailMessage } from '@stassist/shared';
 export function buildEmailVerificationMail(params: { to: string; verifyUrl: string }): MailMessage {
   return {
     to: params.to,
-    subject: 'Подтвердите e-mail — Stassist',
+    subject: 'Подтвердите e-mail — Зодиакум',
     text:
       `Здравствуйте!\n\n` +
-      `Чтобы подтвердить регистрацию на Stassist, перейдите по ссылке:\n${params.verifyUrl}\n\n` +
-      `Ссылка действительна 24 часа. Если вы не регистрировались на Stassist — просто ` +
+      `Чтобы подтвердить регистрацию на Зодиакум, перейдите по ссылке:\n${params.verifyUrl}\n\n` +
+      `Ссылка действительна 24 часа. Если вы не регистрировались на Зодиакум — просто ` +
       `проигнорируйте это письмо.`,
     html:
       `<p>Здравствуйте!</p>` +
-      `<p>Чтобы подтвердить регистрацию на Stassist, перейдите по ссылке:</p>` +
+      `<p>Чтобы подтвердить регистрацию на Зодиакум, перейдите по ссылке:</p>` +
       `<p><a href="${params.verifyUrl}">${params.verifyUrl}</a></p>` +
-      `<p>Ссылка действительна 24 часа. Если вы не регистрировались на Stassist — просто ` +
+      `<p>Ссылка действительна 24 часа. Если вы не регистрировались на Зодиакум — просто ` +
       `проигнорируйте это письмо.</p>`,
   };
 }
@@ -29,10 +29,10 @@ export function buildEmailVerificationMail(params: { to: string; verifyUrl: stri
 export function buildAlreadyRegisteredMail(params: { to: string; resetUrl: string }): MailMessage {
   return {
     to: params.to,
-    subject: 'Попытка регистрации — Stassist',
+    subject: 'Попытка регистрации — Зодиакум',
     text:
       `Здравствуйте!\n\n` +
-      `Кто-то попытался зарегистрироваться на Stassist с указанием этого e-mail — у вас уже ` +
+      `Кто-то попытался зарегистрироваться на Зодиакум с указанием этого e-mail — у вас уже ` +
       `есть аккаунт. Если это были вы и вы забыли пароль, восстановите доступ:\n${params.resetUrl}\n\n` +
       `Если это были не вы — просто проигнорируйте это письмо.`,
   };
@@ -41,15 +41,15 @@ export function buildAlreadyRegisteredMail(params: { to: string; resetUrl: strin
 export function buildPasswordResetMail(params: { to: string; resetUrl: string }): MailMessage {
   return {
     to: params.to,
-    subject: 'Сброс пароля — Stassist',
+    subject: 'Сброс пароля — Зодиакум',
     text:
       `Здравствуйте!\n\n` +
-      `Для сброса пароля на Stassist перейдите по ссылке:\n${params.resetUrl}\n\n` +
+      `Для сброса пароля на Зодиакум перейдите по ссылке:\n${params.resetUrl}\n\n` +
       `Ссылка действительна 1 час. Если вы не запрашивали сброс пароля — проигнорируйте это ` +
       `письмо, пароль останется прежним.`,
     html:
       `<p>Здравствуйте!</p>` +
-      `<p>Для сброса пароля на Stassist перейдите по ссылке:</p>` +
+      `<p>Для сброса пароля на Зодиакум перейдите по ссылке:</p>` +
       `<p><a href="${params.resetUrl}">${params.resetUrl}</a></p>` +
       `<p>Ссылка действительна 1 час. Если вы не запрашивали сброс пароля — проигнорируйте ` +
       `это письмо, пароль останется прежним.</p>`,

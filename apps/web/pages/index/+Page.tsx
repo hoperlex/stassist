@@ -55,7 +55,7 @@ export function Page(): React.JSX.Element {
   return (
     <main style={{ maxWidth: 1040, margin: '0 auto', padding: '0 24px 64px' }}>
       <section style={{ textAlign: 'center', padding: '72px 0 48px' }}>
-        <Title>Stassist — астрология и нумерология с точным расчётом</Title>
+        <Title>Зодиакум — астрология и нумерология с точным расчётом</Title>
         <Paragraph style={{ fontSize: 18, maxWidth: 680, margin: '0 auto 32px' }}>
           Натальная карта, матрица судьбы, гороскопы и разборы с ИИ-астропомощником — на основе
           детерминированного расчётного ядра, а не готовых шаблонов. Каждый вывод опирается на

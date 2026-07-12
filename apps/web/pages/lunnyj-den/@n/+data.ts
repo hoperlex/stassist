@@ -21,7 +21,7 @@ export async function data(pageContext: PageContextServer): Promise<LunnyjDenDat
 
   const appUrl = loadConfig().appUrl;
   const result = await fetchLunarDayHoroscope(n);
-  const title = `${n}-й лунный день — значение и характеристика | Stassist`;
+  const title = `${n}-й лунный день — значение и характеристика | Зодиакум`;
   const description = `Что означает ${n}-й лунный день: общая характеристика, на что обратить внимание, рекомендации.`;
   const path = `/lunnyj-den/${n}`;
   const computed = result?.computed ?? false;

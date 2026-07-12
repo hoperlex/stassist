@@ -17,14 +17,14 @@ export async function data(pageContext: PageContextServer): Promise<AuthorPageDa
 
   if (!author) {
     return {
-      seo: { title: 'Автор не найден | Stassist', description: 'Такой страницы редакции нет.', canonicalPath: `/redakciya/${slug}`, noindex: true },
+      seo: { title: 'Автор не найден | Зодиакум', description: 'Такой страницы редакции нет.', canonicalPath: `/redakciya/${slug}`, noindex: true },
       author: null,
     };
   }
 
   return {
     seo: {
-      title: `${author.roleRu} — редакция Stassist`,
+      title: `${author.roleRu} — редакция Зодиакум`,
       description: author.bioRu[0]!,
       canonicalPath: `/redakciya/${author.slug}`,
       jsonLd: [

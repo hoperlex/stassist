@@ -51,7 +51,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   },
   {
     code: 'goal',
-    textRu: 'Что вы хотите получить от Stassist?',
+    textRu: 'Что вы хотите получить от Зодиакум?',
     options: [
       { code: 'daily_guidance', labelRu: 'Ежедневные подсказки и ориентиры' },
       { code: 'deep_understanding', labelRu: 'Глубокое понимание своей натальной карты' },

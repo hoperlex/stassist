@@ -71,7 +71,7 @@ export async function data(pageContext: PageContextServer): Promise<PlanetInXDat
   }
 
   const path = pageContext.urlPathname;
-  const title = `${planet.nameRu} ${targetLabel} — значение | Stassist`;
+  const title = `${planet.nameRu} ${targetLabel} — значение | Зодиакум`;
   const description = text ? text.text.slice(0, 155) : `${planet.nameRu} ${targetLabel} в натальной карте.`;
 
   return {

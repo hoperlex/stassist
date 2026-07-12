@@ -115,7 +115,7 @@ export const subscriptionsRoutes: FastifyPluginAsyncZod<SubscriptionsRoutesOptio
       const ports = getPorts(config, db);
       const paymentResult = await ports.payments.createPayment({
         amountKop: priceKop,
-        description: `Подписка «${plan.titleRu}» — Stassist`,
+        description: `Подписка «${plan.titleRu}» — Зодиакум`,
         idempotencyKey: `sub_setup_${subscription.id}`,
         savePaymentMethod: true,
         metadata: { subscriptionId: subscription.id, userId },

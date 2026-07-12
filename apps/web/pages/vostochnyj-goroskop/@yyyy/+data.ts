@@ -18,7 +18,7 @@ export async function data(pageContext: PageContextServer): Promise<VostochnyjGo
   const appUrl = loadConfig().appUrl;
   return {
     seo: {
-      title: `Восточный гороскоп на ${yyyy} год — по 12 животным | Stassist`,
+      title: `Восточный гороскоп на ${yyyy} год — по 12 животным | Зодиакум`,
       description: `Восточный (китайский) гороскоп на ${yyyy} год для всех 12 животных: чего ждать в год под управлением текущего животного и стихии.`,
       canonicalPath: `/vostochnyj-goroskop/${yyyy}`,
       jsonLd: [

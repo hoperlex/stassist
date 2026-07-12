@@ -25,7 +25,7 @@ export async function data(pageContext: PageContextServer): Promise<KamenPageDat
   if (!stone) {
     return {
       seo: {
-        title: 'Камень не найден | Stassist',
+        title: 'Камень не найден | Зодиакум',
         description: 'Такой карточки камня нет в каталоге.',
         canonicalPath: `/kamni/${slug}`,
         noindex: true,
@@ -36,7 +36,7 @@ export async function data(pageContext: PageContextServer): Promise<KamenPageDat
 
   return {
     seo: {
-      title: `${stone.name} — свойства, соответствия знакам и планетам | Stassist`,
+      title: `${stone.name} — свойства, соответствия знакам и планетам | Зодиакум`,
       description: `${stone.name}: ${stone.propertiesMd.slice(0, 140)}…`,
       canonicalPath: `/kamni/${stone.slug}`,
       jsonLd: [
