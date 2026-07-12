@@ -90,6 +90,25 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
+  // Единый формат ошибок `{ error: { message, code, requestId } }` (apiErrorSchema).
+  // ВАЖНО: обработчик регистрируется ДО app.register(...) роутов — дочерние (инкапсулированные)
+  // контексты Fastify наследуют error handler на момент СВОЕЙ регистрации. Раньше он стоял в
+  // конце buildApp, и ошибки валидации zod внутри роутов падали в ДЕФОЛТНЫЙ обработчик, чей
+  // формат (`error: "Bad Request"` строкой) не проходил сериализатор apiErrorSchema → клиент
+  // получал 500 FST_ERR_FAILED_ERROR_SERIALIZATION вместо честного 400 (найдено интеграционным
+  // тестом Ф9 sky.integration.test.ts «POST /posts kind=sky_day → 400»).
+  app.setErrorHandler((error: FastifyError, request, reply) => {
+    request.log.error({ err: error }, 'request error');
+    const statusCode = error.statusCode ?? 500;
+    reply.status(statusCode).send({
+      error: {
+        message: statusCode >= 500 ? 'Внутренняя ошибка сервера' : error.message,
+        code: error.code,
+        requestId: request.id,
+      },
+    });
+  });
+
   // request-id: прокидываем во все ответы, чтобы клиент/логи можно было сопоставить.
   app.addHook('onRequest', async (req, reply) => {
     reply.header(REQUEST_ID_HEADER, req.id);
@@ -178,18 +197,6 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   // Ф9: соцраздел «Созвездие» — «Небо дня»: событие дня + проекция + чек-ины/стрик (см.
   // docs/strategy/11-соцраздел-созвездие.md, apps/worker/src/sky — генерация дня).
   await app.register(skyRoutes, { config, prefix: `${apiV1}/sky` });
-
-  app.setErrorHandler((error: FastifyError, request, reply) => {
-    request.log.error({ err: error }, 'request error');
-    const statusCode = error.statusCode ?? 500;
-    reply.status(statusCode).send({
-      error: {
-        message: statusCode >= 500 ? 'Внутренняя ошибка сервера' : error.message,
-        code: error.code,
-        requestId: request.id,
-      },
-    });
-  });
 
   return app;
 }

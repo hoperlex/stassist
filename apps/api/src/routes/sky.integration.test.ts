@@ -232,8 +232,11 @@ describe.skipIf(!process.env.DATABASE_URL)('«Небо дня» Ф9 (integration
     });
     expect(forbiddenKind.statusCode).toBe(400);
 
-    // И системный тред не светится в общей ленте.
-    const feed = await app.inject({ method: 'GET', url: '/api/v1/posts' });
+    // И системный тред не светится в общей ленте. limit=5 — щадим соединения: toPostResponse
+    // делает 3 параллельных запроса НА ПОСТ (наследие Ф7), а session-pooler дев-Supabase
+    // ограничен 15 клиентами (EMAXCONNSESSION при limit=20 на этой БД).
+    const feed = await app.inject({ method: 'GET', url: '/api/v1/posts?limit=5' });
+    expect(feed.statusCode).toBe(200);
     const items = (feed.json() as { items: Array<{ kind: string }> }).items;
     expect(items.every((p) => p.kind !== 'sky_day')).toBe(true);
 
