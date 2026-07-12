@@ -1,12 +1,13 @@
 /**
- * Единая точка сборки адаптеров портов по конфигурации. Пока для всех портов есть только
- * стаб-реализации (реальные адаптеры появятся в соответствующих поздних фазах) — фабрика уже
- * подготовлена к переключению по env, чтобы код-потребитель (api/worker) не менялся.
+ * Единая точка сборки адаптеров портов по конфигурации. Ф2 подключает реальные адаптеры
+ * `Mailer`(smtp)/`Geocoder`(nominatim) — остальные подсистемы (storage/payments/llm/embeddings)
+ * по-прежнему появятся в поздних фазах и намеренно бросают понятную ошибку при попытке выбрать
+ * их не-stub драйвер раньше срока.
  */
 import type { Config } from '../config.js';
 import { type ObjectStorage, MemoryObjectStorage } from './object-storage.js';
-import { type Mailer, ConsoleMailer } from './mailer.js';
-import { type Geocoder, FixtureGeocoder } from './geocoder.js';
+import { type Mailer, ConsoleMailer, SmtpMailer } from './mailer.js';
+import { type Geocoder, FixtureGeocoder, NominatimGeocoder } from './geocoder.js';
 import { type PaymentProvider, FakePaymentProvider } from './payment-provider.js';
 import { type LlmProvider, StubLlmProvider } from './llm-provider.js';
 import { type EmbeddingProvider, StubEmbeddingProvider } from './embedding-provider.js';
@@ -20,42 +21,60 @@ export interface Ports {
   embeddings: EmbeddingProvider;
 }
 
+function buildMailer(config: Config): Mailer {
+  if (config.mailer.driver === 'stub') return new ConsoleMailer();
+  if (config.mailer.driver === 'smtp') {
+    const { host, port, from, user, pass } = config.mailer.smtp;
+    if (!host || !port || !from) {
+      throw new Error(
+        'MAILER=smtp: не заданы SMTP_HOST/SMTP_PORT/SMTP_FROM (в production это ловит parseConfig раньше, см. config.ts)',
+      );
+    }
+    return new SmtpMailer({ host, port, from, user, pass });
+  }
+  throw new Error(`MAILER=${config.mailer.driver}: неизвестный драйвер`);
+}
+
+function buildGeocoder(config: Config): Geocoder {
+  if (config.geocoder.driver === 'stub') return new FixtureGeocoder();
+  if (config.geocoder.driver === 'nominatim') {
+    const { nominatimUrl, nominatimUserAgent } = config.geocoder;
+    if (!nominatimUrl || !nominatimUserAgent) {
+      throw new Error(
+        'GEOCODER=nominatim: не заданы NOMINATIM_URL/NOMINATIM_USER_AGENT (в production это ловит parseConfig раньше, см. config.ts)',
+      );
+    }
+    return new NominatimGeocoder({ baseUrl: nominatimUrl, userAgent: nominatimUserAgent });
+  }
+  throw new Error(`GEOCODER=${config.geocoder.driver}: неизвестный драйвер`);
+}
+
 export function createPorts(config: Config): Ports {
   if (config.storage.driver !== 'stub') {
     throw new Error(
-      `STORAGE=${config.storage.driver}: реальный адаптер появится в поздней фазе, в Ф0 доступен только stub`,
-    );
-  }
-  if (config.mailer.driver !== 'stub') {
-    throw new Error(
-      `MAILER=${config.mailer.driver}: реальный адаптер появится в поздней фазе, в Ф0 доступен только stub`,
-    );
-  }
-  if (config.geocoder.driver !== 'stub') {
-    throw new Error(
-      `GEOCODER=${config.geocoder.driver}: реальный адаптер появится в поздней фазе, в Ф0 доступен только stub`,
+      `STORAGE=${config.storage.driver}: реальный адаптер появится в поздней фазе, сейчас доступен только stub`,
     );
   }
   if (config.payments.driver !== 'stub') {
     throw new Error(
-      `PAYMENTS=${config.payments.driver}: реальный адаптер появится в поздней фазе, в Ф0 доступен только stub`,
+      `PAYMENTS=${config.payments.driver}: реальный адаптер появится в поздней фазе, сейчас доступен только stub`,
     );
   }
   if (config.llm.driver !== 'stub') {
     throw new Error(
-      `LLM_PROVIDER=${config.llm.driver}: реальный адаптер появится в Ф4, в Ф0 доступен только stub`,
+      `LLM_PROVIDER=${config.llm.driver}: реальный адаптер появится в Ф4, сейчас доступен только stub`,
     );
   }
   if (config.embeddings.driver !== 'stub') {
     throw new Error(
-      `EMBED_PROVIDER=${config.embeddings.driver}: реальный адаптер появится в Ф4, в Ф0 доступен только stub`,
+      `EMBED_PROVIDER=${config.embeddings.driver}: реальный адаптер появится в Ф4, сейчас доступен только stub`,
     );
   }
 
   return {
     storage: new MemoryObjectStorage(),
-    mailer: new ConsoleMailer(),
-    geocoder: new FixtureGeocoder(),
+    mailer: buildMailer(config),
+    geocoder: buildGeocoder(config),
     payments: new FakePaymentProvider(),
     llm: new StubLlmProvider(),
     embeddings: new StubEmbeddingProvider(),

@@ -3,8 +3,14 @@
  * docs/architecture/22-модель-данных.md §1 и 21-техническая-архитектура.md §9.
  *
  * actor_id — nullable FK на users (действие может быть системным/анонимным). users создаётся
- * skeleton-таблицей в этой же миграции (см. users.ts), поэтому FK валиден уже в Ф0.
+ * skeleton-таблицей в Ф0-миграции, поэтому FK валиден уже там.
  * updated_at сознательно отсутствует: журнал append-only, записи не редактируются.
+ *
+ * Перенесено из `drizzle/schema/` в `packages/db/src/schema/` в Ф2 (см. README ниже, файл
+ * client.ts) — чтобы apps/api мог типобезопасно импортировать схему как обычную
+ * workspace-зависимость `@stassist/db` (через собранный dist, без нарушения `rootDir` при
+ * `tsc -p tsconfig.build.json`, см. находку `rootDir` в _report/build/f0-отчёт.md §4.6).
+ * Путь `out` для SQL-миграций (`drizzle/migrations`) не менялся.
  */
 import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './users.js';

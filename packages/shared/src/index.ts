@@ -2,6 +2,11 @@ export * from './config.js';
 export * from './constants.js';
 export * from './schemas/common.js';
 export * from './schemas/chart.js';
+export * from './schemas/auth.js';
+export * from './schemas/birth-profile.js';
+
+export * from './crypto/pd-cipher.js';
+export * from './legal/doc-versions.js';
 
 export * from './ports/object-storage.js';
 export * from './ports/mailer.js';

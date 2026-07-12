@@ -15,6 +15,13 @@
       "when": 1783820835312,
       "tag": "0001_users_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783828153869,
+      "tag": "0002_auth_profiles_consents",
+      "breakpoints": true
     }
   ]
 }

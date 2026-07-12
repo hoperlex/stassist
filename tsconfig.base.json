@@ -10,6 +10,8 @@
     "paths": {
       "@stassist/shared": ["packages/shared/src/index.ts"],
       "@stassist/shared/*": ["packages/shared/src/*"],
+      "@stassist/db": ["packages/db/src/index.ts"],
+      "@stassist/db/*": ["packages/db/src/*"],
       "@stassist/astro-core": ["packages/astro-core/src/index.ts"],
       "@stassist/astro-core/*": ["packages/astro-core/src/*"],
       "@stassist/numerology-core": ["packages/numerology-core/src/index.ts"],

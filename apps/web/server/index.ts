@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
 import middie from '@fastify/middie';
 import fastifyStatic from '@fastify/static';
+import httpProxy from '@fastify/http-proxy';
 import { loadConfig } from '@stassist/shared';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -28,6 +29,19 @@ async function buildWebServer() {
   });
 
   await app.register(middie);
+
+  if (!isProduction) {
+    // Dev: браузер обращается к web (localhost:WEB_PORT) — тот же origin, что и в проде через
+    // Caddy (см. caddy/Caddyfile: `/api/*` → api). Локально Caddy нет, поэтому web сам
+    // проксирует `/api/*` на реальный api-процесс (localhost:API_PORT): cookies/credentials идут
+    // прозрачно (важно для httpOnly refresh_token/csrf_token, см. apps/api/src/auth/cookies.ts),
+    // SPA всегда обращается к относительному `/api/v1/...` независимо от dev/prod.
+    await app.register(httpProxy, {
+      upstream: `http://localhost:${config.api.port}`,
+      prefix: '/api',
+      rewritePrefix: '/api',
+    });
+  }
 
   if (isProduction) {
     // Отдаём только собранные ассеты (dist/client/assets/**) отдельным префиксом — если отдать

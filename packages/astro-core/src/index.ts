@@ -33,7 +33,13 @@ export { ascLongitudeDeg, mcLongitudeDeg, declinationOfEclipticPoint, ascensiona
 
 // --- аспекты ---
 export { detectAspects, type AspectableBody, type DetectAspectsConfig } from './aspects/index.js';
-export { ASPECT_ANGLE_DEG, MAJOR_ASPECTS, MINOR_ASPECTS, DEFAULT_ORB_BY_ASPECT } from './aspects/presets.js';
+export {
+  ASPECT_ANGLE_DEG,
+  MAJOR_ASPECTS,
+  MINOR_ASPECTS,
+  DEFAULT_ORB_BY_ASPECT,
+  DEFAULT_ORB_BY_BODY,
+} from './aspects/presets.js';
 
 // --- root-finding / прогностика ---
 export { brentRoot, scanForBracket } from './rootfinding/brent.js';

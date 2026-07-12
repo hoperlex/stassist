@@ -10,8 +10,16 @@
  *    в лог пишется `infra not configured: <подсистема>`, но GET /healthz всё равно отвечает 200.
  */
 import { z } from 'zod';
+import {
+  DEV_INSECURE_JWT_PRIVATE_KEY_PEM,
+  DEV_INSECURE_JWT_PUBLIC_KEY_PEM,
+  DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64,
+} from './crypto/dev-keys.js';
 
 const nodeEnvSchema = z.enum(['development', 'test', 'production']);
+
+/** PEM с env часто передаётся с литеральными `\n` (а не настоящими переводами строк). */
+const normalizePem = (pem: string): string => pem.replace(/\\n/g, '\n');
 
 const csvToArray = (value: string): string[] =>
   value
@@ -29,6 +37,26 @@ export const envSchema = z.object({
   API_URL: z.string().url().default('http://localhost:3001'),
   COOKIE_SECRET: z.string().min(16).default('dev-insecure-cookie-secret-change-me-please-32'),
   CORS_ALLOWLIST: z.string().default('http://localhost:3000'),
+
+  // --- Auth: подпись access JWT (EdDSA/Ed25519) и шифрование ПД (AES-256-GCM) ---
+  // «Всегда обязательные» с dev-дефолтом — та же категория, что COOKIE_SECRET (см. §3
+  // конвенций), но с ДОПОЛНИТЕЛЬНОЙ проверкой в production (см. parseConfig ниже): если
+  // эффективное значение совпадает с закоммиченным dev-дефолтом — это fail-fast, а не degraded
+  // (крипто-материал, а не просто секрет подписи cookie).
+  JWT_PRIVATE_KEY: z.string().default(DEV_INSECURE_JWT_PRIVATE_KEY_PEM),
+  JWT_PUBLIC_KEY: z.string().default(DEV_INSECURE_JWT_PUBLIC_KEY_PEM),
+  /** TTL access-токена в секундах (10–15 мин по ТЗ, см. док. 21 §5). */
+  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+  /** TTL opaque refresh-токена в секундах (по умолчанию 30 дней). */
+  REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24 * 30),
+
+  /** Активная версия ключа шифрования ПД (см. packages/shared/src/crypto/pd-cipher.ts). */
+  PD_ENCRYPTION_KEY_VERSION: z.coerce.number().int().positive().default(1),
+  /** base64, 32 байта (AES-256). Можно задать несколько версий через PD_ENCRYPTION_KEY_V<N>
+   *  для ротации без потери доступа к старым записям (см. README ниже про keyring). */
+  PD_ENCRYPTION_KEY: z.string().default(DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64),
+  PD_ENCRYPTION_KEY_V2: z.string().optional(),
+  PD_ENCRYPTION_KEY_V3: z.string().optional(),
 
   // --- БД (обязательна для функции) ---
   DATABASE_URL: z.string().min(1).optional(),
@@ -93,13 +121,28 @@ export interface Config {
   web: { port: number };
   db: SubsystemStatus & { url: string | undefined };
   storage: SubsystemStatus;
-  mailer: SubsystemStatus;
-  geocoder: SubsystemStatus;
+  mailer: SubsystemStatus & {
+    smtp: { host?: string; port?: number; user?: string; pass?: string; from?: string };
+  };
+  geocoder: SubsystemStatus & { nominatimUrl?: string; nominatimUserAgent?: string };
   payments: SubsystemStatus;
   llm: SubsystemStatus;
   embeddings: SubsystemStatus;
   /** Список подсистем, не готовых к боевой работе (degraded) — для лога при старте. */
   degraded: string[];
+  /** Auth: подпись access JWT (EdDSA) — см. apps/api/src/auth/jwt.ts. */
+  auth: {
+    jwtPrivateKeyPem: string;
+    jwtPublicKeyPem: string;
+    accessTtlSeconds: number;
+    refreshTtlSeconds: number;
+  };
+  /** Шифрование ПД (см. packages/shared/src/crypto/pd-cipher.ts). */
+  pdEncryption: {
+    activeVersion: number;
+    /** base64 по версии — конвертация в Buffer/keyring делает buildPdKeyring(). */
+    keysBase64: Record<number, string>;
+  };
 }
 
 class ConfigError extends Error {
@@ -130,6 +173,25 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
         `при NODE_ENV=production. Заполните .env или переключите ${subsystem} обратно на stub.`,
     );
   };
+
+  // --- Auth: JWT-ключи и ключ шифрования ПД — доп. защита сверх «просто degraded» (см. §41-46
+  // выше в схеме): в production запрещено оставлять закоммиченный dev-дефолт как есть.
+  if (isProduction) {
+    if (
+      env.JWT_PRIVATE_KEY === DEV_INSECURE_JWT_PRIVATE_KEY_PEM ||
+      env.JWT_PUBLIC_KEY === DEV_INSECURE_JWT_PUBLIC_KEY_PEM
+    ) {
+      fail('auth(jwt-keys)', ['JWT_PRIVATE_KEY', 'JWT_PUBLIC_KEY']);
+    }
+    if (env.PD_ENCRYPTION_KEY === DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64) {
+      fail('auth(pd-encryption-key)', ['PD_ENCRYPTION_KEY']);
+    }
+  } else if (
+    env.JWT_PRIVATE_KEY === DEV_INSECURE_JWT_PRIVATE_KEY_PEM ||
+    env.PD_ENCRYPTION_KEY === DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64
+  ) {
+    degraded.push('auth-keys(dev-default)');
+  }
 
   // --- БД ---
   const dbConfigured = Boolean(env.DATABASE_URL);
@@ -210,6 +272,10 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
     degraded.push('embeddings');
   }
 
+  const pdKeysBase64: Record<number, string> = { [env.PD_ENCRYPTION_KEY_VERSION]: env.PD_ENCRYPTION_KEY };
+  if (env.PD_ENCRYPTION_KEY_V2) pdKeysBase64[2] = env.PD_ENCRYPTION_KEY_V2;
+  if (env.PD_ENCRYPTION_KEY_V3) pdKeysBase64[3] = env.PD_ENCRYPTION_KEY_V3;
+
   return {
     env: env.NODE_ENV,
     isProduction,
@@ -221,12 +287,37 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
     web: { port: env.WEB_PORT },
     db: { configured: dbConfigured, driver: dbConfigured ? 'postgres' : 'none', url: env.DATABASE_URL },
     storage: { configured: storageConfigured, driver: env.STORAGE },
-    mailer: { configured: env.MAILER === 'smtp', driver: env.MAILER },
-    geocoder: { configured: env.GEOCODER === 'nominatim', driver: env.GEOCODER },
+    mailer: {
+      configured: env.MAILER === 'smtp',
+      driver: env.MAILER,
+      smtp: {
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
+        from: env.SMTP_FROM,
+      },
+    },
+    geocoder: {
+      configured: env.GEOCODER === 'nominatim',
+      driver: env.GEOCODER,
+      nominatimUrl: env.NOMINATIM_URL,
+      nominatimUserAgent: env.NOMINATIM_USER_AGENT,
+    },
     payments: { configured: env.PAYMENTS === 'yookassa', driver: env.PAYMENTS },
     llm: { configured: env.LLM_PROVIDER !== 'stub', driver: env.LLM_PROVIDER },
     embeddings: { configured: env.EMBED_PROVIDER !== 'stub', driver: env.EMBED_PROVIDER },
     degraded,
+    auth: {
+      jwtPrivateKeyPem: normalizePem(env.JWT_PRIVATE_KEY),
+      jwtPublicKeyPem: normalizePem(env.JWT_PUBLIC_KEY),
+      accessTtlSeconds: env.JWT_ACCESS_TTL_SECONDS,
+      refreshTtlSeconds: env.REFRESH_TTL_SECONDS,
+    },
+    pdEncryption: {
+      activeVersion: env.PD_ENCRYPTION_KEY_VERSION,
+      keysBase64: pdKeysBase64,
+    },
   };
 }
 

@@ -1,0 +1,57 @@
+/**
+ * Шаблоны писем — на русском (требование задачи). Отправка — через порт `Mailer`
+ * (@stassist/shared): `ConsoleMailer` по умолчанию локально (лог + `_work/tmp/mail`),
+ * `SmtpMailer` при `MAILER=smtp`. Письма шлются inline из auth-роутов (см. §2 конвенций:
+ * «Mailer=ConsoleMailer — дефолт локально»; постановка через pg-boss — не требуется для MVP
+ * объёма писем аутентификации, оставлена возможность вынести в worker позже без смены контракта).
+ */
+import type { MailMessage } from '@stassist/shared';
+
+export function buildEmailVerificationMail(params: { to: string; verifyUrl: string }): MailMessage {
+  return {
+    to: params.to,
+    subject: 'Подтвердите e-mail — Stassist',
+    text:
+      `Здравствуйте!\n\n` +
+      `Чтобы подтвердить регистрацию на Stassist, перейдите по ссылке:\n${params.verifyUrl}\n\n` +
+      `Ссылка действительна 24 часа. Если вы не регистрировались на Stassist — просто ` +
+      `проигнорируйте это письмо.`,
+    html:
+      `<p>Здравствуйте!</p>` +
+      `<p>Чтобы подтвердить регистрацию на Stassist, перейдите по ссылке:</p>` +
+      `<p><a href="${params.verifyUrl}">${params.verifyUrl}</a></p>` +
+      `<p>Ссылка действительна 24 часа. Если вы не регистрировались на Stassist — просто ` +
+      `проигнорируйте это письмо.</p>`,
+  };
+}
+
+/** Отправляется вместо письма верификации, если e-mail уже занят — без утечки факта регистрации. */
+export function buildAlreadyRegisteredMail(params: { to: string; resetUrl: string }): MailMessage {
+  return {
+    to: params.to,
+    subject: 'Попытка регистрации — Stassist',
+    text:
+      `Здравствуйте!\n\n` +
+      `Кто-то попытался зарегистрироваться на Stassist с указанием этого e-mail — у вас уже ` +
+      `есть аккаунт. Если это были вы и вы забыли пароль, восстановите доступ:\n${params.resetUrl}\n\n` +
+      `Если это были не вы — просто проигнорируйте это письмо.`,
+  };
+}
+
+export function buildPasswordResetMail(params: { to: string; resetUrl: string }): MailMessage {
+  return {
+    to: params.to,
+    subject: 'Сброс пароля — Stassist',
+    text:
+      `Здравствуйте!\n\n` +
+      `Для сброса пароля на Stassist перейдите по ссылке:\n${params.resetUrl}\n\n` +
+      `Ссылка действительна 1 час. Если вы не запрашивали сброс пароля — проигнорируйте это ` +
+      `письмо, пароль останется прежним.`,
+    html:
+      `<p>Здравствуйте!</p>` +
+      `<p>Для сброса пароля на Stassist перейдите по ссылке:</p>` +
+      `<p><a href="${params.resetUrl}">${params.resetUrl}</a></p>` +
+      `<p>Ссылка действительна 1 час. Если вы не запрашивали сброс пароля — проигнорируйте ` +
+      `это письмо, пароль останется прежним.</p>`,
+  };
+}

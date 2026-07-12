@@ -6,6 +6,19 @@ const BASE_ENV = {
   COOKIE_SECRET: 'x'.repeat(32),
 } as NodeJS.ProcessEnv;
 
+// Ключи-фикстуры для production-тестов: НЕ dev-insecure дефолты (parseConfig обязан принять
+// их как «настоящие» и не падать по auth(jwt-keys)/auth(pd-encryption-key)).
+const PROD_JWT_PRIVATE_KEY =
+  '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIG+ygyrHzZ+qvEM/hM1B3aGgEKB4cNbj7Jfu2KZvOHo1\n-----END PRIVATE KEY-----\n';
+const PROD_JWT_PUBLIC_KEY =
+  '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAhKjcQ7KxxKo8Zyy0Y8qYO9Q1pXKoI6G38CkT1sGE5+0=\n-----END PUBLIC KEY-----\n';
+const PROD_PD_ENCRYPTION_KEY = 'WCUeOeq26PCRHZrRgXCjJygtiyegGlJp/6BR/XCllmc=';
+const PROD_AUTH_ENV = {
+  JWT_PRIVATE_KEY: PROD_JWT_PRIVATE_KEY,
+  JWT_PUBLIC_KEY: PROD_JWT_PUBLIC_KEY,
+  PD_ENCRYPTION_KEY: PROD_PD_ENCRYPTION_KEY,
+} as NodeJS.ProcessEnv;
+
 describe('parseConfig — degraded-режим (development/test)', () => {
   it('поднимается без DATABASE_URL и прочей инфры, помечая подсистемы degraded', () => {
     const config = parseConfig(BASE_ENV);
@@ -29,19 +42,45 @@ describe('parseConfig — degraded-режим (development/test)', () => {
     } as NodeJS.ProcessEnv);
     expect(config.corsAllowlist).toEqual(['https://stassist.ru', 'https://www.stassist.ru']);
   });
+
+  it('помечает auth-keys(dev-default) в degraded, когда JWT/PD-ключи не переопределены', () => {
+    const config = parseConfig(BASE_ENV);
+    expect(config.degraded).toContain('auth-keys(dev-default)');
+  });
+
+  it('строит keyring шифрования ПД из PD_ENCRYPTION_KEY_VERSION/PD_ENCRYPTION_KEY', () => {
+    const config = parseConfig(BASE_ENV);
+    expect(config.pdEncryption.activeVersion).toBe(1);
+    expect(config.pdEncryption.keysBase64[1]).toBeDefined();
+  });
 });
 
 describe('parseConfig — fail-fast (production)', () => {
   it('падает без DATABASE_URL', () => {
     expect(() =>
-      parseConfig({ ...BASE_ENV, NODE_ENV: 'production' } as NodeJS.ProcessEnv),
+      parseConfig({
+        ...BASE_ENV,
+        ...PROD_AUTH_ENV,
+        NODE_ENV: 'production',
+      } as NodeJS.ProcessEnv),
     ).toThrow(ConfigError);
+  });
+
+  it('падает, если JWT/PD-ключи оставлены дефолтными (dev-insecure)', () => {
+    expect(() =>
+      parseConfig({
+        ...BASE_ENV,
+        NODE_ENV: 'production',
+        DATABASE_URL: 'postgres://u:p@localhost:5432/stassist',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(/auth\(jwt-keys\)/);
   });
 
   it('падает, если LLM_PROVIDER=anthropic без ANTHROPIC_API_KEY', () => {
     expect(() =>
       parseConfig({
         ...BASE_ENV,
+        ...PROD_AUTH_ENV,
         NODE_ENV: 'production',
         DATABASE_URL: 'postgres://u:p@localhost:5432/stassist',
         LLM_PROVIDER: 'anthropic',
@@ -52,6 +91,7 @@ describe('parseConfig — fail-fast (production)', () => {
   it('поднимается без degraded-подсистем, если всё сконфигурировано', () => {
     const config = parseConfig({
       ...BASE_ENV,
+      ...PROD_AUTH_ENV,
       NODE_ENV: 'production',
       DATABASE_URL: 'postgres://u:p@localhost:5432/stassist',
       STORAGE: 's3',

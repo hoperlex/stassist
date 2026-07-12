@@ -14,6 +14,7 @@ export const REDACT_PATHS = [
   'req.headers.cookie',
   'res.headers["set-cookie"]',
   'req.body.password',
+  'req.body.newPassword',
   'req.body.token',
   'req.body.refreshToken',
   'req.body.email',
@@ -22,6 +23,12 @@ export const REDACT_PATHS = [
   'req.body.placeName',
   'req.body.lat',
   'req.body.lon',
+  // Ф2: birth_profiles вложены place.* в теле запроса (см. birthProfileInputSchema) — доп. к
+  // плоским полям выше (найдено при верификации Ф2: place.placeName/lat/lon не были покрыты,
+  // см. findings f2.md [pd-leak]).
+  'req.body.place.placeName',
+  'req.body.place.lat',
+  'req.body.place.lon',
 ];
 
 export interface LoggerOptions {

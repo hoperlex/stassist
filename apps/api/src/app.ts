@@ -5,6 +5,7 @@ import Fastify, {
   type FastifyServerOptions,
 } from 'fastify';
 import type { Writable } from 'node:stream';
+import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
@@ -16,6 +17,12 @@ import {
 import { loadConfig, REQUEST_ID_HEADER, type Config } from '@stassist/shared';
 import { buildLoggerOptions } from './logging.js';
 import { healthRoutes } from './routes/health.js';
+import { authRoutes } from './routes/auth.js';
+import { birthProfilesRoutes } from './routes/birth-profiles.js';
+import { consentsRoutes } from './routes/consents.js';
+import { geocodeRoutes } from './routes/geocode.js';
+import { calcPresetsRoutes } from './routes/calc-presets.js';
+import { accountRoutes } from './routes/account.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -67,7 +74,18 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     timeWindow: '1 minute',
   });
 
+  // httpOnly refresh_token + non-httpOnly csrf_token (см. auth/cookies.ts, auth/csrf.ts).
+  await app.register(cookie, { secret: config.cookieSecret });
+
   await app.register(healthRoutes, { config });
+
+  const apiV1 = '/api/v1';
+  await app.register(authRoutes, { config, prefix: `${apiV1}/auth` });
+  await app.register(birthProfilesRoutes, { config, prefix: `${apiV1}/birth-profiles` });
+  await app.register(consentsRoutes, { config, prefix: `${apiV1}/consents` });
+  await app.register(geocodeRoutes, { config, prefix: `${apiV1}/geocode` });
+  await app.register(calcPresetsRoutes, { config, prefix: `${apiV1}/calc-presets` });
+  await app.register(accountRoutes, { config, prefix: `${apiV1}/account` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

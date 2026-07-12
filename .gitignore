@@ -145,12 +145,16 @@ vite.config.ts.timestamp-*
 # Stassist: turborepo, playwright, служебные рантайм-артефакты стабов (см. §2 конвенций
 # реализации — MemoryObjectStorage/ConsoleMailer пишут копии в _work/tmp для ручного просмотра
 # при разработке; сам _work/tmp — не источник правды, в git не нужен).
+# Без ведущего слэша — стаб-порты пишут в `_work/tmp` ОТНОСИТЕЛЬНО cwd процесса (см.
+# ConsoleMailer/MemoryObjectStorage), т.е. может оказаться и в apps/api/_work/tmp при запуске
+# `pnpm --filter @stassist/api start`, а не только в корне репозитория (найдено при живой
+# e2e-проверке Ф2 — apps/web/e2e/cabinet-flow.e2e.test.ts).
 .turbo/
 test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
-/_work/tmp/
+**/_work/tmp/
 
 # tsbuildinfo/сгенерированные декларации внутри src (страховка от бага TS noEmitOnError=false —
 # см. _report/build/f0-отчёт.md; не должно возникать, но на всякий случай не коммитим)
