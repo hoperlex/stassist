@@ -48,6 +48,12 @@ describe('parseConfig — degraded-режим (development/test)', () => {
     expect(config.degraded).toContain('auth-keys(dev-default)');
   });
 
+  it('помечает auth-keys(dev-default) в degraded, когда не задан COOKIE_SECRET (не production — не бросает)', () => {
+    const config = parseConfig({ NODE_ENV: 'test' } as NodeJS.ProcessEnv);
+    expect(config.degraded).toContain('auth-keys(dev-default)');
+    expect(config.cookieSecret).toBe('dev-insecure-cookie-secret-change-me-please-32');
+  });
+
   it('SEO_NOINDEX_ALL по умолчанию true (fail-safe — сайт не индексируется, пока не включат явно)', () => {
     const config = parseConfig(BASE_ENV);
     expect(config.seo.noindexAll).toBe(true);
@@ -84,6 +90,29 @@ describe('parseConfig — fail-fast (production)', () => {
         DATABASE_URL: 'postgres://u:p@localhost:5432/stassist',
       } as NodeJS.ProcessEnv),
     ).toThrow(/auth\(jwt-keys\)/);
+  });
+
+  it('находка [cookie-secret-no-fail-fast]: падает, если COOKIE_SECRET оставлен дефолтным (dev-insecure)', () => {
+    // BASE_ENV намеренно НЕ используется здесь — он переопределяет COOKIE_SECRET, а этот тест
+    // проверяет именно поведение при НЕзаданном COOKIE_SECRET (молчаливый dev-дефолт).
+    expect(() =>
+      parseConfig({
+        NODE_ENV: 'production',
+        ...PROD_AUTH_ENV,
+        DATABASE_URL: 'postgres://u:p@localhost:5432/stassist',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(/auth\(cookie-secret\)/);
+  });
+
+  it('находка [cookie-secret-no-fail-fast]: не падает по cookie-secret, если COOKIE_SECRET задан не-дефолтным', () => {
+    expect(() =>
+      parseConfig({
+        ...BASE_ENV,
+        ...PROD_AUTH_ENV,
+        NODE_ENV: 'production',
+        DATABASE_URL: 'postgres://u:p@localhost:5432/stassist',
+      } as NodeJS.ProcessEnv),
+    ).not.toThrow(/cookie-secret/);
   });
 
   it('падает, если LLM_PROVIDER=anthropic без ANTHROPIC_API_KEY', () => {

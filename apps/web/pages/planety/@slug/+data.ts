@@ -1,8 +1,20 @@
 import type { PageContextServer } from 'vike/types';
 import { render } from 'vike/abort';
-import { loadConfig, signByIndex, zodiacSignEnSlugSchema, ZODIAC_SIGN_EN_SLUGS, CLASSICAL_PLANETS } from '@stassist/shared';
+import {
+  loadConfig,
+  signByIndex,
+  zodiacSignEnSlugSchema,
+  ZODIAC_SIGN_EN_SLUGS,
+  CLASSICAL_PLANETS,
+  type InterpretationChunksBatchResponse,
+} from '@stassist/shared';
 import { articleJsonLd, breadcrumbJsonLd, type PageSeo } from '../../../lib/seo.js';
-import { fetchInterpretationText, type InterpretationText } from '../../../lib/interpretation.js';
+import { serverApiGet } from '../../../lib/server-api.js';
+
+export interface InterpretationText {
+  text: string;
+  quality: 'draft' | 'reviewed';
+}
 
 export interface PlanetInXData {
   seo: PageSeo;
@@ -43,8 +55,20 @@ export async function data(pageContext: PageContextServer): Promise<PlanetInXDat
     breadcrumbTarget = { name: `${houseNum}-й дом`, path: `/wiki/houses/house-${houseNum}` };
   }
 
-  const chunks = await fetchInterpretationText([key]);
-  const text = chunks[key] ?? null;
+  // ВАЖНО: серверный вызов `serverApiGet` (абсолютный `config.apiUrl`), а НЕ клиентский
+  // `lib/api-client.ts`/`lib/interpretation.ts` — тот бьёт по ОТНОСИТЕЛЬНОМУ URL, который в Node
+  // при SSR падает (`Failed to parse URL`), ошибка молча глоталась, и все 240 страниц
+  // `/planety/{планета}-v-{знак|дом}` отдавались пустыми с `noindex` (находка
+  // [seo-planety-empty-ssr]). Паттерн — тот же, что `lunnyj-kalendar/@month/+data.ts` и
+  // `wiki/@razdel/+data.ts`: честный `null`/empty-state при сбое API, а не 500.
+  let text: InterpretationText | null = null;
+  try {
+    const res = await serverApiGet<InterpretationChunksBatchResponse>(`/calc/interpretation?keys=${encodeURIComponent(key)}`);
+    const item = res.items[0];
+    text = item ? { text: item.text, quality: item.quality } : null;
+  } catch {
+    text = null;
+  }
 
   const path = pageContext.urlPathname;
   const title = `${planet.nameRu} ${targetLabel} — значение | Stassist`;

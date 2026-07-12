@@ -160,7 +160,10 @@ export const friendshipsRoutes: FastifyPluginAsyncZod<FriendshipsRoutesOptions> 
       const friendSelf = friendProfiles.find((p) => p.kind === 'self');
       if (!mySelf || !friendSelf) return reply.send({ computed: false, reason: 'no_chart', a: null, b: null, crossAspects: [] });
 
-      const [myChart, friendChart] = await Promise.all([findNatalChartByProfile(db, mySelf.id), findNatalChartByProfile(db, friendSelf.id)]);
+      const [myChart, friendChart] = await Promise.all([
+        findNatalChartByProfile(db, mySelf.id, keyring),
+        findNatalChartByProfile(db, friendSelf.id, keyring),
+      ]);
       if (!myChart || !friendChart) return reply.send({ computed: false, reason: 'no_chart', a: null, b: null, crossAspects: [] });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- jsonb на границе БД

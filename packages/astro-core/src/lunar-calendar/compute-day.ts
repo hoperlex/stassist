@@ -3,6 +3,12 @@
  * набор лунных фактов на этот день (см. docs/roadmap/prompts/f3-калькуляторы-и-карта.md
  * требование 3, packages/db/src/schema/astro-calendar.ts).
  *
+ * Живёт в `@stassist/astro-core` (а не в apps/worker, где раньше был единственный вызывающий),
+ * т.к. `apps/api` тоже стал вызывающим — ленивая генерация `astro_calendar` «при заходе» (см.
+ * apps/api/src/lunar-calendar/lazy-generate.ts, находка [lunnyj-kalendar-empty]) переиспользует
+ * ТУ ЖЕ детерминированную арифметику, что и суточный cron worker'а (apps/worker/src/astro-
+ * calendar/upsert-window.ts) — иначе два процесса считали бы «один и тот же» день по-разному.
+ *
  * УПРОЩЕНИЕ MVP (задокументировано, не скрыто — корневой CLAUDE.md «против галлюцинаций»):
  * вместо честного посуточного сканирования интервалов знака/void считается ОДИН «снимок» на
  * {@link REFERENCE_SNAPSHOT_HOUR} по местному времени опорной локации. Для подавляющего
@@ -11,21 +17,16 @@
  * полдень — это фиксируется в README пакета и в отчёте фазы, а не выдаётся за точный расчёт.
  */
 import * as AE from 'astronomy-engine';
-import {
-  bodyGeocentricPosition,
-  findLunarDay,
-  findMoonVoidOfCourse,
-  localWallTimeToUtc,
-  moonPhaseAngleDeg,
-  moonPhaseName,
-  PLANET_BODIES,
-  resolveTime,
-  signIndexOf,
-  sunApparentPosition,
-  ttToAstroTime,
-} from '@stassist/astro-core';
-import type { MoonPhaseNameDto, ReferenceLocation } from '@stassist/shared';
-import { CALENDAR_REFERENCE_LOCATION, REFERENCE_SNAPSHOT_HOUR } from './reference-location.js';
+import { CALENDAR_REFERENCE_LOCATION, CALENDAR_REFERENCE_SNAPSHOT_HOUR as REFERENCE_SNAPSHOT_HOUR, type MoonPhaseNameDto, type ReferenceLocation } from '@stassist/shared';
+import { localWallTimeToUtc } from '../time/timezone.js';
+import { resolveTime } from '../time/julian-day.js';
+import { sunApparentPosition } from '../ephemeris/sun-vsop87.js';
+import { bodyGeocentricPosition, PLANET_BODIES } from '../ephemeris/planets.js';
+import { signIndexOf } from '../util/angles.js';
+import { findMoonVoidOfCourse } from '../rootfinding/void-of-course.js';
+import { ttToAstroTime } from '../rootfinding/longitude-search.js';
+import { moonPhaseAngleDeg, moonPhaseName } from './phases.js';
+import { findLunarDay } from './lunar-days.js';
 
 export interface AstroCalendarDayFacts {
   date: string;

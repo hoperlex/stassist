@@ -11,7 +11,7 @@
  * и такие queued-строки, если API решит не генерировать big3 синхронно (напр. под нагрузкой).
  */
 import type { Logger } from 'pino';
-import type { ChartData, NatalFullSphere } from '@stassist/shared';
+import type { ChartData, NatalFullSphere, PdCipherKeyring } from '@stassist/shared';
 import type { Db } from '@stassist/db';
 import { generateReport, type ChunkRepository } from '@stassist/llm';
 import type { LlmProvider } from '@stassist/shared';
@@ -31,7 +31,13 @@ function parseInput(row: AiReportRow): AiReportInput {
   };
 }
 
-export async function processOneAiReport(db: Db, llm: LlmProvider, chunkRepository: ChunkRepository, row: AiReportRow): Promise<void> {
+export async function processOneAiReport(
+  db: Db,
+  llm: LlmProvider,
+  chunkRepository: ChunkRepository,
+  row: AiReportRow,
+  keyring: PdCipherKeyring,
+): Promise<void> {
   await markGenerating(db, row.id);
   // Ф5: 'personal_horoscope' — отдельный домен (ai_reports переиспользован только как хранилище,
   // см. doc-комментарий packages/db/src/schema/enums.ts `aiReportKindEnum` и
@@ -45,7 +51,7 @@ export async function processOneAiReport(db: Db, llm: LlmProvider, chunkReposito
     await markFailed(db, row.id, 'ai_reports.chart_id не задан — нечего анализировать');
     return;
   }
-  const chart = await findChartById(db, row.chartId);
+  const chart = await findChartById(db, row.chartId, keyring);
   if (!chart) {
     await markFailed(db, row.id, `charts не найден по id=${row.chartId}`);
     return;
@@ -64,12 +70,18 @@ export async function processOneAiReport(db: Db, llm: LlmProvider, chunkReposito
 
 /** Обрабатывает пачку queued-строк (см. worker.ts, AI_REPORT_CRON). Ошибка по одной строке не
  *  прерывает обработку остальных — каждая помечается 'failed' независимо. */
-export async function processQueuedAiReports(db: Db, llm: LlmProvider, chunkRepository: ChunkRepository, logger: Logger): Promise<number> {
+export async function processQueuedAiReports(
+  db: Db,
+  llm: LlmProvider,
+  chunkRepository: ChunkRepository,
+  logger: Logger,
+  keyring: PdCipherKeyring,
+): Promise<number> {
   const queued = await findQueuedAiReports(db);
   let processed = 0;
   for (const row of queued) {
     try {
-      await processOneAiReport(db, llm, chunkRepository, row);
+      await processOneAiReport(db, llm, chunkRepository, row, keyring);
       processed += 1;
     } catch (err) {
       logger.error({ err, reportId: row.id }, 'ai-report: генерация не удалась');

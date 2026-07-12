@@ -16,6 +16,22 @@ describe('POST /api/v1/ai-reports', () => {
     expect(res.statusCode).toBe(401);
     await app.close();
   });
+
+  it('находка [llm-endpoint-no-rate-limit]: выделенный per-route лимит (10/мин) срабатывает раньше общего 100/мин', async () => {
+    const app = await buildApp({ config: testConfig() });
+    const payload = { birthProfileId: '00000000-0000-0000-0000-000000000000', kind: 'big3' };
+    // Rate-limit хук — onRequest, срабатывает РАНЬШЕ preHandler-проверки авторизации (401), т.е.
+    // считает попытки независимо от того, есть ли валидный токен — так и должно быть: иначе
+    // атакующий без токена вообще не ограничивался бы.
+    const statuses: number[] = [];
+    for (let i = 0; i < 11; i += 1) {
+      const res = await app.inject({ method: 'POST', url: '/api/v1/ai-reports', payload });
+      statuses.push(res.statusCode);
+    }
+    expect(statuses.slice(0, 10)).toEqual(Array(10).fill(401));
+    expect(statuses[10]).toBe(429);
+    await app.close();
+  });
 });
 
 describe('GET /api/v1/ai-reports/:id', () => {

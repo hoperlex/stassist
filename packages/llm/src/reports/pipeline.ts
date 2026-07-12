@@ -11,6 +11,8 @@ import type { ChartData, LlmProvider, NatalFullSphere, ReportKind } from '@stass
 import { serializeChartFacts } from '../facts/serializer.js';
 import { estimateCostMicros } from '../providers/pricing.js';
 import { postprocessReport } from '../postprocess/postprocess.js';
+import { appendDisclaimer } from '../postprocess/disclaimer.js';
+import { buildSoftRefusalText, detectForbidden } from '../postprocess/forbidden-filters.js';
 import { buildPrompt } from '../prompt/build-prompt.js';
 import { retrieveForFacts, type UsedChunkAudit } from '../rag/retriever.js';
 import type { ChunkRepository } from '../rag/chunk-repository.js';
@@ -18,6 +20,11 @@ import { CORPUS_VERSION, PROMPT_VERSION } from '../version.js';
 import { reportKindConfig } from './report-kinds.js';
 import { buildTaskDescription } from './task-description.js';
 import { resolveTimeUnknown } from './time-unknown.js';
+
+/** `kind`, для которых вопрос пользователя вклеивается в промт СВОБОДНЫМ текстом (см.
+ *  task-description.ts) — те же, для которых нужен гейт ДО вызова LLM (находка
+ *  [report-input-no-prefilter]). */
+const FREE_TEXT_REPORT_KINDS: ReadonlySet<ReportKind> = new Set(['custom_question', 'order']);
 
 export interface GenerateReportInput {
   chartData: ChartData;
@@ -45,7 +52,39 @@ export interface GenerateReportResult {
   corpusVersion: string;
 }
 
+/**
+ * Находка [report-input-no-prefilter]: `chat-pipeline.ts` гейтит запрещённый вопрос ДО вызова
+ * LLM (короткое замыкание, экономит токены, гарантированный мягкий отказ); для отчётов
+ * `custom_question`/`order` вопрос пользователя раньше уходил в LLM без предварительной
+ * проверки — ловился только пост-фильтром НА ВЫХОДЕ (защита в глубину, но не дыра честности —
+ * выход всё равно фильтруется), однако запрещённый запрос тратил токены/деньги. Симметрично
+ * `chat-pipeline.ts` (см. `answerChatQuestion`).
+ */
+function prefilterInput(input: GenerateReportInput): GenerateReportResult | null {
+  if (!FREE_TEXT_REPORT_KINDS.has(input.kind) || !input.question) return null;
+  const forbidden = detectForbidden(input.question);
+  if (forbidden.length === 0) return null;
+
+  return {
+    contentMd: appendDisclaimer(buildSoftRefusalText(forbidden)),
+    calcBlock: {},
+    factKeys: [],
+    usedChunks: [],
+    tokensIn: 0,
+    tokensOut: 0,
+    provider: 'filter',
+    costMicros: 0,
+    flagged: true,
+    flagReasons: forbidden.map((f) => `forbidden-input:${f.category}`),
+    promptVersion: input.promptVersion ?? PROMPT_VERSION,
+    corpusVersion: input.corpusVersion ?? CORPUS_VERSION,
+  };
+}
+
 export async function generateReport(input: GenerateReportInput): Promise<GenerateReportResult> {
+  const prefiltered = prefilterInput(input);
+  if (prefiltered) return prefiltered;
+
   const config = reportKindConfig(input.kind);
   const { text: factsText, factKeys } = serializeChartFacts(input.chartData);
   const timeDecision = resolveTimeUnknown(input.kind, input.sphere, input.chartData.meta.noHouses);

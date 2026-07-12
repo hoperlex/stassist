@@ -50,6 +50,14 @@ const idParamsSchema = z.object({ id: z.string().uuid() });
  *  (см. находку [самодостаточность-тарификация] в _work/build/findings/f4.md). */
 const PREMIUM_REPORTS_ENABLED = false;
 
+/** Находка [llm-endpoint-no-rate-limit]: `POST /` — синхронный вызов реального LLM-провайдера
+ *  для `kind='big3'` (остальные kinds пишут `status='queued'`, но тоже доходят до этого роута).
+ *  Без выделенного лимита действовал только общий 100/мин на весь сайт (который к тому же общий
+ *  на ВСЕХ клиентов до находки [rate-limit-behind-proxy]) — авторизованный пользователь мог
+ *  менять `question` на каждый запрос (обходя `cache_key`) и гонять неограниченные платные
+ *  вызовы провайдера. Жёсткий лимит по аналогии с `AUTH_RATE_LIMIT` в routes/auth.ts. */
+const AI_REPORT_RATE_LIMIT = { max: 10, timeWindow: '1 minute' } as const;
+
 export const aiReportsRoutes: FastifyPluginAsyncZod<AiReportsRoutesOptions> = async (app, opts) => {
   const { config } = opts;
   const requireAuth = buildRequireAuth(config);
@@ -67,6 +75,7 @@ export const aiReportsRoutes: FastifyPluginAsyncZod<AiReportsRoutesOptions> = as
           404: apiErrorSchema,
         },
       },
+      config: { rateLimit: AI_REPORT_RATE_LIMIT },
     },
     async (req, reply) => {
       const db = requireDbOr503(config, reply, req.id);
@@ -89,7 +98,7 @@ export const aiReportsRoutes: FastifyPluginAsyncZod<AiReportsRoutesOptions> = as
       if (!profile) {
         return reply.status(404).send({ error: { message: 'Профиль рождения не найден', requestId: req.id } });
       }
-      const chart = await findNatalChartByProfile(db, profile.id);
+      const chart = await findNatalChartByProfile(db, profile.id, keyring);
       if (!chart) {
         return reply
           .status(404)

@@ -22,6 +22,7 @@ import {
   wikiSectionUrls,
   yearlyGoroskopUrls,
   zodiacHoroscopeUrls,
+  znakiZodiakaUrls,
 } from './sitemap.js';
 
 describe('compatPairUrls', () => {
@@ -90,6 +91,23 @@ describe('lunarDayUrls / humorHoroscopeUrls (Ф5)', () => {
     const urls = humorHoroscopeUrls();
     expect(urls.some((u) => u.path === '/shutochnyj-goroskop/oven')).toBe(true);
     expect(urls.some((u) => u.path === '/shutochnyj-goroskop/professiya/razrabotchik')).toBe(true);
+  });
+});
+
+describe('znakiZodiakaUrls (находка [znaki-zodiaka-404])', () => {
+  it('12 URL /znaki-zodiaka/{znak}, без дублей', () => {
+    const urls = znakiZodiakaUrls();
+    expect(urls).toHaveLength(12);
+    expect(new Set(urls.map((u) => u.path)).size).toBe(12);
+    expect(urls.some((u) => u.path === '/znaki-zodiaka/oven')).toBe(true);
+  });
+
+  it('входит и в buildAllSitemapUrls, и в goroskopyClusterUrls', () => {
+    const now = new Date(Date.UTC(2026, 0, 1));
+    const allPaths = buildAllSitemapUrls(now).map((u) => u.path);
+    const clusterPaths = goroskopyClusterUrls(now).map((u) => u.path);
+    expect(allPaths).toContain('/znaki-zodiaka/oven');
+    expect(clusterPaths).toContain('/znaki-zodiaka/oven');
   });
 });
 

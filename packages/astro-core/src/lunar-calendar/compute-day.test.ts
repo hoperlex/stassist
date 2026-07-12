@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { CALENDAR_REFERENCE_LOCATION } from '@stassist/shared';
 import { computeAstroCalendarDay } from './compute-day.js';
-import { CALENDAR_REFERENCE_LOCATION } from './reference-location.js';
 
 describe('computeAstroCalendarDay', () => {
   it('возвращает согласованный набор фактов для конкретной даты (детерминированно)', () => {

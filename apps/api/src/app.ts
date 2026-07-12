@@ -75,6 +75,15 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
     // graceful shutdown: закрываем неактивные keep-alive-соединения сразу, активные —
     // дожидаются ответа (см. верификацию Ф0: SIGTERM под нагрузкой не должен рвать ответы).
     forceCloseConnections: 'idle',
+    // Весь внешний трафик идёт через caddy (см. caddy/Caddyfile reverse_proxy) — БЕЗ trustProxy
+    // req.ip был бы адресом контейнера caddy для всех клиентов, и @fastify/rate-limit ключевал
+    // бы все запросы в одну общую корзину на весь сайт (находка [rate-limit-behind-proxy]).
+    // Именно `1`, а НЕ `true` — доверяем ровно одному хопу (caddy). `trustProxy:true` доверял бы
+    // X-Forwarded-For целиком, а атакующий мог бы подделать этот заголовок и обходить лимит;
+    // caddy/Caddyfile перезаписывает X-Forwarded-For реальным адресом сокета клиента
+    // (`header_up X-Forwarded-For {remote_host}`) ПЕРЕД проксированием, так что trustProxy:1
+    // видит именно IP клиента caddy, а не то, что клиент сам вписал бы в заголовок.
+    trustProxy: 1,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);

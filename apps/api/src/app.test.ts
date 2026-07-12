@@ -88,6 +88,39 @@ describe('secure headers', () => {
   });
 });
 
+describe('trustProxy (находка [rate-limit-behind-proxy])', () => {
+  it('req.ip берётся из X-Forwarded-For для ровно ОДНОГО хопа (адрес caddy = socket)', async () => {
+    const app = await buildApp({ config: testConfig() });
+    app.get('/__test_ip', async (req) => ({ ip: req.ip }));
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/__test_ip',
+      // remoteAddress имитирует TCP-соединение от caddy (единственный доверенный хоп).
+      remoteAddress: '10.0.0.5',
+      headers: { 'x-forwarded-for': '203.0.113.7' },
+    });
+    expect(res.json()).toEqual({ ip: '203.0.113.7' });
+    await app.close();
+  });
+
+  it('второй (недоверенный) хоп в X-Forwarded-For НЕ подменяет req.ip — только ближайший к caddy', async () => {
+    const app = await buildApp({ config: testConfig() });
+    app.get('/__test_ip', async (req) => ({ ip: req.ip }));
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/__test_ip',
+      remoteAddress: '10.0.0.5',
+      // Атакующий пытается вписать в заголовок сразу два адреса, чтобы подменить видимый IP —
+      // с trustProxy:1 доверяем только ПОСЛЕДНЕМУ (ближайшему к caddy) значению.
+      headers: { 'x-forwarded-for': '198.51.100.1, 203.0.113.7' },
+    });
+    expect(res.json()).toEqual({ ip: '203.0.113.7' });
+    await app.close();
+  });
+});
+
 describe('pino redaction', () => {
   it('не пишет Authorization в лог в открытом виде', async () => {
     const stream = new CaptureStream();

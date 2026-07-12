@@ -29,6 +29,22 @@ export const REDACT_PATHS = [
   'req.body.place.placeName',
   'req.body.place.lat',
   'req.body.place.lon',
+  // Находка [pd-leak-synastry-redaction]: calc-синастрия (`synastryCalcRequestSchema`, см.
+  // packages/shared/src/schemas/calc.ts) принимает ДВЕ карты `a`/`b` = `chartInputSchema`, каждая
+  // со СВОИМ вложенным `dateTime` (год/месяц/день/час/минута/секунда рождения) и `place`
+  // (lat/lon) — те же по чувствительности данные, что birthDate/birthTime/place.* выше, но по
+  // другим путям в теле запроса, поэтому не покрывались существующими правилами. Сейчас
+  // `serializers.req` (см. ниже) тело запроса не логирует вообще — так что практической утечки
+  // нет, но это защита-в-глубину: если логирование тела когда-нибудь включат, эти пути уже
+  // закрыты, а не открыты по умолчанию.
+  'req.body.a.dateTime',
+  'req.body.a.place',
+  'req.body.b.dateTime',
+  'req.body.b.place',
+  // birth_profiles.notes — свободный текст пользователя о человеке, легко наполняется ПД
+  // (см. находку [notes-not-encrypted], которую сознательно не трогаем в этой задаче, но
+  // редактирование в логах — дешёвый и независимый шаг защиты-в-глубину).
+  'req.body.notes',
 ];
 
 export interface LoggerOptions {

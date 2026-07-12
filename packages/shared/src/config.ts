@@ -27,6 +27,12 @@ const csvToArray = (value: string): string[] =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+/** Закоммиченный dev-дефолт `COOKIE_SECRET` — им подписывается CSRF-HMAC (см. `apps/api/src/
+ *  auth/csrf.ts`), поэтому в production он ЗАПРЕЩЁН тем же fail-fast, что JWT/PD-ключи (находка
+ *  [cookie-secret-no-fail-fast]: без этой проверки деплой с незаданным `COOKIE_SECRET` молча
+ *  подписывал бы CSRF-токены публичным секретом — атакующий, зная его, подделывает csrf_token). */
+const DEV_INSECURE_COOKIE_SECRET = 'dev-insecure-cookie-secret-change-me-please-32';
+
 /** Сырая zod-схема переменных окружения. Все поля-«для функции» — опциональны на этом уровне. */
 export const envSchema = z.object({
   NODE_ENV: nodeEnvSchema.default('development'),
@@ -35,7 +41,7 @@ export const envSchema = z.object({
   WEB_PORT: z.coerce.number().int().positive().default(3000),
   APP_URL: z.string().url().default('http://localhost:3000'),
   API_URL: z.string().url().default('http://localhost:3001'),
-  COOKIE_SECRET: z.string().min(16).default('dev-insecure-cookie-secret-change-me-please-32'),
+  COOKIE_SECRET: z.string().min(16).default(DEV_INSECURE_COOKIE_SECRET),
   CORS_ALLOWLIST: z.string().default('http://localhost:3000'),
 
   // --- Auth: подпись access JWT (EdDSA/Ed25519) и шифрование ПД (AES-256-GCM) ---
@@ -235,9 +241,16 @@ export function parseConfig(rawEnv: NodeJS.ProcessEnv = process.env): Config {
     if (env.PD_ENCRYPTION_KEY === DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64) {
       fail('auth(pd-encryption-key)', ['PD_ENCRYPTION_KEY']);
     }
+    // Находка [cookie-secret-no-fail-fast]: COOKIE_SECRET подписывает CSRF-HMAC (см. apps/api/
+    // src/auth/csrf.ts) — та же категория риска, что JWT/PD-ключи выше, дефолт публично
+    // закоммичен, поэтому такая же fail-fast-проверка, а не тихий degraded.
+    if (env.COOKIE_SECRET === DEV_INSECURE_COOKIE_SECRET) {
+      fail('auth(cookie-secret)', ['COOKIE_SECRET']);
+    }
   } else if (
     env.JWT_PRIVATE_KEY === DEV_INSECURE_JWT_PRIVATE_KEY_PEM ||
-    env.PD_ENCRYPTION_KEY === DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64
+    env.PD_ENCRYPTION_KEY === DEV_INSECURE_PD_ENCRYPTION_KEY_BASE64 ||
+    env.COOKIE_SECRET === DEV_INSECURE_COOKIE_SECRET
   ) {
     degraded.push('auth-keys(dev-default)');
   }

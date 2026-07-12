@@ -27,6 +27,7 @@ import {
   USEFUL_COMMENT_REPUTATION_POINTS,
   type CommentResponse,
   type Config,
+  type PdCipherKeyring,
   type PostResponse,
 } from '@stassist/shared';
 import { classifyUgcText } from '@stassist/llm';
@@ -64,10 +65,15 @@ export interface PostsRoutesOptions {
 
 const idParamsSchema = z.object({ id: z.string().uuid() });
 
-async function toPostResponse(db: Db, row: PostRow, viewerId: string | undefined): Promise<PostResponse> {
+async function toPostResponse(
+  db: Db,
+  row: PostRow,
+  viewerId: string | undefined,
+  keyring: PdCipherKeyring,
+): Promise<PostResponse> {
   const [authorDisplayName, chartRow, celebrity] = await Promise.all([
     getAuthorDisplayName(db, row.authorId),
-    row.chartId ? getChartById(db, row.chartId) : Promise.resolve(null),
+    row.chartId ? getChartById(db, row.chartId, keyring) : Promise.resolve(null),
     row.celebrityId ? getCelebrityById(db, row.celebrityId) : Promise.resolve(null),
   ]);
   return {
@@ -114,6 +120,7 @@ function isVisibleToViewer(status: string, moderation: string, authorId: string,
 export const postsRoutes: FastifyPluginAsyncZod<PostsRoutesOptions> = async (app, opts) => {
   const { config } = opts;
   const requireAuth = buildRequireAuth(config);
+  const keyring = getPdKeyring(config);
 
   app.get(
     '/',
@@ -122,7 +129,7 @@ export const postsRoutes: FastifyPluginAsyncZod<PostsRoutesOptions> = async (app
       const db = getDb(config);
       if (!db) return reply.send({ items: [], total: 0 });
       const { items, total } = await listPosts(db, { ...req.query, onlyApproved: true });
-      const responses = await Promise.all(items.map((r) => toPostResponse(db, r, undefined)));
+      const responses = await Promise.all(items.map((r) => toPostResponse(db, r, undefined, keyring)));
       return reply.send({ items: responses, total });
     },
   );
@@ -135,7 +142,7 @@ export const postsRoutes: FastifyPluginAsyncZod<PostsRoutesOptions> = async (app
       if (!db) return reply.send({ items: [], total: 0 });
       const userId = req.authUser!.id;
       const { items, total } = await listPosts(db, { ...req.query, authorId: userId, onlyApproved: false });
-      const responses = await Promise.all(items.map((r) => toPostResponse(db, r, userId)));
+      const responses = await Promise.all(items.map((r) => toPostResponse(db, r, userId, keyring)));
       return reply.send({ items: responses, total });
     },
   );
@@ -150,24 +157,27 @@ export const postsRoutes: FastifyPluginAsyncZod<PostsRoutesOptions> = async (app
 
       let chartId: string | null = null;
       if (req.body.kind === 'chart_review_request' && req.body.birthProfileId) {
-        const keyring = getPdKeyring(config);
         const profile = await getBirthProfile(db, userId, req.body.birthProfileId, keyring);
         if (!profile) {
           return reply.status(404).send({ error: { message: 'Профиль рождения не найден', requestId: req.id } });
         }
-        const chart = await findNatalChartByProfile(db, profile.id);
+        const chart = await findNatalChartByProfile(db, profile.id, keyring);
         if (!chart) {
           return reply.status(400).send({ error: { message: 'Натальная карта для этого профиля ещё не рассчитана', requestId: req.id } });
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- jsonb на границе БД
         const anon = anonymizeChartData(chart.data as any);
-        const anonRow = await insertAnonymizedChart(db, {
-          presetId: chart.presetId,
-          kind: chart.kind,
-          data: anon,
-          coreVersion: chart.coreVersion,
-          checksum: checksumOf(anon),
-        });
+        const anonRow = await insertAnonymizedChart(
+          db,
+          {
+            presetId: chart.presetId,
+            kind: chart.kind,
+            data: anon,
+            coreVersion: chart.coreVersion,
+            checksum: checksumOf(anon),
+          },
+          keyring,
+        );
         chartId = anonRow.id;
       }
 
@@ -186,7 +196,7 @@ export const postsRoutes: FastifyPluginAsyncZod<PostsRoutesOptions> = async (app
         autoFlags: classification.reasons,
       });
 
-      return reply.send(await toPostResponse(db, post, userId));
+      return reply.send(await toPostResponse(db, post, userId, keyring));
     },
   );
 
@@ -200,7 +210,7 @@ export const postsRoutes: FastifyPluginAsyncZod<PostsRoutesOptions> = async (app
       if (!row || !isVisibleToViewer(row.status, row.moderation, row.authorId, viewerId)) {
         return reply.status(404).send({ error: { message: 'Пост не найден', requestId: req.id } });
       }
-      return reply.send(await toPostResponse(db!, row, viewerId));
+      return reply.send(await toPostResponse(db!, row, viewerId, keyring));
     },
   );
 

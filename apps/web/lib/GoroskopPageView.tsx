@@ -35,7 +35,8 @@ export function GoroskopPageView({ data }: { data: GoroskopPageData }): React.JS
             ))}
           </Paragraph>
           <Paragraph>
-            См. также: <a href={`/goroskop/${new Date().getUTCFullYear()}/${sign.slug}`}>годовой гороскоп {sign.nameRuGenitive}</a>,{' '}
+            См. также: <a href={`/znaki-zodiaka/${sign.slug}`}>описание знака {sign.nameRuGenitive}</a>,{' '}
+            <a href={`/goroskop/${new Date().getUTCFullYear()}/${sign.slug}`}>годовой гороскоп {sign.nameRuGenitive}</a>,{' '}
             <a href="/sovmestimost">совместимость знаков</a>, <a href="/lunnyj-den/1">лунный календарь</a>.
           </Paragraph>
         </>

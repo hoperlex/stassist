@@ -71,6 +71,10 @@ export { fortunaLongitudeDeg, computeArabicPart, isDaySect, type ArabicPartResul
 // --- лунный календарь ---
 export { moonPhaseAngleDeg, moonPhaseName, nextMoonQuarter, type MoonPhaseName, type MoonPhaseEvent } from './lunar-calendar/phases.js';
 export { findLunarDay, type LunarDayResult } from './lunar-calendar/lunar-days.js';
+// Предрасчёт astro_calendar (см. doc-комментарий compute-day.ts): переиспользуется и worker'ом
+// (суточный cron), и api (ленивая генерация «при заходе» — находка [lunnyj-kalendar-empty]).
+export { computeAstroCalendarDay, type AstroCalendarDayFacts } from './lunar-calendar/compute-day.js';
+export { buildAstroCalendarWindow, dateRangeIso, type AstroCalendarWindowDay } from './lunar-calendar/build-window.js';
 
 // --- сидерика / джйотиш (про запас, см. ACCURACY.md) ---
 export { ayanamshaDeg, toSiderealDeg } from './sidereal/ayanamsha.js';

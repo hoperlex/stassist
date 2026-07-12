@@ -109,6 +109,13 @@ export function lunarDayUrls(): SitemapUrl[] {
   return LUNAR_DAY_NUMBERS.map((n) => ({ path: `/lunnyj-den/${n}`, changefreq: 'monthly' }));
 }
 
+/** `/znaki-zodiaka/{znak}` — хаб-страница знака (requirement промта Ф5 «хабы /goroskop,
+ *  /znaki-zodiaka/{znak}», находка [znaki-zodiaka-404]). 12 фиксированных URL, ЧИСТАЯ функция —
+ *  тот же паттерн, что `kamniPoZnakuUrls()` ниже. */
+export function znakiZodiakaUrls(): SitemapUrl[] {
+  return ZODIAC_SIGNS.map((sign) => ({ path: `/znaki-zodiaka/${sign.slug}`, changefreq: 'monthly' }));
+}
+
 export function humorHoroscopeUrls(): SitemapUrl[] {
   const urls: SitemapUrl[] = ZODIAC_SIGNS.map((sign) => ({ path: `/shutochnyj-goroskop/${sign.slug}`, changefreq: 'daily' }));
   for (const slug of HOROSCOPE_PROFESSION_SLUGS) urls.push({ path: `/shutochnyj-goroskop/professiya/${slug}`, changefreq: 'daily' });
@@ -191,6 +198,7 @@ export function buildAllSitemapUrls(now: Date = new Date()): SitemapUrl[] {
     ...yearlyGoroskopUrls(now),
     ...lunarDayUrls(),
     ...humorHoroscopeUrls(),
+    ...znakiZodiakaUrls(),
     ...kamniPoZnakuUrls(),
     ...wikiHubUrls(),
     ...wikiSectionUrls(),
@@ -214,7 +222,7 @@ export function calculatorsClusterUrls(now: Date = new Date()): SitemapUrl[] {
 }
 
 export function goroskopyClusterUrls(now: Date = new Date()): SitemapUrl[] {
-  return [...zodiacHoroscopeUrls(), ...yearlyGoroskopUrls(now), ...lunarDayUrls(), ...humorHoroscopeUrls()];
+  return [...zodiacHoroscopeUrls(), ...yearlyGoroskopUrls(now), ...lunarDayUrls(), ...humorHoroscopeUrls(), ...znakiZodiakaUrls()];
 }
 
 /** `stoneSlugs` — реальные слаги камней из БД (динамический контент, см. заголовок раздела Ф6). */

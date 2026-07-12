@@ -21,20 +21,34 @@ www.{$CADDY_DOMAIN:localhost} {
 
 	encode gzip zstd
 
+	# X-Forwarded-For ПЕРЕЗАПИСЫВАЕТСЯ реальным адресом сокета клиента (не дописывается к тому,
+	# что клиент сам мог прислать) — иначе api (Fastify с trustProxy:1, см. apps/api/src/app.ts)
+	# доверял бы одному хопу спереди, но этим хопом мог бы оказаться подделанный клиентский
+	# заголовок, а не caddy. Без этой перезаписи @fastify/rate-limit ключует все запросы по IP
+	# контейнера caddy (единая корзина на весь сайт) либо — того хуже — по спуфящемуся заголовку
+	# (находка [rate-limit-behind-proxy]).
 	handle /healthz {
-		reverse_proxy api:3001
+		reverse_proxy api:3001 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle /readyz {
-		reverse_proxy api:3001
+		reverse_proxy api:3001 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle /metrics {
-		reverse_proxy api:3001
+		reverse_proxy api:3001 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle /api/* {
-		reverse_proxy api:3001
+		reverse_proxy api:3001 {
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 
 	handle {

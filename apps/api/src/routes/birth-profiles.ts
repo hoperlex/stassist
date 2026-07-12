@@ -74,7 +74,7 @@ export const birthProfilesRoutes: FastifyPluginAsync<
         ? await getCalcPresetById(db, req.body.presetId)
         : await getDefaultSystemPreset(db);
       if (presetRow) {
-        await computeAndStoreNatalChart(db, profile, rowToCalcPreset(presetRow), presetRow.id);
+        await computeAndStoreNatalChart(db, profile, rowToCalcPreset(presetRow), presetRow.id, keyring);
       } else {
         req.log.warn('birth-profiles: не найден ни запрошенный, ни системный дефолтный calc_preset — карта не рассчитана');
       }
@@ -117,7 +117,7 @@ export const birthProfilesRoutes: FastifyPluginAsync<
       if (!profile) {
         return reply.status(404).send({ error: { message: 'Профиль не найден', requestId: req.id } });
       }
-      const chart = await findNatalChartByProfile(db, profile.id);
+      const chart = await findNatalChartByProfile(db, profile.id, keyring);
       if (!chart) {
         return reply.status(404).send({ error: { message: 'Натальная карта ещё не рассчитана', requestId: req.id } });
       }

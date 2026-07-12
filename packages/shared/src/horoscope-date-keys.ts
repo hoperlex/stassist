@@ -10,7 +10,9 @@
  * дублирования критична для корректности, а не только для DRY).
  *
  * Работает по календарным UTC-суткам (без часового пояса) — тот же принцип, что и остальной
- * astro_calendar-контур (см. apps/worker/src/astro-calendar/build-window.ts `dateRangeIso`).
+ * astro_calendar-контур (см. packages/astro-core/src/lunar-calendar/build-window.ts
+ * `dateRangeIso` — по той же причине вынесен в общий пакет, находка [lunnyj-kalendar-empty]:
+ * worker (cron) и api (ленивая генерация) обязаны считать один и тот же день ОДИНАКОВО).
  */
 
 export function toDateKeyDay(date: Date): string {

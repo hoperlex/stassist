@@ -52,6 +52,12 @@ export interface PersonalHoroscopeRoutesOptions {
 /** См. doc-комментарий файла — та же заглушка-паттерн, что PREMIUM_REPORTS_ENABLED в routes/ai-reports.ts. */
 const PERSONAL_HOROSCOPE_FULL_ENABLED = false;
 
+/** Находка [llm-endpoint-no-rate-limit]: тот же класс риска, что `AI_REPORT_RATE_LIMIT` в
+ *  routes/ai-reports.ts — этот роут МОЖЕТ дойти до `ports.llm.generate` (buildPersonalHoroscopeFull),
+ *  как только `PERSONAL_HOROSCOPE_FULL_ENABLED` включат; выделенный лимит — заранее, чтобы не
+ *  полагаться только на общий 100/мин. */
+const PERSONAL_HOROSCOPE_RATE_LIMIT = { max: 20, timeWindow: '1 minute' } as const;
+
 const querySchema = z.object({
   birthProfileId: z.string().uuid(),
   period: personalHoroscopePeriodSchema.default('day'),
@@ -68,7 +74,10 @@ export const personalHoroscopeRoutes: FastifyPluginAsyncZod<PersonalHoroscopeRou
 
   app.get(
     '/',
-    { schema: { querystring: querySchema, response: { 200: personalHoroscopeResponseSchema, 404: apiErrorSchema } } },
+    {
+      schema: { querystring: querySchema, response: { 200: personalHoroscopeResponseSchema, 404: apiErrorSchema } },
+      config: { rateLimit: PERSONAL_HOROSCOPE_RATE_LIMIT },
+    },
     async (req, reply) => {
       const db = requireDbOr503(config, reply, req.id);
       if (!db) return;
@@ -80,7 +89,7 @@ export const personalHoroscopeRoutes: FastifyPluginAsyncZod<PersonalHoroscopeRou
       if (!profile) {
         return reply.status(404).send({ error: { message: 'Профиль рождения не найден', requestId: req.id } });
       }
-      const chart = await findNatalChartByProfile(db, profile.id);
+      const chart = await findNatalChartByProfile(db, profile.id, keyring);
       if (!chart) {
         return reply.status(404).send({ error: { message: 'Натальная карта профиля ещё не рассчитана', requestId: req.id } });
       }

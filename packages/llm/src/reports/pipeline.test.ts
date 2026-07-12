@@ -91,16 +91,96 @@ describe('generateReport — конвейер (со StubLlmProvider, без се
     expect(result.factKeys.some((k) => k.startsWith('asc_in_sign:'))).toBe(false);
   });
 
-  it('провокационный ответ LLM → flagged=true, текст заменён мягким отказом', async () => {
+  it('провокационный ОТВЕТ LLM (сам вопрос безобиден) → flagged=true, текст заменён мягким отказом', async () => {
+    // Вопрос НАМЕРЕННО безобидный (не матчит detectForbidden) — тест проверяет именно
+    // ПОСТ-фильтр (ответ LLM), а не входной прегейт (см. отдельный describe ниже про
+    // находку [report-input-no-prefilter]).
     const result = await generateReport({
       chartData: buildTestChartData(),
       kind: 'custom_question',
-      question: 'когда я умру',
+      question: 'какие годы моей жизни будут наиболее удачными в карьере?',
       llm: fakeLlm('Отвечаю: когда я умру, вы узнаете точную дату из карты.'),
       chunkRepository: new InMemoryChunkRepository([]),
     });
     expect(result.flagged).toBe(true);
     expect(result.contentMd).toContain('обратитесь к психологу');
+    expect(result.flagReasons.some((r) => r.startsWith('forbidden:'))).toBe(true);
+  });
+
+  describe('находка [report-input-no-prefilter]: запрещённый ВХОДНОЙ вопрос гейтится ДО вызова LLM', () => {
+    function countingLlm(text: string): { llm: LlmProvider; calls: () => number } {
+      let calls = 0;
+      return {
+        llm: {
+          name: 'counting',
+          async generate(req: LlmGenerateRequest): Promise<LlmGenerateResult> {
+            calls += 1;
+            return { text, provider: 'counting', tokensIn: Math.ceil(req.prompt.length / 4), tokensOut: Math.ceil(text.length / 4) };
+          },
+        },
+        calls: () => calls,
+      };
+    }
+
+    it('custom_question с запрещённым вопросом → LLM НЕ вызывается, flagged=true, мягкий отказ', async () => {
+      const { llm, calls } = countingLlm('этот текст не должен попасть в ответ');
+      const result = await generateReport({
+        chartData: buildTestChartData(),
+        kind: 'custom_question',
+        question: 'когда я умру',
+        llm,
+        chunkRepository: new InMemoryChunkRepository([]),
+      });
+      expect(calls()).toBe(0);
+      expect(result.flagged).toBe(true);
+      expect(result.provider).toBe('filter');
+      expect(result.tokensIn).toBe(0);
+      expect(result.tokensOut).toBe(0);
+      expect(result.contentMd).toContain('обратитесь к психологу');
+      expect(result.contentMd).not.toContain('этот текст не должен попасть в ответ');
+      expect(result.flagReasons).toEqual(['forbidden-input:death']);
+    });
+
+    it('order с запрещённым вопросом (мед. тема) → LLM НЕ вызывается, flagged=true', async () => {
+      const { llm, calls } = countingLlm('не должно попасть в ответ');
+      const result = await generateReport({
+        chartData: buildTestChartData(),
+        kind: 'order',
+        question: 'поставь мне диагноз по карте',
+        llm,
+        chunkRepository: new InMemoryChunkRepository([]),
+      });
+      expect(calls()).toBe(0);
+      expect(result.flagged).toBe(true);
+      expect(result.contentMd).toContain('обратитесь к врачу');
+    });
+
+    it('custom_question с БЕЗОБИДНЫМ вопросом → LLM вызывается как обычно (прегейт не мешает легитимному пути)', async () => {
+      const { llm, calls } = countingLlm('Обычный ответ по карте.');
+      const result = await generateReport({
+        chartData: buildTestChartData(),
+        kind: 'custom_question',
+        question: 'как мне лучше развивать карьеру?',
+        llm,
+        chunkRepository: new InMemoryChunkRepository([]),
+      });
+      expect(calls()).toBe(1);
+      expect(result.flagged).toBe(false);
+      expect(result.contentMd).toContain('Обычный ответ по карте');
+    });
+
+    it('big3 (НЕ входит в список свободного текста) с «запрещённым» question — прегейт НЕ применяется, LLM вызывается', async () => {
+      const { llm, calls } = countingLlm('big3 не читает question вообще, но прегейт не должен ложно сработать');
+      const result = await generateReport({
+        chartData: buildTestChartData(),
+        kind: 'big3',
+        question: 'когда я умру',
+        llm,
+        chunkRepository: new InMemoryChunkRepository([]),
+      });
+      expect(calls()).toBe(1);
+      expect(result.provider).toBe('counting');
+    });
   });
 
   it('кэш: повторный вызов с теми же входами не меняет промт-версию/корпус-версию (для cache_key)', async () => {

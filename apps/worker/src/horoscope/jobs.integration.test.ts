@@ -11,7 +11,7 @@ import { StubLlmProvider, ZODIAC_SIGN_EN_SLUGS, type LlmGenerateRequest, type Ll
 import { extractZachin } from '@stassist/llm';
 import pino from 'pino';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
-import { buildAstroCalendarWindow } from '../astro-calendar/build-window.js';
+import { buildAstroCalendarWindow } from '@stassist/astro-core';
 import { upsertAstroCalendarWindow } from '../astro-calendar/upsert-window.js';
 import { CALENDAR_REFERENCE_LOCATION } from '../astro-calendar/reference-location.js';
 import { checkDailyHoroscopeReadiness, runHoroscopePipeline, runDailyZodiacJob, mskNow } from './jobs.js';

@@ -3,6 +3,10 @@
  * добавляет `ingresses` — тела, сменившие знак Луны/планет относительно ПРЕДЫДУЩЕГО
  * предрасчитанного дня (упрощение MVP: сравнение полуденных «снимков», см. compute-day.ts).
  * ЧИСТАЯ функция — принимает список дат, ничего не знает о БД/сети.
+ *
+ * Живёт в `@stassist/astro-core` — см. doc-комментарий compute-day.ts про переиспользование
+ * между worker (суточный cron) и api (ленивая генерация «при заходе», находка
+ * [lunnyj-kalendar-empty]).
  */
 import type { ReferenceLocation } from '@stassist/shared';
 import { computeAstroCalendarDay, type AstroCalendarDayFacts } from './compute-day.js';

@@ -71,6 +71,14 @@ export const webhooksRoutes: FastifyPluginAsyncZod<WebhooksRoutesOptions> = asyn
         if (!verifyWebhookSignature(req.rawBody ?? '', signature, config.payments.webhookSecret)) {
           return reply.status(401).send({ error: { message: 'Неверная подпись вебхука' } });
         }
+      } else if (config.isProduction) {
+        // Находка [webhook-fail-open]: без секрета подпись было НЕЧЕМ проверить, и любой
+        // неаутентифицированный POST с `payment.succeeded` применялся как настоящий платёж
+        // (выдача подписки/пометка заказа оплаченным) — fail-open. В production при
+        // отсутствии секрета вебхук ОТКЛОНЯЕТСЯ (fail-closed): лучше временно не принимать
+        // платёжные уведомления, чем провести платёж по неаутентифицированному запросу.
+        req.log.error('webhook: YOOKASSA_WEBHOOK_SECRET не задан в production — вебхук отклонён (fail-closed)');
+        return reply.status(401).send({ error: { message: 'Вебхук отклонён: подпись не может быть проверена' } });
       }
 
       const parsed = yookassaWebhookEventSchema.safeParse(req.body);

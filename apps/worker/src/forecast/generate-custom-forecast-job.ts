@@ -13,7 +13,14 @@
 import { eq } from 'drizzle-orm';
 import type { Logger } from 'pino';
 import { users, type Db } from '@stassist/db';
-import { customForecastSubjectSchema, type ChartData, type LlmProvider, type Mailer, type ObjectStorage } from '@stassist/shared';
+import {
+  customForecastSubjectSchema,
+  type ChartData,
+  type LlmProvider,
+  type Mailer,
+  type ObjectStorage,
+  type PdCipherKeyring,
+} from '@stassist/shared';
 import {
   buildElectivesContent,
   buildEventDateContent,
@@ -55,15 +62,16 @@ export interface CustomForecastJobDeps {
   llm: LlmProvider;
   storage: ObjectStorage;
   mailer: Mailer;
+  keyring: PdCipherKeyring;
   appUrl: string;
   logger: Logger;
 }
 
 export async function processOneCustomForecastOrder(deps: CustomForecastJobDeps, order: OrderRow): Promise<void> {
-  const { db, llm, storage, mailer, appUrl, logger } = deps;
+  const { db, llm, storage, mailer, keyring, appUrl, logger } = deps;
   try {
     const subject = customForecastSubjectSchema.parse(order.subject);
-    const chart = await findNatalChartByBirthProfileId(db, subject.birthProfileId);
+    const chart = await findNatalChartByBirthProfileId(db, subject.birthProfileId, keyring);
     if (!chart) {
       throw new Error(`натальная карта не найдена для профиля ${subject.birthProfileId} — пересчитайте профиль рождения`);
     }

@@ -11,7 +11,7 @@ import { Pool } from 'pg';
 import { createDb, resolvePgPoolConfig, resolvePgSsl } from '@stassist/db';
 import { createPorts, type Config, type LlmProvider } from '@stassist/shared';
 import { createLlmProviderChain } from '@stassist/llm';
-import { buildAstroCalendarWindow } from './astro-calendar/build-window.js';
+import { buildAstroCalendarWindow } from '@stassist/astro-core';
 import { upsertAstroCalendarWindow } from './astro-calendar/upsert-window.js';
 import { CALENDAR_REFERENCE_LOCATION } from './astro-calendar/reference-location.js';
 import { processPendingShares } from './share/process-pending-shares.js';
@@ -181,7 +181,7 @@ export class Worker {
     // Ф4: генерация ИИ-разборов (ai_reports.status='queued' → 'generating' → 'done'/'failed'/'flagged').
     await boss.createQueue(AI_REPORT_QUEUE);
     await boss.work(AI_REPORT_QUEUE, async () => {
-      const processed = await processQueuedAiReports(db, llmProvider, chunkRepository, this.logger);
+      const processed = await processQueuedAiReports(db, llmProvider, chunkRepository, this.logger, getPdKeyring(this.config));
       if (processed > 0) this.logger.info({ processed }, 'ai-report-generate: разборы обработаны');
     });
     await boss.schedule(AI_REPORT_QUEUE, AI_REPORT_CRON);
@@ -228,6 +228,7 @@ export class Worker {
         llm: llmProvider,
         storage: ports.storage,
         mailer: ports.mailer,
+        keyring: getPdKeyring(this.config),
         appUrl: this.config.appUrl,
         logger: this.logger,
       });

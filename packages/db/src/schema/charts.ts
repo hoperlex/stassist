@@ -1,7 +1,12 @@
 /**
- * charts — кэш расчётов (см. docs/architecture/22-модель-данных.md §2). `data` — сериализованный
- * `ChartData` (packages/shared/src/schemas/chart.ts), пересчитывается при смене `coreVersion`
- * (см. packages/astro-core ASTRO_CORE_VERSION).
+ * charts — кэш расчётов (см. docs/architecture/22-модель-данных.md §2). `data` — ШИФРТЕКСТ
+ * (`encryptPd(JSON.stringify(ChartData | SharePositions), keyring)`, см. `apps/api/src/
+ * repositories/charts-repository.ts`), НЕ сырой jsonb-объект: `ChartData.input` содержит точные
+ * дату/время/координаты рождения — те же значения, что `birth_profiles` шифрует AES-256-GCM;
+ * хранить их открытым текстом рядом с шифртекстом обнуляло бы защиту 152-ФЗ (находка
+ * [pd-leak-charts-data]). Колонка остаётся `jsonb` (не `text`) без миграции — jsonb прекрасно
+ * хранит и строковый JSON-литерал; расшифровка/дешифровка — строго на границе репозитория,
+ * пересчитывается при смене `coreVersion` (см. packages/astro-core ASTRO_CORE_VERSION).
  *
  * `birthProfileId` намеренно nullable (см. _work/build/findings/cross.md, пункт
  * «схема-vs-функциональность» про Ф7 posts.chart_id → анонимные копии карт без профиля) —
@@ -26,7 +31,8 @@ export const charts = pgTable('charts', {
   refChartId: uuid('ref_chart_id'),
   /** Момент для транзитов/соляров/лунаров — null для натала. */
   moment: timestamp('moment', { withTimezone: true }),
-  /** `ChartData` целиком (см. packages/shared/src/schemas/chart.ts). */
+  /** `ChartData`/`SharePositions` целиком, ЗАШИФРОВАНО (см. doc-комментарий выше и
+   *  packages/shared/src/schemas/chart.ts). */
   data: jsonb('data').notNull(),
   coreVersion: text('core_version').notNull(),
   /** sha256 от `data` — для быстрой проверки «не протухло ли» без парсинга jsonb. */

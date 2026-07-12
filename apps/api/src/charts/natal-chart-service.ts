@@ -7,7 +7,7 @@
 import { createHash } from 'node:crypto';
 import { computeChart, ASTRO_CORE_VERSION } from '@stassist/astro-core';
 import type { Db } from '@stassist/db';
-import type { BirthProfileResponse, CalcPreset } from '@stassist/shared';
+import type { BirthProfileResponse, CalcPreset, PdCipherKeyring } from '@stassist/shared';
 import { buildChartInput } from './build-chart-input.js';
 import { insertChart, type ChartRow } from '../repositories/charts-repository.js';
 
@@ -20,15 +20,20 @@ export async function computeAndStoreNatalChart(
   profile: BirthProfileResponse,
   preset: CalcPreset,
   presetId: string,
+  keyring: PdCipherKeyring,
 ): Promise<ChartRow> {
   const chartInput = buildChartInput(profile, preset);
   const data = computeChart(chartInput);
-  return insertChart(db, {
-    birthProfileId: profile.id,
-    presetId,
-    kind: 'natal',
-    data,
-    coreVersion: ASTRO_CORE_VERSION,
-    checksum: checksumOf(data),
-  });
+  return insertChart(
+    db,
+    {
+      birthProfileId: profile.id,
+      presetId,
+      kind: 'natal',
+      data,
+      coreVersion: ASTRO_CORE_VERSION,
+      checksum: checksumOf(data),
+    },
+    keyring,
+  );
 }
