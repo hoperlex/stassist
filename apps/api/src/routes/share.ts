@@ -19,6 +19,7 @@ import {
   chartShareResponseSchema,
   type Config,
 } from '@stassist/shared';
+import { classifyUgcText } from '@stassist/llm';
 import { getDb } from '../db.js';
 import { getPorts } from '../route-context.js';
 import { findChartShareBySlug, upsertChartShare } from '../repositories/chart-shares-repository.js';
@@ -39,7 +40,7 @@ export const shareRoutes: FastifyPluginAsyncZod<ShareRoutesOptions> = async (app
     {
       schema: {
         body: chartShareCreateRequestSchema,
-        response: { 200: chartShareResponseSchema, 503: apiErrorSchema },
+        response: { 200: chartShareResponseSchema, 400: apiErrorSchema, 503: apiErrorSchema },
       },
       config: { rateLimit: SHARE_RATE_LIMIT },
     },
@@ -49,6 +50,18 @@ export const shareRoutes: FastifyPluginAsyncZod<ShareRoutesOptions> = async (app
         return reply
           .status(503)
           .send({ error: { message: 'Шеринг временно недоступен (БД не сконфигурирована)', requestId: req.id } });
+      }
+      // Ф9: caption — только у transit_day-карточек (см. shareCaptionSchema); публичный текст,
+      // поэтому прогоняется через тот же классификатор, что и UGC (эндпоинт публичный, без auth).
+      if (req.body.caption !== undefined && req.body.kind !== 'transit_day') {
+        return reply
+          .status(400)
+          .send({ error: { message: 'caption поддерживается только для карточек «Небо дня» (transit_day)', requestId: req.id } });
+      }
+      if (req.body.caption && classifyUgcText(req.body.caption).flagged) {
+        return reply
+          .status(400)
+          .send({ error: { message: 'Подпись карточки не прошла автомодерацию — переформулируйте текст', requestId: req.id } });
       }
       const slug = computeShareSlug(req.body);
       const row = await upsertChartShare(db, slug, req.body);
@@ -81,6 +94,7 @@ export const shareRoutes: FastifyPluginAsyncZod<ShareRoutesOptions> = async (app
         positions: row.positions as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         positionsB: (row.positionsB as any) ?? null,
+        caption: row.caption,
         theme: row.theme === 'dark' ? 'dark' : 'light',
         ogImageReady: Boolean(row.ogImageKey),
       });

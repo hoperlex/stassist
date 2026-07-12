@@ -23,6 +23,9 @@ export * from './schemas/billing.js';
 export * from './schemas/quiz.js';
 export * from './schemas/paywall.js';
 
+// Ф9: соцраздел «Созвездие» / «Небо дня» (см. docs/strategy/11-соцраздел-созвездие.md).
+export * from './schemas/sky.js';
+
 export * from './crypto/pd-cipher.js';
 export * from './legal/doc-versions.js';
 export * from './legal/community-rules.js';

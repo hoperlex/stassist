@@ -22,8 +22,20 @@ import { z } from 'zod';
 // Посты
 // ---------------------------------------------------------------------------------------------
 
-export const postKindSchema = z.enum(['chart_review_request', 'discussion', 'gallery']);
+/** Все виды постов, включая системные. `sky_day` (Ф9) — пост-тред «Небо дня», создаётся ТОЛЬКО
+ *  worker'ом от имени Астры (см. apps/worker/src/sky); через API не создаётся — для
+ *  пользовательского ввода используется `userPostKindSchema` ниже. */
+export const postKindSchema = z.enum(['chart_review_request', 'discussion', 'gallery', 'sky_day']);
 export type PostKind = z.infer<typeof postKindSchema>;
+
+/** Виды постов, доступные пользователю в POST /posts (без системного `sky_day`). */
+export const userPostKindSchema = z.enum(['chart_review_request', 'discussion', 'gallery']);
+export type UserPostKind = z.infer<typeof userPostKindSchema>;
+
+/** Маркировка автора UGC (Ф9): 'ai' — контент Астры, в UI ВСЕГДА с бейджем «ИИ»
+ *  (см. packages/db/src/schema/enums.ts ugcAuthorKindEnum — юридическое требование маркировки). */
+export const ugcAuthorKindSchema = z.enum(['human', 'ai']);
+export type UgcAuthorKind = z.infer<typeof ugcAuthorKindSchema>;
 
 export const postStatusSchema = z.enum(['published', 'hidden', 'deleted']);
 export type PostStatus = z.infer<typeof postStatusSchema>;
@@ -37,7 +49,7 @@ export type PostSort = z.infer<typeof postSortSchema>;
 /** Обезличенная карта, прикреплённая к посту (см. `SharePositions` в calc.ts) — идентичная форма
  *  переиспользуется, чтобы фронт (ChartWheel) не знал разницы между шерингом и постом. */
 export const postCreateRequestSchema = z.object({
-  kind: postKindSchema,
+  kind: userPostKindSchema,
   title: z.string().trim().min(3).max(160),
   bodyMd: z.string().trim().min(1).max(20000),
   /** Только для kind='chart_review_request' — свой профиль рождения, бэкенд анонимизирует. */
@@ -51,6 +63,8 @@ export const postResponseSchema = z.object({
   id: z.string().uuid(),
   authorId: z.string().uuid(),
   authorDisplayName: z.string().nullable(),
+  /** default('human') — обратная совместимость уже сохранённых ответов/тестов до Ф9. */
+  authorKind: ugcAuthorKindSchema.default('human'),
   kind: postKindSchema,
   title: z.string(),
   bodyMd: z.string(),
@@ -96,6 +110,8 @@ export const commentResponseSchema = z.object({
   postId: z.string().uuid(),
   authorId: z.string().uuid(),
   authorDisplayName: z.string().nullable(),
+  /** См. postResponseSchema.authorKind. */
+  authorKind: ugcAuthorKindSchema.default('human'),
   parentId: z.string().uuid().nullable(),
   bodyMd: z.string(),
   status: postStatusSchema,

@@ -11,7 +11,7 @@
  * реализовано как поле здесь, а не отдельная таблица (1:1 с комментарием, простое булево-по-факту).
  */
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { ugcModerationStatusEnum, ugcStatusEnum } from './enums.js';
+import { ugcAuthorKindEnum, ugcModerationStatusEnum, ugcStatusEnum } from './enums.js';
 import { posts } from './posts.js';
 import { users } from './users.js';
 
@@ -23,6 +23,8 @@ export const comments = pgTable('comments', {
   authorId: uuid('author_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  /** Ф9: 'ai' — контент Астры, всегда с бейджем «ИИ» в UI (см. ugcAuthorKindEnum в enums.ts). */
+  authorKind: ugcAuthorKindEnum('author_kind').notNull().default('human'),
   /** self-FK — null у комментариев 1-го уровня; см. заголовок файла про ограничение глубины=2. */
   parentId: uuid('parent_id'),
   bodyMd: text('body_md').notNull(),

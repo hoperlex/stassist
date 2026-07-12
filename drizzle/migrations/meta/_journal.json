@@ -64,6 +64,13 @@
       "when": 1783855995916,
       "tag": "0008_f8_billing_marketing",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783892882534,
+      "tag": "0009_f9_sozvezdie_nebo_dnya",
+      "breakpoints": true
     }
   ]
 }

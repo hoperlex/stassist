@@ -6,11 +6,13 @@
 import { createHash } from 'node:crypto';
 import type { ChartShareCreateRequest } from '@stassist/shared';
 
-export function computeShareSlug(payload: Pick<ChartShareCreateRequest, 'kind' | 'positions' | 'positionsB'>): string {
+export function computeShareSlug(payload: Pick<ChartShareCreateRequest, 'kind' | 'positions' | 'positionsB' | 'caption'>): string {
   const canonical = JSON.stringify({
     kind: payload.kind,
     positions: payload.positions,
     positionsB: payload.positionsB ?? null,
+    // Ф9: caption — часть содержимого карточки transit_day (другая подпись = другая карточка/PNG).
+    caption: payload.caption ?? null,
   });
   return createHash('sha256').update(canonical).digest('hex').slice(0, 16);
 }

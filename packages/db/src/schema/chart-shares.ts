@@ -29,8 +29,13 @@ export const chartShares = pgTable('chart_shares', {
   kind: shareKindEnum('kind').notNull(),
   /** `SharePositions` (карта A) — см. packages/shared/src/schemas/calc.ts. */
   positions: jsonb('positions').notNull(),
-  /** `SharePositions` карты B — только для kind='synastry'. */
+  /** `SharePositions` карты B — kind='synastry' (вторая наталка) и kind='transit_day'
+   *  (транзитный снапшот дня из `sky_days.transit_positions`, Ф9). */
   positionsB: jsonb('positions_b'),
+  /** Ф9, только kind='transit_day': текст плашки отклика («В точку · Марс □ Солнце, орб 1.2°»).
+   *  Без ПД по построению (аспект + вердикт); входит в канонический JSON хэша слага
+   *  (apps/api/src/share/slug.ts) и прогоняется через classifyUgcText при создании. */
+  caption: text('caption'),
   theme: text('theme').notNull().default('light'),
   /** Ключ PNG в ObjectStorage (`og/<slug>.png`) — null, пока не сгенерирован. */
   ogImageKey: text('og_image_key'),

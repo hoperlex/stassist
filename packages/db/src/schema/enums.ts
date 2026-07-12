@@ -57,8 +57,10 @@ export const chartKindEnum = pgEnum('chart_kind', [
   'horary',
 ]);
 
-/** См. `shareKindSchema` в packages/shared/src/schemas/calc.ts (Ф3, `chart_shares`). */
-export const shareKindEnum = pgEnum('share_kind', ['natal', 'synastry']);
+/** См. `shareKindSchema` в packages/shared/src/schemas/calc.ts (Ф3, `chart_shares`).
+ *  `transit_day` — Ф9 «Созвездие»: share-карточка отклика «Небо дня» (натал в `positions`,
+ *  транзитный снапшот дня в `positions_b` — та же механика двойного колеса, что synastry). */
+export const shareKindEnum = pgEnum('share_kind', ['natal', 'synastry', 'transit_day']);
 
 // -------------------------------------------------------------------------------------------
 // Ф4: ИИ-конвейер, RAG-корпус, вики (см. docs/architecture/22-модель-данных.md §3, §6).
@@ -193,8 +195,14 @@ export const stoneStatusEnum = pgEnum('stone_status', ['draft', 'reviewed']);
 // по значениям, эти pgEnum — просто материализация тех же строк в БД).
 // -------------------------------------------------------------------------------------------
 
-/** См. `postKindSchema`. */
-export const postKindEnum = pgEnum('post_kind', ['chart_review_request', 'discussion', 'gallery']);
+/** См. `postKindSchema`. `sky_day` — Ф9: системный пост-тред дня «Небо дня» (создаётся ТОЛЬКО
+ *  worker'ом от имени Астры, через API не создаётся — см. `userPostKindSchema` в community.ts). */
+export const postKindEnum = pgEnum('post_kind', [
+  'chart_review_request',
+  'discussion',
+  'gallery',
+  'sky_day',
+]);
 
 /** См. `postStatusSchema` — общий для posts/comments (оба используют один жизненный цикл
  *  видимости: published → hidden (модератор/жалоба) → deleted (автор/модератор)). */
@@ -278,3 +286,19 @@ export const experimentEventKindEnum = pgEnum('experiment_event_kind', ['exposed
 
 /** См. `emailOptoutScopeSchema`. */
 export const emailOptoutScopeEnum = pgEnum('email_optout_scope', ['all', 'digest', 'marketing']);
+
+// -------------------------------------------------------------------------------------------
+// Ф9: соцраздел «Созвездие» / «Небо дня» (см. docs/strategy/11-соцраздел-созвездие.md,
+// packages/shared/src/schemas/sky.ts — единый источник правды по значениям).
+// -------------------------------------------------------------------------------------------
+
+/** См. `skyCheckinVerdictSchema` — отметка чек-ина «как прожилось событие дня». */
+export const skyCheckinVerdictEnum = pgEnum('sky_checkin_verdict', ['hit', 'partial', 'miss']);
+
+/**
+ * Маркировка автора UGC: `ai` — контент ИИ-участницы «Астры» (решение заказчика 13.07.2026:
+ * ИИ в сообществе допущен ТОЛЬКО с явной маркировкой, см. §1/§9 док. 11). Колонка данных,
+ * а не UI-договорённость: юридическая прослеживаемость и невозможность «размаркировать»
+ * ИИ-контент правкой фронта.
+ */
+export const ugcAuthorKindEnum = pgEnum('ugc_author_kind', ['human', 'ai']);

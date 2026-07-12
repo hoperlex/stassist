@@ -2,7 +2,7 @@
  * posts — лента коммьюнити (Ф7, M8). `chartId`/`celebrityId` — см. doc-комментарий
  * packages/db/src/schema/posts.ts.
  */
-import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, ne, sql } from 'drizzle-orm';
 import { celebrities, posts, users, type Db } from '@stassist/db';
 import type { PostKind, PostSort, UgcModerationStatus, UgcViolationReason } from '@stassist/shared';
 
@@ -62,6 +62,9 @@ export interface ListPostsParams {
 export async function listPosts(db: Db, params: ListPostsParams): Promise<{ items: PostRow[]; total: number }> {
   const conditions = [
     params.kind ? eq(posts.kind, params.kind) : undefined,
+    // Ф9: системные треды «Небо дня» живут на своей странице (/nebo-dnya) — в общей ленте их нет,
+    // если только их не запросили явно через kind=sky_day.
+    !params.kind ? ne(posts.kind, 'sky_day') : undefined,
     params.authorId ? eq(posts.authorId, params.authorId) : undefined,
     params.onlyApproved ? eq(posts.status, 'published') : undefined,
     params.onlyApproved ? eq(posts.moderation, 'approved') : undefined,

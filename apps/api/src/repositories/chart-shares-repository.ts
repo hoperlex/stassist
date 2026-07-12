@@ -22,6 +22,7 @@ export async function upsertChartShare(
       kind: input.kind,
       positions: input.positions,
       positionsB: input.positionsB ?? null,
+      caption: input.caption ?? null,
       theme: input.theme,
     })
     .onConflictDoNothing({ target: chartShares.slug })

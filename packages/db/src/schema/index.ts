@@ -42,6 +42,11 @@ export * from './friendships.js';
 export * from './reports-ugc.js';
 export * from './reputation.js';
 
+// Ф9: соцраздел «Созвездие» / «Небо дня» (см. docs/strategy/11-соцраздел-созвездие.md).
+export * from './sky-days.js';
+export * from './sky-checkins.js';
+export * from './sky-streaks.js';
+
 // Ф8: биллинг, эксперименты/пейвол, квиз-онбординг, email-отписки (см. docs/architecture/
 // 22-модель-данных.md §4, §7б, docs/roadmap/prompts/f8-монетизация-и-запуск.md).
 export * from './plans.js';

@@ -92,8 +92,15 @@ export type CompatPageResponse = z.infer<typeof compatPageResponseSchema>;
 // [internal-completeness] «OG-шеринг без постоянного URL».
 // ---------------------------------------------------------------------------------------------
 
-export const shareKindSchema = z.enum(['natal', 'synastry']);
+/** `transit_day` (Ф9 «Созвездие») — share-карточка отклика «Небо дня»: натал пользователя в
+ *  `positions`, транзитный снапшот дня (`sky_days.transit_positions`) в `positionsB`,
+ *  подпись отклика — в `caption`. См. docs/strategy/11-соцраздел-созвездие.md §3. */
+export const shareKindSchema = z.enum(['natal', 'synastry', 'transit_day']);
 export type ShareKind = z.infer<typeof shareKindSchema>;
+
+/** Подпись плашки отклика (только kind='transit_day'): «В точку · Марс □ Солнце, орб 1.2°».
+ *  Без ПД по построению; на бэке дополнительно прогоняется через classifyUgcText. */
+export const shareCaptionSchema = z.string().trim().min(1).max(120);
 
 /** Обезличенный срез ChartData — то, что реально попадает в `chart_shares` (без input/даты/места). */
 export const sharePositionsSchema = z.object({
@@ -143,8 +150,10 @@ export function anonymizeChartData(data: z.infer<typeof chartDataSchema>): Share
 export const chartShareCreateRequestSchema = z.object({
   kind: shareKindSchema,
   positions: sharePositionsSchema,
-  /** Для synastry — вторая карта (первая идёт в `positions`). */
+  /** Для synastry — вторая карта; для transit_day — транзитный снапшот дня. */
   positionsB: sharePositionsSchema.optional(),
+  /** Только для transit_day — см. shareCaptionSchema. */
+  caption: shareCaptionSchema.optional(),
   theme: z.enum(['light', 'dark']).default('light'),
 });
 export type ChartShareCreateRequest = z.infer<typeof chartShareCreateRequestSchema>;
@@ -162,6 +171,8 @@ export const chartShareDetailsResponseSchema = z.object({
   kind: shareKindSchema,
   positions: sharePositionsSchema,
   positionsB: sharePositionsSchema.nullable(),
+  /** Только для transit_day (см. shareCaptionSchema), иначе null. */
+  caption: z.string().nullable().default(null),
   theme: z.enum(['light', 'dark']),
   ogImageReady: z.boolean(),
 });

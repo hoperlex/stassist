@@ -53,6 +53,7 @@ import { promoCodesRoutes } from './routes/promo-codes.js';
 import { quizRoutes } from './routes/quiz.js';
 import { paywallRoutes } from './routes/paywall.js';
 import { emailOptoutsRoutes } from './routes/email-optouts.js';
+import { skyRoutes } from './routes/sky.js';
 
 export interface BuildAppOptions {
   config?: Config;
@@ -173,6 +174,10 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(quizRoutes, { config, prefix: `${apiV1}/quiz` });
   await app.register(paywallRoutes, { config, prefix: `${apiV1}/paywall` });
   await app.register(emailOptoutsRoutes, { config, prefix: `${apiV1}/email-optouts` });
+
+  // Ф9: соцраздел «Созвездие» — «Небо дня»: событие дня + проекция + чек-ины/стрик (см.
+  // docs/strategy/11-соцраздел-созвездие.md, apps/worker/src/sky — генерация дня).
+  await app.register(skyRoutes, { config, prefix: `${apiV1}/sky` });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     request.log.error({ err: error }, 'request error');

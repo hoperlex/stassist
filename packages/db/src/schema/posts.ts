@@ -10,7 +10,7 @@
 import { integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { celebrities } from './celebrities.js';
 import { charts } from './charts.js';
-import { postKindEnum, ugcModerationStatusEnum, ugcStatusEnum } from './enums.js';
+import { postKindEnum, ugcAuthorKindEnum, ugcModerationStatusEnum, ugcStatusEnum } from './enums.js';
 import { users } from './users.js';
 
 export const posts = pgTable('posts', {
@@ -18,6 +18,8 @@ export const posts = pgTable('posts', {
   authorId: uuid('author_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  /** Ф9: 'ai' — контент Астры, всегда с бейджем «ИИ» в UI (см. ugcAuthorKindEnum в enums.ts). */
+  authorKind: ugcAuthorKindEnum('author_kind').notNull().default('human'),
   kind: postKindEnum('kind').notNull(),
   title: text('title').notNull(),
   bodyMd: text('body_md').notNull(),
