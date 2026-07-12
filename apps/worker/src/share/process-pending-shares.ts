@@ -13,7 +13,7 @@ import type { Logger } from 'pino';
 import type { Db } from '@stassist/db';
 import type { ObjectStorage } from '@stassist/shared';
 import { svgToPngBuffer } from '../og/render-og-png.js';
-import { buildShareChartWheelInput } from './build-share-svg.js';
+import { buildShareChartWheelInput, composeTransitDayShareSvg } from './build-share-svg.js';
 import { findPendingChartShares, markOgImageGenerated } from './chart-shares-repository.js';
 import { renderChartWheelSvg } from '@stassist/ui/render';
 
@@ -34,7 +34,12 @@ export async function processPendingShares(db: Db, storage: ObjectStorage, logge
         positionsB: row.positionsB as any,
         theme: row.theme === 'dark' ? 'dark' : 'light',
       });
-      const svg = renderChartWheelSvg(wheelInput);
+      const wheelSvg = renderChartWheelSvg(wheelInput);
+      // Ф9: карточка «Небо дня» с подписью — OG-компоновка 1200×630 (колесо + текст отклика).
+      const svg =
+        row.kind === 'transit_day' && row.caption
+          ? composeTransitDayShareSvg(wheelSvg, row.caption, row.theme === 'dark' ? 'dark' : 'light')
+          : wheelSvg;
       const png = svgToPngBuffer(svg, { width: 1200, backgroundColor: row.theme === 'dark' ? '#1a1730' : '#ffffff' });
       const key = ogImageKeyFor(row.slug);
       await storage.put(key, png, 'image/png');

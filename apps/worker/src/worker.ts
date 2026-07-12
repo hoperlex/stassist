@@ -24,6 +24,8 @@ import { processPaidCustomForecastOrders } from './forecast/generate-custom-fore
 import { runSubscriptionRenewalSweep } from './billing/subscription-renewal-job.js';
 import { retryUnprocessedWebhooks } from './billing/webhook-retry-job.js';
 import { sendAbandonedCalcEmails, sendTrialEndingEmails, sendWeeklyDigestEmails } from './email/lifecycle-emails.js';
+import { runSkyDayPipeline } from './sky/generate-sky-day-job.js';
+import { publishAstraWeeklyDigest } from './sky/astra-weekly-digest-job.js';
 
 export type WorkerStatus = 'stopped' | 'degraded' | 'running';
 
@@ -109,6 +111,19 @@ export const TRIAL_ENDING_EMAIL_CRON = '25 * * * *';
 /** Еженедельный дайджест — понедельник 08:00 МСК = 05:00 UTC. */
 export const WEEKLY_DIGEST_EMAIL_QUEUE = 'weekly-digest-email';
 export const WEEKLY_DIGEST_EMAIL_CRON = '0 5 * * 1';
+
+/**
+ * Ф9: «Небо дня» (см. apps/worker/src/sky/generate-sky-day-job.ts) — слот 00:40 МСК (21:40 UTC),
+ * на 20/30 минут ПОЗЖЕ гороскопов (00:20) и astro-calendar (00:10): читаем СВЕЖИЙ
+ * `astro_calendar` того же ночного прогона (тот же принцип зазора, что HOROSCOPE_CRON).
+ */
+export const SKY_DAY_QUEUE = 'sky-day-generate';
+export const SKY_DAY_CRON = '40 21 * * *';
+
+/** Ф9: недельный дайджест Астры в треде дня — воскресенье 18:00 МСК = 15:00 UTC (вечер, когда
+ *  неделя фактически прожита; не пересекается с ночным конвейером). */
+export const ASTRA_DIGEST_QUEUE = 'sky-astra-weekly-digest';
+export const ASTRA_DIGEST_CRON = '0 15 * * 0';
 
 export function defaultLogger(config: Pick<Config, 'isProduction'>): Logger {
   return pino({ level: config.isProduction ? 'info' : 'warn' });
@@ -275,6 +290,21 @@ export class Worker {
     });
     await boss.schedule(WEEKLY_DIGEST_EMAIL_QUEUE, WEEKLY_DIGEST_EMAIL_CRON);
 
+    // Ф9: «Небо дня» — событие дня + тред Астры (см. apps/worker/src/sky/generate-sky-day-job.ts).
+    await boss.createQueue(SKY_DAY_QUEUE);
+    await boss.work(SKY_DAY_QUEUE, async () => {
+      const written = await runSkyDayPipeline({ db, llm: llmProvider, logger: this.logger });
+      if (written > 0) this.logger.info({ written }, 'sky-day-generate: дни записаны');
+    });
+    await boss.schedule(SKY_DAY_QUEUE, SKY_DAY_CRON);
+
+    // Ф9: недельный дайджест Астры (см. apps/worker/src/sky/astra-weekly-digest-job.ts).
+    await boss.createQueue(ASTRA_DIGEST_QUEUE);
+    await boss.work(ASTRA_DIGEST_QUEUE, async () => {
+      await publishAstraWeeklyDigest({ db, logger: this.logger });
+    });
+    await boss.schedule(ASTRA_DIGEST_QUEUE, ASTRA_DIGEST_CRON);
+
     this.boss = boss;
     this.status = 'running';
     this.logger.info(
@@ -293,6 +323,8 @@ export class Worker {
           ABANDONED_CALC_EMAIL_QUEUE,
           TRIAL_ENDING_EMAIL_QUEUE,
           WEEKLY_DIGEST_EMAIL_QUEUE,
+          SKY_DAY_QUEUE,
+          ASTRA_DIGEST_QUEUE,
         ],
       },
       'worker: pg-boss запущен, очереди активны',
