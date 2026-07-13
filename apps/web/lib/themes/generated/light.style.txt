@@ -153,6 +153,31 @@
   }
   .premium .art{position:absolute;right:26px;top:0;bottom:0;width:220px;opacity:.5;pointer-events:none}
 
+  /* ---------- SKY OF THE DAY BAND ---------- */
+  /* Светлая полоса (в отличие от тёмной premium — чтобы два бэнда не сливались), в тех же токенах:
+     мягкий периваново-золотой градиент как у фона страницы, но собранный в карточку. */
+  .sky{margin:56px 0 6px}
+  .sky-inner{
+    position:relative;overflow:hidden;border-radius:26px;
+    background:
+      radial-gradient(560px 260px at 90% -30%, rgba(200,162,75,0.16), rgba(200,162,75,0) 62%),
+      radial-gradient(620px 300px at 4% 130%, rgba(124,124,224,0.20), rgba(124,124,224,0) 60%),
+      linear-gradient(120deg,#FBF8F1 0%,#F3F0FC 60%,#FAF4F5 100%);
+    border:1px solid rgba(124,124,224,0.18);
+    padding:38px 44px;
+    display:grid;grid-template-columns:auto 1fr auto;gap:30px;align-items:center;
+    box-shadow:0 18px 46px rgba(91,87,199,0.10), 0 2px 8px rgba(42,37,64,0.05);
+  }
+  .sky-inner::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,rgba(124,124,224,0),rgba(124,124,224,0.5),rgba(200,162,75,0));opacity:.8}
+  .sky-art{width:72px;height:72px;flex:0 0 auto}
+  .sky .kicker{margin-bottom:12px;color:var(--peri-deep)}
+  .sky h2{font-family:var(--serif);font-weight:700;font-size:27px;line-height:1.22;margin:0 0 10px;color:var(--ink)}
+  .sky p{font-size:15px;line-height:1.62;color:var(--muted);margin:0;max-width:560px;font-weight:500}
+  .sky .sky-cta{font-size:15px;padding:14px 26px}
+  .sky .sky-cta .arr{transition:transform .2s}
+  .sky .sky-cta:hover .arr{transform:translateX(3px)}
+
   /* ---------- FOOTER ---------- */
   footer.site{margin-top:26px;padding:40px 0 46px;border-top:1px solid var(--line)}
   .foot-top{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:26px}
@@ -196,6 +221,11 @@
     .premium-inner{grid-template-columns:1fr;padding:30px 24px;gap:20px;min-width:0}
     .premium .art{display:none}
     .premium .btn.gold{justify-self:start;white-space:normal;text-align:center}
+    /* «Небо дня»: колонки арт|текст|кнопка → одна колонка, арт скрываем (декоративен). */
+    .sky{margin:36px 0 6px}
+    .sky-inner{grid-template-columns:1fr;padding:28px 24px;gap:16px;min-width:0}
+    .sky-art{display:none}
+    .sky .sky-cta{justify-self:start;white-space:normal;text-align:center}
     /* большие CTA-кнопки могут переносить текст на телефоне (у .btn базово nowrap) */
     .btn.hero-cta{white-space:normal;text-align:center}
   }
